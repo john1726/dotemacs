@@ -1,0 +1,540 @@
+See https://dzone.com/articles/git-vs-svn-basic-commandline
+
+-Comparing GIT versus SVN commands:
+Command:                                                    GIT:                                           SVN:
+Get current branch                                          git branch -vv
+                                                            git status -sb
+
+List all local branches:                                                                                               
+                                                            git branch --sort=-committerdate
+                                                            
+List all remote branches:                                                                                               
+                                                            git branch -r --sort=-committerdate
+Then get hash code for a particular branch:
+                                                            git rev-parse origin/Release_2.27.1.9969
+
+Create a new branch (see https://stackoverflow.com/questions/1519006/how-do-you-create-a-remote-git-branch):
+
+                                                            git checkout -b your_branch
+															# Set upstream when pushing to remote
+                                                            git push -u origin your_branch
+															
+															OR (see https://stackoverflow.com/questions/6089294/why-do-i-need-to-do-set-upstream-all-the-time)
+															# Set upstream without pushing it
+															git branch --set-upstream-to origin/my_branch
+															
+
+Create a new branch if there is already a tag of the same name (see https://stackoverflow.com/questions/9378760/git-push-local-branch-with-same-name-as-remote-tag):
+                                                            git push origin refs/heads/Release_2.27.1.9969:refs/heads/Release_2.27.1.9969
+                                                            
+Delete branch (see https://stackoverflow.com/questions/2003505/how-do-i-delete-a-git-branch-locally-and-remotely):
+                                                            git push -d <remote_name> <branch_name>
+                                                            git branch -d <branch_name>
+
+Create a new branch (see https://stackoverflow.com/questions/1519006/how-do-you-create-a-remote-git-branch):
+
+                                                            git checkout -b your_branch
+                                                            git push -u origin your_branch
+Initial checkout from existing repo for a given branch	    git clone http://github.com/sonatype/sonatype-tycho.git; cd sonatype-tycho; git checkout -b origin/tycho-0.10.x
+
+Initial checkout from existing repo for a given branch	    git clone http://github.com/sonatype/sonatype-tycho.git; cd sonatype-tycho; git checkout -b origin/tycho-0.10.x
+
+OR:
+git clone https://github.com/john1726/bigbluebutton-dev.git; cd bigbluebutton-dev; git checkout -b origin/my-1.0-work
+
+svn checkout http://anonsvn.jboss.org/repos/jbosstools/branches/jbosstools-3.2.0.Beta1/
+
+Add remote branch:
+
+$ git remote add origin https://rogermoore@bitbucket.org/tuberedu/tuberedu-aws.git
+$ git push --set-upstream origin master
+
+Clone master to directory (see https://stackoverflow.com/questions/2411031/how-do-i-clone-into-a-non-empty-directory):
+                                                            git init
+                                                            git remote add origin PATH/TO/REPO
+                                                            git fetch
+                                                            git reset origin/master  # this is required if files in the non-empty directory are in the repo
+                                                            git checkout -t origin/master
+
+
+Update locally checked out files from central repo	    git pull                                       svn update
+                                                            Ex:
+                                                            git pull origin master
+                                                            git pull http://moo0220@git.cpr.ca:7990/scm/sam/tam.git
+
+                                                            moo0220@GKKRHB2 MINGW64 /c/src/InspectionsCommon/branches
+                                                            $ git clone http://moo0220@git.cpr.ca:7990/scm/sam/inspectionscommon.git;
+                                                            
+                                                            moo0220@GKKRHB2 MINGW64 /c/src/InspectionsCommon/branches
+                                                            $ cd "C:\src\InspectionsCommon\branches\InspectionsCommonTAM_Eliot"
+                                                            
+                                                            moo0220@GKKRHB2 MINGW64 /c/src/InspectionsCommon/branches/InspectionsCommonTAM_Eliot
+                                                            $ git status -sb
+                                                            ## master...origin/master
+
+                                                            moo0220@GKKRHB2 MINGW64 /c/src/InspectionsCommon/branches/InspectionsCommonTAM_Eliot
+                                                            $ git checkout -b InspectionsCommonTAM_Eliot
+                                                            Switched to a new branch 'InspectionsCommonTAM_Eliot'
+
+-Get a previous version: first clone, then (see https://stackoverflow.com/questions/3489173/how-to-clone-git-repository-with-specific-revision-changeset):
+                                                            git fetch origin 06cb2744b92d83f41441aae7cad71c18f790d0de
+                                                            git reset --hard FETCH_HEAD
+
+-Reset your branch to master (see https://stackoverflow.com/questions/29796127/git-how-to-make-a-branch-be-the-same-as-master?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa):
+                                                            # make sure master is up to date before you do this
+                                                            git checkout develop
+                                                            git reset --hard master
+                                                            git push -f # force push the branch
+                                                            
+-Reset a master or branch to what is in the remote master/branch (see https://stackoverflow.com/questions/1628088/reset-local-repository-branch-to-be-just-like-remote-repository-head):
+                                                            git fetch origin
+                                                            git reset --hard origin/master
+
+OR:
+git clone https://github.com/john1726/bigbluebutton-dev.git; cd bigbluebutton-dev; git checkout origin/my-1.0-work
+
+svn checkout http://anonsvn.jboss.org/repos/jbosstools/branches/jbosstools-3.2.0.Beta1/
+
+Update locally checked out files from central repo	    git pull                                       svn update
+                                                            Ex:
+                                                            git pull origin master
+                                                            git pull http://moo0220@git.cpr.ca:7990/scm/sam/tam.git
+
+List locally changes files/folders                          git status                                     svn stat
+
+Diff locally changed file                                   git diff somefile.txt                          svn diff somefile.txt
+Diff locally changed file you have added                    git diff --cached somefile.txt                          ...?
+
+Revert locally changed file*                                git checkout somefile.txt                      svn revert somefile.txt
+
+Revert ALL local changes (except untracked files)*          git reset --hard HEAD                          svn revert . -R
+
+Add new file                                                git add file.txt                               svn add file.txt
+
+Add new folder recursively                                  git add folder                                 svn add folder
+
+Delete file                                                 git rm file.txt                                svn rm file.txt
+
+Delete branch                                               git push origin --delete TAM_Roger
+Delete folder                                               git rm -r folder                               svn rm folder (recursive by default; use -N to not recurse)
+
+Commit changed file to central repo                         git commit -m "message" file.txt; git push     svn ci -m "message" file.txt
+
+OR,
+
+
+
+Ignore files/folders (in the current folder)                echo "target                                   svn propset svn:ignore "target
+                                                            *.class                                        *.class
+                                                            bin" > .gitignore; \                           bin" .; \
+                                                            git ci -m "gitignore" .gitignore               svn ci -N -m "svn:ignore" .
+
+To get a specific commit or tag (https://stackoverflow.com/questions/7539130/go-to-particular-revision):
+                                                            git checkout <sha1>
+                                                            OR:
+                                                            git reset --hard HASH-CODE
+                   
+
+Reset all code changes using magit:                         git reset --hard PRE-MAGIT-STATE               svn revert . -R
+
+Merge from from a branch to trunk/master                    git merge master                               svn merge [-c M[,N...] | -r N:M ...] SOURCE[@REV] [TARGET_WCPATH]
+Here are the full commands (https://stackoverflow.com/questions/5601931/best-and-safest-way-to-merge-a-git-branch-into-master):
+                                                            git checkout master
+                                                            git pull origin master
+                                                            git merge test
+                                                            git push origin master
+
+                                                            
+                                                            
+-If you are on a feature branch, then want to continue commits after the last commit in master (see https://www.atlassian.com/git/tutorials/merging-vs-rebasing):
+                                                            git checkout feature
+                                                            git rebase master
+                                                            Ex (for CP for TAM): git rebase origin/master
+                                                            
+-Before running a git rebase, ask yourself "Is anyone else looking at this branch?"  That is, it is usually not a good idea to rebase master onto the end of your feature branch.
+-Note, rebase is good if the branch hasn`t been distributed, or there will be confusion and extra work downstream.  Rebase makes it as if the changes on the branch were made on top of (or after) the changes on the master branch (see https://superuser.com/questions/224085/git-merge-master-into-a-branch):
+
+          A---B---C feature                             A'--B'--C'--D' feature
+         /                   --rebase-->               /
+    D---E---F---G master                  D---E---F---G master
+
+
+-Here is what git merge master does:
+
+          A---B---C feature                    A---B---C---M feature
+         /                   --merge-->       /       ,---
+    D---E---F---G master                 D---E---F---G master
+--------------------------------------------------------------------------------
+
+-Tag a build and use for revision number (see https://softwareengineering.stackexchange.com/questions/141973/how-do-you-achieve-a-numeric-versioning-scheme-with-git):
+
+$ git tag -a Release_2.27.1.10002 -m '-Updated script to 2017R2 '
+Or:
+$ git tag -a Release_0.2.0.1648 -m '-Release_0.2.0.1648'
+Push tags upstream; this is not done by default:
+
+$ git push --tags
+Then use the describe command:
+
+$ git describe --tags --long
+This gives you a string of the format:
+
+Release_2.26.1.9947-deadbeef
+
+ALTERNATIVELY, you can use this to get a revision number (see https://stackoverflow.com/questions/4120001/what-is-the-git-equivalent-for-revision-number): 
+
+$ git rev-list --count HEAD
+
+-----
+
+a) Specify a tag as the default branch (need to select "Enable to use tags in the branch specification", then put something like this into the default branch (see https://teamcity-support.jetbrains.com/hc/en-us/community/posts/206820825-How-to-specify-tags-in-checkout-rules-for-GIT):
+
+refs/tags/Release_2.26.1.9949
+
+Then use this as the checkout rule:
+
++: => .                                        
+
+-----
+
+-List all tags (see https://stackoverflow.com/questions/6269927/how-can-i-list-all-tags-in-my-git-repository-by-the-date-they-were-created/29497919#29497919):
+
+$ git log --tags --simplify-by-decoration --pretty="format:%ci %d"
+
+1) Other interesting commands: To list the tags with their hash:
+
+$ git show-ref --tags
+
+2) To show what tag you are presently on:
+
+$ git describe --exact-match --tags $(git log -n1 --pretty='%h')
+                
+-----
+
+$ git config --list
+
+...
+
+-Set username and email:
+
+$ git config --global user.name "John Doe"
+
+...
+
+$ git config --global user.email "john@gmail.com"
+
+-Connect your local git repository to the cloud version of the repo:
+
+$ git init
+$ git remote add origin https://github.com/ncarchedi/test-repo.git
+
+
+
+$ git add .    adds all new files
+$ git add -u   updates tracking for files that have changed names or were deleted
+$ git add -A   does both of the previous
+
+--------------------------------------------------------------------------------
+
+-Get the current revision hash tag (see https://stackoverflow.com/questions/949314/how-to-retrieve-the-hash-for-the-current-commit-in-git):
+
+$ git rev-parse --verify HEAD
+2016.08.04
+I. Push only to your remote, and not upstream:
+
+rmoore@Schubert:~/dev/bigbluebutton$ git push origin my-1.1-work
+Username for 'https://github.com': john1726
+Password for 'https://john1726@github.com':
+Counting objects: 604, done.
+Delta compression using up to 12 threads.
+Compressing objects: 100% (168/168), done.
+Writing objects: 100% (173/173), 498.15 KiB | 0 bytes/s, done.
+Total 173 (delta 63), reused 0 (delta 0)
+To https://github.com/john1726/bigbluebutton.git
+ * [new branch]      my-1.0-work -> my-1.0-work
+
+
+-To push to upstream:
+
+rmoore@Schubert:~/dev/bigbluebutton$ git push upstream my-1.0-work
+
+-----
+
+To clone code after receiving error "fatal: The remote end hung up unexpectedly" (see https://stackoverflow.com/questions/6842687/the-remote-end-hung-up-unexpectedly-while-git-cloning and https://stackoverflow.com/questions/21277806/fatal-early-eof-fatal-index-pack-failed):
+
+$ git config --global http.postBuffer 1048576000
+$ git config --global core.compression 0
+$ git clone --depth 1 <repo_URI>
+$ git fetch --unshallow 
+$ git pull --all
+
+2017.11.29
+I. Using GIT with TAM commands:
+
+http://moo0220@git.cpr.ca:7990/scm/sam/tam.git
+
+git clone http://moo0220@git.cpr.ca:7990/scm/stt/tam.git; cd tam; git checkout origin/TAM_Roger
+
+git commit -m "message"; git push
+
+-----
+
+git remote add origin http://git.cpr.ca:7990/scm/sam/tam.git
+
+2018.01.02
+I. Using GitVersion (see https://gitversion.readthedocs.io/en/latest/more-info/version-increments/):
+-Adding +semver: breaking or +semver: major will cause the major version to be increased,  +semver: feature or +semver: minor will bump minor and +semver: patch or +semver: fix will bump the patch.
+-Alternatively, you can set the next-version value in GitVersion.yml, e.g.,
+
+next-version: 2.0.0
+
+Home:
+-Tags override other rules (see https://gitversion.readthedocs.io/en/latest/)
+-The Semantic Version SemVer does not increment on every commit
+-You can consume GitVersion by using GitVersion.exe or adding an MSBuild task
+
+Usage: Command Line: Output:
+-This changes the mode of GitVersion to write out the variables to whatever build server it is running on
+
+C:\Tools> GitVersion.exe /output buildserver
+
+log.ToString()
+"INFO [01/02/18 10:45:06:70] Working directory: C:\\Tools\\GitVersion\\src\\GitVersionExe\\bin\\Debug\r\n
+INFO [01/02/18 10:45:06:74] IsDynamicGitRepository: False\r\n
+ERROR [01/02/18 10:45:06:92] An unexpected error occurred:\r\nSystem.IO.DirectoryNotFoundException: Can't find the .git directory in C:\\Tools\\GitVersion\\src\\GitVersionExe\\bin\\Debug\r\n   
+    at GitVersion.GitPreparer.GetDotGitDirectory() in C:\\Tools\\GitVersion\\src\\GitVersionCore\\GitPreparer.cs:line 161\r\n   
+    at GitVersion.GitPreparer.GetProjectRootDirectory() in C:\\Tools\\GitVersion\\src\\GitVersionCore\\GitPreparer.cs:line 177\r\n   
+    at GitVersion.ConfigurationProvider.Verify(GitPreparer gitPreparer, IFileSystem fileSystem) in C:\\Tools\\GitVersion\\src\\GitVersionCore\\Configuration\\ConfigurationProvider.cs:line 270\r\n   
+    at GitVersion.Program.VerifyConfiguration(Arguments arguments, IFileSystem fileSystem) in C:\\Tools\\GitVersion\\src\\GitVersionExe\\Program.cs:line 149\r\n   at GitVersion.Program.VerifyArgumentsAndRun() in C:\\Tools\\GitVersion\\src\\GitVersionExe\\Program.cs:line 94\r\n
+INFO [01/02/18 10:45:06:92] \r\n
+INFO [01/02/18 10:45:06:92] Attempting to show the current git graph (please include in issue): \r\n
+INFO [01/02/18 10:45:06:92] Showing max of 100 commits\r\nINFO [01/02/18 10:45:07:02] ERROR: fatal: Not a git repository (or any of the parent directories): .git\r\n\r\n"
+
+Usage: Command Line: Inject version metadata into the assembly:
+-To update versions in each AssemblyInfo.cs file, use the following command:
+
+C:\Tools> GitVersion.exe C:\src\EAM\tam /updateassemblyinfo
+
+Usage: MSBuild Task:
+-Add using:
+
+PM> Install-Package GitVersionTask
+
+Usage: MSBuild Task: Accessing Injected Variables:
+
+    var assemblyName = assembly.GetName().Name;
+    var gitVersionInformationType = assembly.GetType(assemblyName + ".GitVersionInformation");
+    var fields = gitVersionInformationType.GetFields();
+
+    foreach (var field in fields)
+    {
+        Trace.WriteLine(string.Format("{0}: {1}", field.Name, field.GetValue(null)));
+    }
+
+Specific variable:
+
+    var assemblyName = assembly.GetName().Name;
+    var gitVersionInformationType = assembly.GetType(assemblyName + ".GitVersionInformation");
+    var versionField = gitVersionInformationType.GetField("Major");
+    Trace.WriteLine(versionField.GetValue(null));
+
+Usage: MSBuild Task: Accessing variables in MSBuild:
+-Once GitVersionTask.GetVersion has been executed, the MSBuild properties can be used in the standard way. For example:
+
+    <Message Text="GitVersion_InformationalVersion: $(GitVersion_InformationalVersion)"/>    
+
+Usage: MSBuild Task: Communicate variables to current Build Server:
+-The sub-task GitVersionTask.WriteVersionInfoToBuildLog will attempt to write the version information to the current Build Server log.
+
+Usage: MSBuild Task: My Git repository requires authentication. What should I do?
+-Set the environment variables GITVERSION_REMOTE_USERNAME and GITVERSION_REMOTE_PASSWORD before the build is initiated.
+
+Configuration: Configuration tool:
+-Run this to help you configure GitVersion the way you want:
+
+C:\src\EAM\tam>C:\Tools\GitVersion\build\NuGetExeBuild\tools\GitVersion.exe init
+
+C:\src\EAM\tam>C:\Tools\GitVersion\build\NuGetExeBuild\tools\GitVersion.exe init
+C:\Tools\GitVersion\build\NuGetExeBuild\tools\GitVersion.exe init
+INFO [01/02/18 12:18:47:45] Working directory: C:\src\EAM\tam
+INFO [01/02/18 12:18:47:46] IsDynamicGitRepository: False
+INFO [01/02/18 12:18:47:47] Returning Project Root from DotGitDirectory: C:\src\EAM\tam\.git - C:\src\EAM\tam
+GitVersion init will guide you through setting GitVersion up to work for you
+
+Which would you like to change?
+
+0) Save changes and exit
+1) Exit without saving
+
+2) Run getting started wizard
+
+3) Set next version number
+4) Branch specific configuration
+5) Branch Increment mode (per commit/after tag) (Current: )
+6) Assembly versioning scheme (Current: )
+7) Setup build scripts
+
+> 2
+
+The way you will use GitVersion will change a lot based on your branching strategy. What branching strategy will you be using:
+
+1) GitFlow (or similar)
+2) GitHubFlow
+3) Unsure, tell me more
+
+> 3
+
+GitVersion can try to recommend you a branching strategy based on a few questions. 
+
+Do you need to maintain multiple versions of your application simultaneously in production? (y/n)
+
+> n
+
+Do you stabilise releases while continuing work on the next version? (y/n)
+
+> y
+GitFlow is likely a good fit, the 'develop' branch can be used for active development while stabilising the next release.
+
+GitHubFlow is designed for a lightweight workflow where master is always good to deploy to production and feature branches are used to stabilise features, once stable they are merged to master and made available in the next release
+
+The way you will use GitVersion will change a lot based on your branching strategy. What branching strategy will you be using:
+
+1) GitFlow (or similar)
+2) GitHubFlow
+3) Unsure, tell me more
+
+> 2
+
+By default GitVersion will only increment the version when tagged
+
+What do you want the default increment mode to be (can be overriden per branch):
+
+1) Follow SemVer and only increment when a release has been tagged (continuous delivery mode)
+2) Increment based on branch config every commit (continuous deployment mode)
+3) Each merged branch against master will increment the version (mainline mode)
+4) Skip
+
+> 2
+
+Questions are all done, you can now edit GitVersion`s configuration further
+Which would you like to change?
+
+0) Save changes and exit
+1) Exit without saving
+
+2) Run getting started wizard
+
+3) Set next version number
+4) Branch specific configuration
+5) Branch Increment mode (per commit/after tag) (Current: ContinuousDeployment)
+6) Assembly versioning scheme (Current: )
+7) Setup build scripts
+
+> 
+
+Introduction: Build Server Support:
+-When GitVersion.exe is run with the /output buildserver flag instead of outputting Json it will export variables to the current build server. For instance if you are running in TeamCity after you run  GitVersion /output buildserver you will have the %system.GitVersion.SemVer% available for you to use
+-When running in MSBuild either from the MSBuild Task or by using the /proj myproject.sln parameter, GitVersion will make the MSBuild variables available in the format $(GitVersion_SemVer)
+
+Introduction: Build Servers: TeamCity:
+-
+
+
+
+2018.03.06
+I. Tags:
+
+-Get v9963 tag or a specific version/revision of GIT:
+
+moo0220@GKKRHB2 MINGW64 /c/Temp/EAM/sam
+$ git fetch origin cd379d1c02ae095ad945c8c8c833f4fa2aaf51a7
+Password for 'http://moo0220@git.cpr.ca:7990':
+From http://git.cpr.ca:7990/scm/sam/sam
+ * branch              cd379d1c02ae095ad945c8c8c833f4fa2aaf51a7 -> FETCH_HEAD
+
+moo0220@GKKRHB2 MINGW64 /c/Temp/EAM/sam
+$ git reset --hard FETCH_HEAD
+Checking out files: 100% (1517/1517), done.
+HEAD is now at cd379d1c -Adjusted SD1 config settings so that it runs against the new SMP HANA consolidation database instead of the old windows SAP server
+
+OR (see https://stackoverflow.com/questions/791959/download-a-specific-tag-with-git and https://stackoverflow.com/questions/35979642/how-to-checkout-remote-git-tag):
+$ git fetch --all --tags --prune
+$ git checkout tags/<tag_name> -b <branch_name>
+
+OR:
+
+$ git checkout tags/<tag_name>
+
+2018.04.10
+I. Merging for TAM (see https://stackoverflow.com/questions/5601931/best-and-safest-way-to-merge-a-git-branch-into-master):
+
+$ git checkout master
+$ git pull origin master
+$ git merge origin/TAM_Roger
+$ git push origin master
+
+----
+
+-Got this error (see https://stackoverflow.com/questions/38536896/git-reset-hard-origin-master-failing?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa):
+
+fatal: Could not reset index file to revision 'origin/master'
+
+-Solved by:
+
+$ git gc
+$ git reset
+$ git reset --hard <target_branch>
+
+--------------------------------------------------------------------------------
+
+$ git merge -s recursive -X ours origin/TAM_Roger
+
+OR
+
+$ git merge -s recursive -X theirs origin/master
+
+
+git.exe checkout --no-track -b Release_2.27.1.9969d_branch Release_2.27.1.9969d
+
+ 
+
+git checkout tags/Release_2.27.1.9969 -b Release_2.27.1.9969
+
+Forcing reset of local on-disk code to what is in remote (instead of git pull -f, use this, see https://stackoverflow.com/questions/1125968/how-do-i-force-git-pull-to-overwrite-local-files): 
+$ git fetch --all
+$ git reset --hard origin/master
+
+
+2018.10.12
+I. Changing GIT to HTTPS:
+
+git config --global http.sslVerify false
+
+-Then also search in GIT directory and change all instances like the ones in config from:
+
+http://git.cpr.ca:7990
+
+To:
+
+https://git.cpr.ca
+
+OR:
+
+http://moo0220@git.cpr.ca:7990
+
+To:
+
+https://moo0220@git.cpr.ca
+
+2018.11.15
+I. Get Present Version of Code:
+
+-To determine what revision you are presently on:
+
+$ git rev-parse HEAD
+
+2018.12.07
+I. Determine what tag you are presently on (see https://stackoverflow.com/questions/3404936/show-which-git-tag-you-are-on):
+
+$ git describe --exact-match --tags $(git log -n1 --pretty='%h')
+

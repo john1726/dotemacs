@@ -1,0 +1,411 @@
+-----Original Appointment-----
+From: Roger Moore 
+Sent: February 25, 2021 2:28 PM
+To: Roger Moore; Carl Reine; Draga Talinga; Kaushal Pander
+Cc: Brenda Maloff; Kevin Lee; Laurie Weston
+Subject: Add standard colour bars like Rainbow, Sand shale etc to the colour bar settings
+When: March 2, 2021 10:00 AM-11:00 AM (UTC-07:00) Mountain Time (US & Canada).
+Where: Teams
+
+Clarification on requirements for this software development task:
+
+•	Should we save custom color bar settings as text files in the installation directory or in AppData, or have them be a limited set that are compiled directly into the QI-Pro executable?  What is the best way to ensure that a given customer’s custom color bar settings don’t get deleted or lost when they install a new version of QI-Pro?
+•	Should we have the custom color bars be selected in the Color Bar via combobox or open file selector?  Should we allow users to add as many custom color bar settings files as they want, or limit it to a pre-defined set?
+•	What specific custom color bar settings should we have? Rainbow, Sand shale, etc?  
+•	Should we allow the user to select these custom color bar settings in the "Color Bar" accessed only from the "Xplot Settings" dialog or from other ways as well?
+________________________________________________________________________________ 
+Microsoft Teams meeting 
+
+--------------------------------------------------------------------------------
+
+Clarification on requirements for this software development task:
+
+•	Should we save custom color bar settings as text files in the installation directory or in AppData, or have them be a limited set that are compiled directly into the QI-Pro executable?  What is the best way to ensure that a given customer’s custom color bar settings don’t get deleted or lost when they install a new version of QI-Pro?
+
+-Brenda: Don`t need just one place for things.  We could store some in a binary, some in a directory, some in an AppData folder.
+-Carl: There are default built-in color bars, but you can still customize any of those.  Do we need separate files?  
+-Kevin: If you load a different version of QI-Pro, so then a different executable doesn`t have those templates built-in.
+-Brenda: If you want to pull in a bunch of color bars maybe we do want an external file?
+-Carl: In terms of having stored colors
+-Brenda: Dolomites are blue, sandstones are yellow
+-The classified colour bar is going to be a tricky one.  Maybe even just changing the default color bar, so that it is a bit bigger than 10 classes.  Let us have, say, 15 classes.
+-Kaushal: For classified volume, we don`t need a custom colour bar.  When they are done, they just tweak it a bit.  I was thinking if you want to see porosity, s-impedance, z-impedance, there are custom colour bars out there.  We need to make sure that when a person upgrades QI-Pro, he shouldn`t lose it, if he moves or upgrades.
+-Carl: The paste, easter-egg color 
+-Laurie: Instead of them saving to an internal database is better.  If they save to their own directory, they will lose it all of the time.  If you can internally save it to a database that goes with QI-Pro.  
+-Carl: If they have several projects, we want the colour bar to go between projects.
+-Kaushal: In my view, whenever you open QI-Pro, you should see all of your color bars.  
+-Kevin: I don`t want to lose existing functionality, so if somebody wants to save their color bar as a text file, they can then send it to a colleague.
+-Save the whole range of options.
+-Brenda: Would you really want to see all of your color bars in all of your projects?  It might get pretty big soon.
+-Kaushal: How Petrel works, is it saves it in the project, butthen it has that reference tool function so I can transfer that colour bar between projects.
+-Brenda: It might be good to store the colour bars in the app directory or in AppData, then we are kind of building up a database. 
+-Laurie: I think we should start simple.  Rather than trying to think of every possible situation that may arise, let us put in a few colour bar templates that everybody uses in the install directory.  
+-Kevin: They will always be saved in the project.  But we won`t save the whole database in the project.
+
+•	Should we have the custom color bars be selected in the Color Bar via combobox or open file selector?  Should we allow users to add as many custom color bar settings files as they want, or limit it to a pre-defined set?
+•	What specific custom color bar settings should we have? Rainbow, Sand shale, etc?  
+•	Should we allow the user to select these custom color bar settings in the “Color Bar” accessed only from the “Xplot Settings” dialog or from other ways as well?
+
+Laurie: I have had this idea that you can have this highlight color in your colour bar, and you can slide it up and down in your porosity or point density colour.  
+-Kaushal: We were wondering about inserting two colours, in between.  
+-Brenda: We have another ticket.
+-Laurie: Do we have a greyscale as well?
+-Carl: Do we have a target number of spectra to have?  10?  7?
+-Laurie: That is for the Thrid Attribute, right?
+-Kevin: We will save all the color bars in use in the project bar.  We will ... in the Third Attribute mode, to save to a database.  Then we will allow the user to export their database.
+-Carl: In Hampson Russel, you have individually select every color bar combo-box text item to see what it actually is.  This drives me absolutely batty.
+-Brenda: We want to put a little Red, White and Blue swatch.
+-Kevin: Save class names as well as part of the colour bar 
+
+2021.03.23
+I. Researching and implementing solution:                        
+
+STRINGTABLE
+BEGIN
+    ID_OUTPUT_SEGY          "SEG-Y Output"
+    ID_FILE_EXPORT_SEGY     "Save Classified Seismic Volume as a SEG-Y file\nSave Classified Seismic Volume as a SEG-Y file"
+    ID_CB_NEW               "Create a New Color Set\nCreate a New Color Set"
+    ID_CB_OPEN              "Load a Color Set File\nLoad a Color Set File"
+    ID_CB_SAVE              "Save this Color Set\nSave this Color Set"
+    ID_CB_CLEAR             "Clear All Colors\nClear All Colors"
+    ID_CB_INTERP            "Interpolate Color Scale\nInterpolate Color Scale"
+    ID_CB_HELP              "Class Manager Help\nClass Manager Help"
+END
+
+COMBOBOX        IDC_X_COMBO,76,88,356,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+
+void CCrossPlotSettingsDlg::DoDataExchange(CDataExchange* pDX)
+{
+    CDialog::DoDataExchange(pDX);
+    // ...
+    DDX_Control(pDX, IDC_X_COMBO, m_xAttrCombo);
+    // ...
+}
+
+ON_CBN_SELCHANGE(IDC_X_COMBO, OnSelchangeXCombo)
+
+void CCrossPlotSettingsDlg::OnSelchangeXCombo()
+{
+	UpdateData(TRUE);
+	PopulateMinMax(&m_xAttrCombo, &m_xMin, &m_xMax);
+	UpdateData(FALSE);
+}
+
+CComboBox	  m_xAttrCombo;
+
+void CCrossPlotSettingsDlg::OnScanXattr() 
+{
+    UpdateData(TRUE);
+    DoScan(&m_xAttrCombo, &m_xMin, &m_xMax);
+}
+
+bool CCrossPlotSettingsDlg::IsValid()
+{
+	UpdateData(TRUE);
+	SaveActiveData();
+	int xCurSel = m_xAttrCombo.GetCurSel();
+	int yCurSel = m_yAttrCombo.GetCurSel();
+	int cCurSel = m_thirdAttribute.GetCurSel();
+
+	m_strXAttr = _T("");
+	m_strYAttr = _T("");
+	m_strColorAttr = _T("");
+
+	if (xCurSel >= 0) {
+		m_xAttrCombo.GetLBText(xCurSel, m_strXAttr);
+	}
+	if (yCurSel >= 0) {
+		m_yAttrCombo.GetLBText(yCurSel, m_strYAttr);
+	}
+	if (cCurSel >= 0) {
+		m_thirdAttribute.GetLBText(cCurSel, m_strColorAttr);
+	}
+    // ...
+}    
+
+Where:
+
+  CString	m_strXAttr;
+
+OnInitDialog:
+
+	int xselect = m_xAttrCombo.FindStringExact( -1, m_parms.m_strXAttr);
+	int yselect = m_yAttrCombo.FindStringExact( -1, m_parms.m_strYAttr);
+	int cselect = m_thirdAttribute.FindStringExact(-1, m_parms.m_strColorAttr);
+	m_xAttrCombo.SetCurSel(xselect);
+	m_yAttrCombo.SetCurSel(yselect);
+	m_thirdAttribute.SetCurSel(cselect);
+
+BEGIN_MESSAGE_MAP(CColorBarView, CView)
+	ON_WM_LBUTTONDOWN()
+	ON_WM_LBUTTONUP()
+	ON_WM_MOUSEMOVE()
+	ON_COMMAND(ID_CB_INTERP, OnCbInterp)
+	ON_COMMAND(ID_CB_CLEAR, OnCbClear)
+	ON_COMMAND(ID_CB_NEW, OnCbExtend)
+	ON_COMMAND(ID_CB_OPEN, OnCbOpen)
+	ON_COMMAND(ID_CB_SAVE, OnCbSave)
+	ON_COMMAND(ID_CB_HELP, OnCbHelp)
+	ON_COMMAND(ID_CB_EXIT, OnCbExit)
+
+	ON_UPDATE_COMMAND_UI(ID_CB_NAMES, OnUpdateCbNames)
+	ON_COMMAND(ID_CB_NAMES, &CColorBarView::OnCbNames)
+END_MESSAGE_MAP()
+
+
+COMBOBOX        IDC_COMBO_DEFAULT,54,57,255,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+
+COMBOBOX        IDC_CUTOFFTYPE,154,54,50,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+
+    COMBOBOX        IDC_COMBO_CLASS_ABOVE,154,70,50,30,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+
+COMBOBOX        IDC_USERLINE_COMBO,12,267,64,51,CBS_DROPDOWN | WS_VSCROLL | WS_GROUP | WS_TABSTOP    
+
+	// populate the x and y attribute combo box drop down menus.
+	m_xAttrCombo.ResetContent();
+	m_yAttrCombo.ResetContent();
+	m_thirdAttribute.ResetContent();
+
+	for ( i = 0; i < m_fileCount; i++) {
+		if (!m_attr[i].IsEmpty() && m_favorite[i] >= 0) {
+			m_xAttrCombo.AddString(m_attr[i]);
+			m_yAttrCombo.AddString(m_attr[i]);
+			m_thirdAttribute.AddString(m_attr[i]);
+		}
+	}
+
+	m_strTitleBox.Format("Crossplot %d Settings - %s", m_viewInstance + 1, m_parms.m_title);
+
+
+	int xselect = m_xAttrCombo.FindStringExact( -1, m_parms.m_strXAttr);
+	int yselect = m_yAttrCombo.FindStringExact( -1, m_parms.m_strYAttr);
+	int cselect = m_thirdAttribute.FindStringExact(-1, m_parms.m_strColorAttr);
+	m_xAttrCombo.SetCurSel(xselect);
+
+-----
+
+    CComboBox m_colorTemplateCombo;
+
+    COMBOBOX    IDC_COMBO_COLOR_TEMPLATE, 154, 10, 50, 30, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+
+2021.03.23
+I. Researching and implementing solution:                        
+    
+-Instead of trying to set values in IMAC.rc for the combobox the ColorBarView is a CView instead of a CDialog so it means that you have to create the combobox like the Crossline one in the main view:
+
+	// find the coordinates of the placeholder on the toolbar. This is where the controls will be placed.
+	CRect rect;
+	int index = 0;
+	UINT ID = 0;
+	while (ID != ID_PLACEHOLDER) {
+		ID = m_wndToolBar.GetItemID(index++);
+	}
+	index--;
+	m_wndToolBar.SetButtonInfo(index, ID_PLACEHOLDER, TBBS_SEPARATOR, 1);
+	m_wndToolBar.GetItemRect(index, &rect);
+
+        // ...
+
+	// the Xline select combo box
+	extent = pDC->GetTextExtent("1234567");
+	rect.left  = rect.right;
+	rect.right = rect.left  + extent.cx + 30;
+	if (!m_wndToolBar.m_cmbXline.Create( WS_CHILD|WS_VISIBLE|CBS_DROPDOWN|WS_VSCROLL, 
+				rect, &m_wndToolBar, IDC_COMBO_XLINE)) {
+		TRACE0("Failed to create line select combo Box\n");
+		return -1;
+	}
+	m_wndToolBar.m_cmbXline.SetLineMode(eXLINE);
+
+
+    COMBOBOX    IDC_COMBO_COLOR_TEMPLATE, 104, 10, 50, 30, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+
+    
+-----
+
+void CColorBarView::OnInitialUpdate()
+{
+	m_intensity = 1.0;
+	m_lbuttondown = FALSE;
+	m_palletIndex = -2;	// nothing selected
+	m_colorbarIndex = -1;
+	m_colorbarIndexMouseMove = -1;
+	pApp = (CIMACApp*)AfxGetApp();
+}
+
+void CMainFrame::CreateCrossplotMenus()
+{
+	CIMACDoc* pDoc = CIMACApp::GetDocument();
+	if (pDoc != NULL)
+	{
+		int nXplot = pDoc->GetXplotCount();
+
+		if (nXplot != 0)
+		{
+			CMenu* mainMenu = AfxGetMainWnd()->GetMenu();
+
+			// Add cross plots into the View menu
+			CMenu* viewMenu = mainMenu->GetSubMenu(3);
+			if (viewMenu)
+			{
+				for (int i = 0; i < nXplot; i++)
+				{
+					CXplotParms* pXplot = pDoc->GetXplotParms(i);
+					CString title;
+					title.Format("Crossplot %d - %s", i + 1, pXplot->m_title);
+					viewMenu->AppendMenu(MF_STRING | MF_ENABLED, ID_VIEW_XPLOTS + i + 1, title);
+				}
+			}
+
+			// Add cross plots settings into the Crossplot menu
+			CMenu* crossplotMenu = mainMenu->GetSubMenu(2);
+			if (crossplotMenu)
+			{
+				for (int i = 0; i < nXplot; i++)
+				{
+					CXplotParms* pXplot = pDoc->GetXplotParms(i);
+					CString title;
+					title.Format("Crossplot %d Settings - %s", i + 1, pXplot->m_title);
+					crossplotMenu->AppendMenu(MF_STRING | MF_ENABLED, ID_EDIT_XPLOT_PARMS + i + 1, title);
+				}
+			}
+		}
+	}
+}
+
+Which is called from:
+
+void CMainFrame::UpdateCrossplotMenus()
+{
+	CIMACDoc* pDoc = CIMACApp::GetDocument();
+	if (pDoc != NULL)
+	{
+		CMenu* mainMenu = AfxGetMainWnd()->GetMenu();
+		CMenu* viewMenu = mainMenu->GetSubMenu(3);
+		if (viewMenu)
+		{
+			int count = viewMenu->GetMenuItemCount();
+			for (int i = 0; i < NXPLOT; i++)
+				viewMenu->DeleteMenu(ID_VIEW_XPLOTS + i + 1, MF_BYCOMMAND);
+		}
+		CMenu* crossplotMenu = mainMenu->GetSubMenu(2);
+		if (crossplotMenu)
+		{
+			for (int i = 0; i < NXPLOT; i++)
+				crossplotMenu->DeleteMenu(ID_EDIT_XPLOT_PARMS + i + 1, MF_BYCOMMAND);
+		}
+		CreateCrossplotMenus();
+	}
+}
+
+void CMainFrame::OnActivate(UINT state, CWnd* wndOther, BOOL minimized)
+{
+	UpdateCrossplotMenus();
+}
+
+BOOL CMainFrame::OnNcActivate(BOOL)
+{
+	UpdateCrossplotMenus();
+	return TRUE;
+}
+
+-----
+
+void CIMACDoc::UpdateCombobox(DWORD lineCount, DWORD* pLine, CLineSelectCombo *pCombo, int currentLine) 
+{
+	CString txt;
+	pCombo->ResetContent();
+	int currentIndex = 0;
+
+	for (DWORD i=0; i<lineCount; i++) {
+		txt.Format("%d", pLine[i]);
+		if (pLine[i] == currentLine) currentIndex = i;
+		int status = pCombo->AddString(txt);
+		if (status == CB_ERR || status == CB_ERRSPACE) {
+			AfxMessageBox("error creating inline/crossline combo");
+			break;
+		}
+	}
+	pCombo->SetCurSel(currentIndex);
+}
+
+Which is called from:
+UpdateViews(...):
+
+			// Update Inline combobox
+			GetLiveInlineNumbers(lineCount, &pLine);
+			UpdateCombobox(lineCount, pLine, pApp->m_cmbInline, m_nDisplayInline);
+
+But please note that IMAC.h has:
+
+	CLineSelectCombo *m_cmbInline;
+	CLineSelectCombo *m_cmbXline;
+        CLineSelectCombo *m_cmbUserline;
+
+2021.03.25
+I. Researching and implementing solution:                                
+    
+currentDir = 0x000000f5f96f9a90 "C:\\Sound-QI_Source\\SoundQI-Branch\\RM_Branch\\IMAC"
+
+void CIMACDoc::UpdateCombobox(DWORD lineCount, DWORD* pLine, CLineSelectCombo *pCombo, int currentLine) 
+{
+	CString txt;
+	pCombo->ResetContent();
+	int currentIndex = 0;
+
+	for (DWORD i=0; i<lineCount; i++) {
+		txt.Format("%d", pLine[i]);
+		if (pLine[i] == currentLine) currentIndex = i;
+		int status = pCombo->AddString(txt);
+		if (status == CB_ERR || status == CB_ERRSPACE) {
+			AfxMessageBox("error creating inline/crossline combo");
+			break;
+		}
+	}
+	pCombo->SetCurSel(currentIndex);
+}
+
+-----
+
+void CColorBarView::OnCbOpen() 
+{
+	FILE *pf;
+	CString msg, fname;
+	CString fileFilter = "Colorbar Files (*.cb)|*.cb|All Files (*.*)|*.*|";
+	CCSIDoc* pDoc = GetDocument();
+
+	CFileDialog fileDialog(TRUE, "cb", NULL, OFN_HIDEREADONLY|OFN_FILEMUSTEXIST, fileFilter, this);
+	if (fileDialog.DoModal() == IDOK)
+	{
+		fname = fileDialog.GetPathName();
+		if ((pf=fopen(fname, "r"))==NULL) {		
+			msg.Format("Cannot open file %s", fname);
+			AfxMessageBox(msg);
+			return;
+		}
+		int i=0;
+		int istat, red, grn, blu;
+		while (!feof(pf)) {
+			istat = fscanf(pf, "%d %d %d", &red, &grn, &blu);
+			if (istat==3) {
+				pDoc->m_colorbar[i++] = RGB(red, grn, blu);
+			}
+		}
+		fclose(pf);
+		pDoc->m_cbSize=i;
+		m_colorbarIndex = -1;
+		pDoc->SetForceRedraw(TRUE);
+
+		Invalidate(FALSE);
+	}	
+}
+
+-----
+
+        int nRows = m_nameList.GetItemCount();
+
+	for (int i = 0; i < m_pDoc->GetClassCount(); i++) {
+            // ...
+        }
+
+        

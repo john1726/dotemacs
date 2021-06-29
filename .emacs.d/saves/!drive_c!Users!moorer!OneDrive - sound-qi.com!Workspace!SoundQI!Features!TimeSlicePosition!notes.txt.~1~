@@ -1,0 +1,310 @@
+Description:
+A few clients have requested a dotted line indicating the position of the time slice displayed on the map.
+
+2020.12.14
+I. Researching and implementing solution:
+
+	CEdit	   m_edtSliceTime;
+	int        m_sliceTime;
+	CComboBox  m_cmbSlice;
+
+// Time slice controls
+void CMapSelectDlg::OnClickedUpdateSlice()
+{
+	UpdateData(TRUE);
+	if (ValidateSliceTime()) {
+		CString sliceReference;
+		m_cmbSlice.GetLBText(m_cmbSlice.GetCurSel(), sliceReference);
+		pDoc->SetTimeSliceParms(m_sliceTime, sliceReference);
+		pDoc->UpdateViews(TRUE);
+	} else {
+		m_bShowSliceFlag = FALSE;
+	}
+	UpdateControls();
+}
+
+		m_cmbSlice.GetCurSel()	Function CComboBox::GetCurSel has no address, possibly due to compiler optimizations.	
+
+    m_sliceTime = 10                
+    sliceReference = " Lwr_Keg_River"
+    m_sliceReference = CHorizon::TIME_ZERO;
+    
+void CIMACDoc::SetTimeSliceParms(int time, CString ref) 
+{ 
+	m_timeSlice.SetSliceTime(time); 
+	m_timeSlice.SetSliceReference(ref); 
+	m_timeSlice.SetShowSliceFlag(TRUE); 
+	m_timeSlice.SetLoadSliceFlag(TRUE);
+	m_timeSlice.SetActiveFlag(TRUE);
+}
+
+void CIMACDoc::GetSliceParms(BOOL &bShow, BOOL &bLoad, int &time, CString &ref)
+{
+	bShow = m_timeSlice.isShowSliceFlag(); 
+	bLoad = m_timeSlice.isLoadSliceFlag();
+	time  = m_timeSlice.GetSliceTime(); 
+	ref   = m_timeSlice.GetSliceReference();
+}
+
+    
+	CString strReference = pTimeSlice->GetSliceReference();
+
+-Which is called in:
+
+int CSegy::LoadSliceData(int ixSlice, CString fname, CTimeSlice *pTimeSlice, CHorizon *pHorizon, const CUPDUPDATA* pProgress )
+
+-----
+
+void CIMACDoc::GetSliceParms(BOOL &bShow, BOOL &bLoad, int &time, CString &ref)
+{
+	bShow = m_timeSlice.isShowSliceFlag(); 
+	bLoad = m_timeSlice.isLoadSliceFlag();
+	time  = m_timeSlice.GetSliceTime(); 
+	ref   = m_timeSlice.GetSliceReference();
+}
+
+-The above function is called here:
+
+// reset the controls according to the document settings.
+void CMapSelectDlg::UpdateControls()
+{
+	if (m_cmbSlice.m_hWnd == NULL) {
+		TRACE("Error updating Time Slice Relative To combo box. Invalid window handle.\n");
+		return;	// The dialog has probably been closed.
+	}
+
+	// time slice combo
+	m_cmbSlice.ResetContent();  // this line of code breaks the redraw of the crossplot views.  See bug 237
+	CString selectedString;
+	pDoc->GetSliceParms(m_bShowSliceFlag, m_bLoadSliceFlag, m_sliceTime, selectedString);
+	CString defaultString = CHorizon::TIME_ZERO;
+	m_cmbSlice.AddString(defaultString);
+	CHorizon *pHor = pDoc->GetHorizonDataPtr();
+        // ...
+}    
+
+-In IMACDoc::UpdateViews:
+
+	// Time Slice...
+	if (m_timeSlice.isActive() && m_timeSlice.isShowSliceFlag()) {
+		if (m_timeSlice.isLoadSliceFlag()) {
+			if (!m_timeSlice.Create(GetFileCount()+GetVirtualVolumeCount(), GetSegyInPtr(0)->GetSegyIndexPtr())) {
+				m_timeSlice.Destroy();
+				m_timeSlice.SetShowSliceFlag(FALSE);
+			}
+		}
+		LoadTimeSlice(&m_timeSlice);
+  		m_timeSlice.SetLoadSliceFlag(FALSE);
+        }
+
+-		m_index	{m_pEbcdic=0xcccccccc000000a0 <Error reading characters of string.> m_pBinary=0xcccccccc00000d20 <Error reading characters of string.> ...}	CSegyIndex
++		CObject	{...}	CObject
++		m_pEbcdic	0xcccccccc000000a0 <Error reading characters of string.>	unsigned char[3200]
++		m_pBinary	0xcccccccc00000d20 <Error reading characters of string.>	unsigned char[400]
++		m_pTrHeader	0xcccccccc00000eb0 <Error reading characters of string.>	unsigned char[240]
+		m_ntrace	<Unable to read memory>	
+		m_nsamps	<Unable to read memory>	
+		m_sampleInterval	<Unable to read memory>	
+		m_trsize	<Unable to read memory>	
+		m_inlineCount	<Unable to read memory>	
+		m_xlineCount	<Unable to read memory>	
+		m_liveInlineCount	<Unable to read memory>	
+		m_liveXlineCount	<Unable to read memory>	
+		m_startTime	<Unable to read memory>	
+		m_endTime	<Unable to read memory>	
+		m_pInline	<Unable to read memory>	
+		m_pXline	<Unable to read memory>	
+		m_pTmp	<Unable to read memory>	
+		m_pXcoord	<Unable to read memory>	
+		m_pYcoord	<Unable to read memory>	
+		m_pOffset	<Unable to read memory>	
+		m_bIgnore	<Unable to read memory>	
+		m_bSaveIgnore	<Unable to read memory>	
+		m_pLiveInline	<Unable to read memory>	
+		m_pLiveXline	<Unable to read memory>	
+		m_isIndexLoaded	<Unable to read memory>	
+		m_isIgnoreListValid	<Unable to read memory>	
+		m_isFileOpen	<Unable to read memory>	
++		m_filename	???	ATL::CStringT<char,StrTraitMFC_DLL<char,ATL::ChTraitsCRT<char>>>
+
+int CIMACDoc::GetVirtualVolumeCount()
+{
+	int fileCount = 0;
+	int vvCount = GetVVAttributeCount();
+	for (int i = 0; i < vvCount; i++){
+		CVVAttribute &vvAttr = GetVVAttributeRef(i);
+		fileCount += vvAttr.GetVVCount();
+	}
+	return fileCount; 
+}
+
+vvCount = 11
+
+fileCount = 13
+
+typedef struct load_timeslice_parm {
+	CIMACDoc* pDoc;
+	CTimeSlice* pTimeSlice;
+} LOAD_TIMESLICE_PARM;
+
+Where:
+
+class CTimeSlice : public CObject
+{
+public:
+	CTimeSlice(); 
+	virtual ~CTimeSlice();
+        // ...
+        void  SetSliceTime(int n){ m_sliceTime = n;}
+        // ...
+	BOOL  isActive()		 { return m_bActiveFlag; }
+	void  SetShowSliceFlag(BOOL flg) { m_bShowSliceFlag = flg; }
+	void  SetLoadSliceFlag(BOOL flg) { m_bLoadSliceFlag = flg; }
+	void  SetActiveFlag(BOOL flg)    { m_bActiveFlag = flg; }
+        // ...    
+}
+
+GetXplotCount()
+3
+
+CIMACApp *pApp = (CIMACApp *)AfxGetApp();
+
+-What is a virtual volume?
+
+CMapSelectDlg::OnPaint:
+
+if (pParent->GetShowAllUseLines() && pDoc->GetInlineXlineMode() == eUSERLINE && mapMode != eMAP_DIGITIZE && m_bMouseEnter) {
+        // ...
+}        
+
+Where:
+
+CMapSelectDlg *pParent;
+
+BOOL GetShowAllUseLines() {return m_showAllUserLines;}
+
+BOOL CChildFrame::PreCreateWindow(CREATESTRUCT& cs)
+{
+
+	cs.style &= ~(LONG)FWS_ADDTOTITLE;
+	cs.lpszName = "Classified Seismic Volume";
+
+	return CMDIChildWndEx::PreCreateWindow(cs);
+
+}
+
+ID_VIEW_VIEW1    "Classified Seismic Volume\nClassified Seismic Volume"
+
+	pDocTemplate->AddFrameTemplate(
+        new CFrameTemplate( 
+			menuID,
+            RUNTIME_CLASS( CChildFrame ), 
+            RUNTIME_CLASS( CIMACView ), 
+            ID_VIEW_VIEW1, 
+            SW_SHOWNORMAL, 
+            TRUE ) );
+
+ // Draw the timing lines at the specified "timingLine" interval.
+void CIMACView::DrawTimingLines(CDC *pDC, int timingLine)
+{
+	CIMACDoc* pDoc = GetDocument();
+	if (!pDoc->GetDisplayLinesDisplayToggle()) return;
+	int si = pDoc->GetSI();
+	int ixs = Time2Index(m_startTime, si);
+	if (timingLine == 10) {
+		pDC->SelectObject(m_normPen);
+	} else {
+		pDC->SelectObject(m_dotPen);
+	}
+	for (int i = m_startTime; i <= m_endTime; i++) {
+		int displayTime = i;
+		if (pDoc->IsPetrelTimeMode()) {
+			displayTime = -(displayTime - (int) pDoc->CalculatePetrelOffset(pDoc->GetPetrelDatum()));
+		}
+		if (displayTime != displayTime / timingLine * timingLine) continue;
+		float ixLine = Time2IndexFloat(i, si);
+		int iy = TOP + (int)((ixLine - ixs) * m_vScale);
+		if (timingLine == 10) {
+			// for 10 mil timing lines, draw our own dotted line
+			for (int j = SIDE; j < SIDE + m_nTotalTrace * m_hScale; j += 6) {
+				pDC->MoveTo(j, iy);
+				pDC->LineTo(j + 2, iy);
+			}
+		} else {
+			// draw the line using the DotPen
+			pDC->MoveTo(SIDE, iy);
+			pDC->LineTo(SIDE + m_nTotalTrace * m_hScale, iy);
+		}
+	}
+}
+       
+// Draw the timing line labels at the specified "timingLine" interval.
+void CIMACView::DrawTimingLineLabels(CDC *pDC, int timingLine)
+{
+
+	CRect rcItem;
+	CString strItem;
+	CIMACDoc* pDoc = GetDocument();
+	if (!pDoc->GetDisplayLinesDisplayToggle()) return;
+	int si = pDoc->GetSI();
+	int ixs = Time2Index(m_startTime, si);
+	int ixe = Time2Index(m_endTime, si);
+	for (int i = m_startTime; i <= m_endTime; i++) {
+		int displayTime = i;
+		if (pDoc->IsPetrelTimeMode()) {
+			displayTime = -(displayTime - (int) pDoc->CalculatePetrelOffset(pDoc->GetPetrelDatum()));
+		}
+		if (displayTime != displayTime / timingLine * timingLine) continue;
+		float ixLabel = Time2IndexFloat(i, si);
+		rcItem.left = 0;
+		rcItem.right = SIDE - DXY;
+		int iy = TOP + (int)((ixLabel - ixs) * m_vScale);
+		rcItem.top = iy - DXY;
+		rcItem.bottom = iy + DXY;
+		
+		
+		if (pDoc->IsPetrelTimeMode() && pDoc->GetFlatteningDisplayToggle() && pDoc->GetFlattenHorizonCheck())  strItem.Format("%d (%d)", displayTime, displayTime - (pDoc->GetFlatteningDatum()));
+		else if (pDoc->GetFlatteningDisplayToggle() && pDoc->GetFlattenHorizonCheck())  strItem.Format("%d (%d)", displayTime, displayTime - pDoc->GetFlatteningDatum());
+		else strItem.Format("%d", displayTime);
+
+		pDC->DrawText(strItem, -1, rcItem, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
+		rcItem.left = SIDE + m_nTotalTrace * m_hScale + DXY;
+		rcItem.right = rcItem.left + SIDE;
+		pDC->DrawText(strItem, -1, rcItem, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+	}
+}
+
+Where:
+
+for (int i = m_startTime; i <= m_endTime; i++) {
+        // ...
+        
+}
+
+m_startTime = 850
+m_endTime = 1050
+
+void CIMACDoc::ComputeSlice()
+{ 
+	clock_t start = clock();
+
+	int fileCount = GetFileCount();
+	if (fileCount == 0) return;
+
+	CTimeSlice *pTimeSlice = GetTimeSlicePtr();
+	if (!pTimeSlice->isShowSliceFlag() || pTimeSlice->isLoadSliceFlag()) return;
+	float *pSlice = pTimeSlice->GetSlicePtr();
+        // ...
+}    
+
+
+if (pWell->m_xline == xLine && pWell->m_inline == inLine) {
+        // ...
+}
+Where:
+
+pWell = 0x000001d00bcd0290 {m_fileName="Z:\\QI-Pro Demo\\Horn River Demo\\Wells\\Well 1_logs.las" header="~VERSION INFORMATION\n VERS.                          2.0   : CWLS LOG ASCII STANDARD - VERSION 2.0\n WRAP.                          NO    : ONE LINE PER DEPTH..."
+
+if (!pDoc->m_bDrawFlag || m_nTrace == 0) {
+    // ...
+}        

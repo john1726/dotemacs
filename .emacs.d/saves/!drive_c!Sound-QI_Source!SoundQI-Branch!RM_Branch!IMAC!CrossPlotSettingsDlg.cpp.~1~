@@ -1,0 +1,1358 @@
+// XplotParameterDlg.cpp : implementation file
+//
+
+#include "stdafx.h"
+#include "imac.h"
+#include "CrossPlotSettingsDlg.h"
+#include "ScanDlg.h"
+#include "cutoffLineDlg.h"
+#include "MessageBoxDlg.h"
+#include "../common/SegyUtil.h"
+#include "../common/CUtil.h"
+#include "../common/CppUtil.h"
+#include "../common/Utilities.h"
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+// CXplotParameterDlg dialog
+
+
+CCrossPlotSettingsDlg::CCrossPlotSettingsDlg(CWnd* pParent /*=NULL*/)
+	: CDialog(CCrossPlotSettingsDlg::IDD, pParent)
+{
+	m_xMin = 0;
+	m_xMax = 0;
+	m_yMin = 0;
+	m_yMax = 0;
+	m_ImageFile = _T("");
+	m_strXAttr = _T("");
+	m_strTitleBox = _T("");
+	m_strYAttr = _T("");
+	m_bDisableImage = FALSE;
+	m_bFineTuneMode = FALSE;
+	m_nScatter = 1;
+	m_xLabelInterval = 0;
+	m_yLabelInterval = 0;
+	m_xTickInterval = 0;
+	m_yTickInterval = 0;
+	m_title = _T("");
+	m_dotSize = 2;
+	m_nScatterMode = 0;
+	m_binXsize = 0.0f;
+	m_binYsize = 0.0f;
+	m_colorBarMin = 0;
+	m_colorBarMax = 0;
+	m_strColorAttr = _T("");
+	m_attrColorBarMin = 0.0;
+	m_attrColorBarMax = 0.0;
+	m_viewInstance = 0;
+	m_csiXstate = FALSE;
+	m_csiYstate = FALSE;
+	m_fileCount = 0;
+	m_applied = false;
+	m_cutoffsChanged = false;
+	m_fromAA = false;
+}
+
+
+void CCrossPlotSettingsDlg::DoDataExchange(CDataExchange* pDX)
+{
+    CDialog::DoDataExchange(pDX);
+    DDX_Control(pDX, IDC_CUTOFF_LIST, m_lstCutoffLines);
+    DDX_Control(pDX, IDC_CUTOFF_DELETE, m_btnCutoffDelete);
+    DDX_Control(pDX, IDC_CUTOFF_ADD, m_btnCutoffAdd);
+    DDX_Control(pDX, IDC_X_SCAN, m_btnScanXAttr);
+    DDX_Control(pDX, IDC_Y_SCAN, m_btnScanYAttr);
+    DDX_Control(pDX, IDC_ATTRIBUTE_SCAN, m_btnScanAttribute);
+    DDX_Control(pDX, IDC_X_COMBO, m_xAttrCombo);
+    DDX_Control(pDX, IDC_Y_COMBO, m_yAttrCombo);
+    DDX_Control(pDX, IDC_CSI_X_CHECK, m_btnCSIX);
+    DDX_Control(pDX, IDC_CSI_Y_CHECK, m_btnCSIY);
+    DDX_Control(pDX, IDC_BUTTON1, m_ImageBrowse);
+    DDX_Text(pDX, IDC_X_MIN, m_xMin);
+    DDX_Text(pDX, IDC_X_MAX, m_xMax);
+    DDX_Text(pDX, IDC_Y_MIN, m_yMin);
+    DDX_Text(pDX, IDC_Y_MAX, m_yMax);
+    DDX_Text(pDX, IDC_EDIT5, m_ImageFile);
+    DDX_Check(pDX, IDC_CHECK1, m_bDisableImage);
+    DDX_Text(pDX, IDC_EDIT_SCATTER_DECIMATION, m_nScatter);
+    DDX_Text(pDX, IDC_EDIT15, m_xLabelInterval);
+    DDX_Text(pDX, IDC_EDIT17, m_yLabelInterval);
+    DDX_Text(pDX, IDC_EDIT16, m_xTickInterval);
+    DDX_Text(pDX, IDC_EDIT18, m_yTickInterval);
+    DDX_Text(pDX, IDC_EDIT13, m_title);
+    DDX_Text(pDX, IDC_EDIT_DOTSIZE, m_dotSize);
+    DDV_MinMaxInt(pDX, m_dotSize, 1, 20);
+    DDX_Radio(pDX, IDC_RADIO_CLASS, m_nScatterMode);
+    DDX_Text(pDX, IDC_EDIT_BINX, m_binXsize);
+    DDX_Text(pDX, IDC_EDIT_BINY, m_binYsize);
+    DDX_Text(pDX, IDC_EDIT_COLOR_MIN, m_colorBarMin);
+    DDX_Text(pDX, IDC_EDIT_COLOR_MAX, m_colorBarMax);
+    DDX_Check(pDX, IDC_CHECKFINETUNE, m_bFineTuneMode);
+    DDX_Control(pDX, IDC_ATTRIBUTE_COMBO, m_thirdAttribute);
+	DDX_Control(pDX, IDC_COLORMAP_COMBO, m_cmbColorTemplate);
+    DDX_Text(pDX, IDC_EDIT_AMPMIN, m_attrColorBarMin);
+    DDX_Text(pDX, IDC_EDIT_AMPMAX, m_attrColorBarMax);
+    DDX_Check(pDX, IDC_CSI_X_CHECK, m_csiXstate);
+    DDX_Check(pDX, IDC_CSI_Y_CHECK, m_csiYstate);
+}
+
+
+BEGIN_MESSAGE_MAP(CCrossPlotSettingsDlg, CDialog)
+	ON_BN_CLICKED(IDC_BUTTON1, OnBrowse)
+	ON_BN_CLICKED(IDC_X_SCAN, OnScanXattr)
+	ON_BN_CLICKED(IDC_Y_SCAN, OnScanYattr)
+	ON_BN_CLICKED(IDC_X_DEFAULT_SPACING, OnDefaultSettingsXattr)
+	ON_BN_CLICKED(IDC_Y_DEFAULT_SPACING, OnDefaultSettingsYattr)
+	ON_BN_CLICKED(IDC_ATTRIBUTE_SCAN, OnScanAttribute)
+	ON_BN_CLICKED(IDC_CSI_X_CHECK, OnCSIXCheck)
+	ON_BN_CLICKED(IDC_CSI_Y_CHECK, OnCSIYCheck)
+	ON_BN_CLICKED(IDC_DELETE, OnDelete)
+	ON_BN_CLICKED(IDC_CUTOFF_ADD, OnCutoffAdd)
+	ON_BN_CLICKED(IDC_CUTOFF_DELETE, OnCutoffDelete)
+	ON_BN_CLICKED(IDC_RADIO_CLASS, OnRadioScatterMode)
+	ON_BN_CLICKED(IDC_RADIO_DEN, OnRadioScatterMode)
+	ON_BN_CLICKED(IDC_RADIO_ATTR, OnRadioScatterMode)
+	ON_BN_CLICKED(IDC_CUTOFF_MOVEDOWN, OnClickedCutoffMovedown)
+	ON_BN_CLICKED(IDC_CUTOFF_MOVEUP, OnClickedCutoffMoveup)
+	ON_BN_CLICKED(ID_CROSSPLOT_SETTINGS_HELP, OnClickedHelp)
+	ON_BN_CLICKED(IDC_APPLY, OnClickedApply)
+	ON_EN_KILLFOCUS(IDC_EDIT_SCATTER_DECIMATION, OnKillfocusEditScatterDecimation)
+	ON_CBN_SELCHANGE(IDC_X_COMBO, OnSelchangeXCombo)
+	ON_CBN_SELCHANGE(IDC_Y_COMBO, OnSelchangeYCombo)
+	ON_CBN_SELCHANGE(IDC_ATTRIBUTE_COMBO, OnSelchangeAttributeCombo)
+	ON_CBN_SELCHANGE(IDC_COLORMAP_COMBO, OnSelchangeColorBarTemplateCombo)
+	ON_NOTIFY(LVN_ITEMCHANGED, IDC_CUTOFF_LIST, OnItemchangedCutoffList)
+	ON_NOTIFY(HDN_ENDTRACK, 0, OnEndtrackVvList)
+	ON_WM_SIZE()
+	ON_WM_GETMINMAXINFO()
+END_MESSAGE_MAP()
+
+/////////////////////////////////////////////////////////////////////////////
+// CXplotParameterDlg message handlers
+
+BOOL CCrossPlotSettingsDlg::OnInitDialog()
+{
+	int i;
+	CDialog::OnInitDialog();
+
+	SetWindowText(m_strTitleBox);
+
+	// populate the x and y attribute combo box drop down menus.
+	m_xAttrCombo.ResetContent();
+	m_yAttrCombo.ResetContent();
+	m_thirdAttribute.ResetContent();
+	m_cmbColorTemplate.ResetContent();
+
+	for ( i = 0; i < m_fileCount; i++) {
+		if (!m_attr[i].IsEmpty() && m_favorite[i] >= 0) {
+			m_xAttrCombo.AddString(m_attr[i]);
+			m_yAttrCombo.AddString(m_attr[i]);
+			m_thirdAttribute.AddString(m_attr[i]);
+		}
+	}
+	m_strTitleBox.Format("Crossplot %d Settings - %s", m_viewInstance + 1, m_parms.m_title);
+
+
+	int xselect = m_xAttrCombo.FindStringExact( -1, m_parms.m_strXAttr);
+	int yselect = m_yAttrCombo.FindStringExact( -1, m_parms.m_strYAttr);
+	int cselect = m_thirdAttribute.FindStringExact(-1, m_parms.m_strColorAttr);
+	m_xAttrCombo.SetCurSel(xselect);
+	m_yAttrCombo.SetCurSel(yselect);
+	m_thirdAttribute.SetCurSel(cselect);
+
+	if (xselect == CB_ERR) {
+		xselect = 0;
+		m_xAttrCombo.SetCurSel(xselect);
+		PopulateMinMax(&m_xAttrCombo, &m_xMin, &m_xMax);
+	}
+	else {
+		m_xMin = m_parms.m_fXMin;
+		m_xMax = m_parms.m_fXMax;
+	}
+	if (yselect == CB_ERR) {
+		yselect = 0;
+		m_yAttrCombo.SetCurSel(yselect);
+		PopulateMinMax(&m_yAttrCombo, &m_yMin, &m_yMax);
+	}
+	else {
+		m_yMin = m_parms.m_fYMin;
+		m_yMax = m_parms.m_fYMax;
+	}
+	if (cselect == CB_ERR) {
+		cselect = 0;
+		m_thirdAttribute.SetCurSel(cselect);
+		PopulateMinMax(&m_thirdAttribute, &m_attrColorBarMin, &m_attrColorBarMax);
+	}
+	else {
+		m_attrColorBarMin = m_parms.m_attrColorBarMin;
+		m_attrColorBarMax = m_parms.m_attrColorBarMax;
+	}
+
+	// first time disable the delete button
+	if (m_parms.m_strXAttr.IsEmpty() && m_parms.m_strYAttr.IsEmpty() ) {
+		CWnd *pDlgItem=GetDlgItem(IDC_DELETE);
+		pDlgItem->EnableWindow(FALSE);
+	}
+
+	m_ImageFile = m_parms.m_strImageFile;
+	m_bDisableImage = m_parms.m_bDisableImage;
+	m_bFineTuneMode = m_parms.m_bFineTuneMode;
+	m_nScatter = m_parms.m_nScatter;
+	m_xLabelInterval = m_parms.m_xLabelInterval;
+	m_yLabelInterval = m_parms.m_yLabelInterval;
+	m_xTickInterval = m_parms.m_xTickInterval;
+	m_yTickInterval = m_parms.m_yTickInterval;
+	m_title = m_parms.m_title;
+	m_dotSize = m_parms.m_dotSize;
+	m_nScatterMode = m_parms.m_nScatterMode;
+	m_binXsize = m_parms.m_binXsize;
+	m_binYsize = m_parms.m_binYsize;
+	m_colorBarMin = m_parms.m_colorBarMin;
+	m_colorBarMax = m_parms.m_colorBarMax;
+	m_csiXstate = m_parms.m_csiXstate;
+	m_csiYstate = m_parms.m_csiYstate;
+
+	CIMACDoc* pDoc = CIMACDoc::GetIMACDocPtr();
+	m_cmbColorTemplate.SetMaxColors(MAXCLASS);
+	m_cmbColorTemplate.SetClassCount(pDoc->GetClassCount());
+	m_cmbColorTemplate.SetProjectName(pDoc->GetProjectName());
+	m_cmbColorTemplate.SetTemplatesProjectDirectory(pDoc->GetProjectPath(), FALSE);
+	bool bScatter = m_nScatter > 0;
+	bool bDensity = bScatter && (m_nScatterMode == eDENSITY);
+	bool bAttr = bScatter && (m_nScatterMode == eATTR);
+	CString colorBarItemText;
+	m_colorbarName = m_parms.m_colorbarName;
+	m_densityColorBarCurSel = m_parms.m_densityColorBarCurSel;
+	m_thirdAttrColorBarCurSel = m_parms.m_thirdAttrColorBarCurSel;
+	bool isClassColors = FALSE;
+
+	m_cmbColorTemplate.SetCurSel(m_thirdAttrColorBarCurSel);
+	
+	if (bDensity) {
+		m_cmbColorTemplate.SetCurSel(m_densityColorBarCurSel);
+	}
+	UpdateData(FALSE);
+
+	// initialize the cutoff line list box
+	CRect rItem;
+	pDoc->SetColorbarOpenedFromCrossplotSettings(TRUE);
+	colorBarItemText = DEFAULT_CLASS_COLORBAR;
+	CArray<COLORREF> colorbarColors;
+	Utilities::LoadColorBar(colorBarItemText, pDoc->GetProjectPath(), colorbarColors, pDoc->GetClassCount());
+	m_lstCutoffLines.ResetSubItemColorArray();
+	m_colorList.RemoveAll();
+	COLORREF whiteColor = RGB(255, 255, 255);
+	
+	for (int i = 0; i < pDoc->GetClassCount(); i++) {
+		m_colorList.Add(colorbarColors[i]);
+		m_lstCutoffLines.SetSubitemColor(COL_CLASS_ABOVE_IN, i, colorbarColors[i]);
+		m_lstCutoffLines.SetSubitemColor(COL_CLASS_BELOW_OUT, i, colorbarColors[i]);
+		m_lstCutoffLines.SetSubitemColor(COL_APPLY, i, colorbarColors[i]);
+	}
+
+	m_lstCutoffLines.SetColoredSubitemRange(4,6);
+	m_lstCutoffLines.SetTextCol(COL_CLASS_ABOVE_IN);
+	m_lstCutoffLines.SetTextCol(COL_CLASS_BELOW_OUT);
+	m_lstCutoffLines.SetTextCol(COL_APPLY);
+	m_lstCutoffLines.m_colorComboMap.SetAt(COL_CLASS_ABOVE_IN, &m_colorList);
+	m_lstCutoffLines.m_colorComboMap.SetAt(COL_CLASS_BELOW_OUT, &m_colorList);
+	m_lstCutoffLines.m_colorComboMap.SetAt(COL_APPLY, &m_colorList);
+
+	m_lstCutoffLines.SetTextCol(COL_NAME);
+	m_lstCutoffLines.SetNumericCol(COL_GROUP);
+	m_lstCutoffLines.SetCheckBoxCol(COL_ENABLED);
+	m_lstCutoffLines.GetClientRect(rItem);
+
+	m_lstCutoffLines.InsertColumn(COL_ELEMENT, "Element",				LVCFMT_LEFT, rItem.Width() * 10 / 100);
+	m_lstCutoffLines.InsertColumn(COL_ENABLED,"Enable",					LVCFMT_LEFT, rItem.Width()*10/100);
+	m_lstCutoffLines.InsertColumn(COL_NAME,"Name",						LVCFMT_LEFT, rItem.Width()*10/100);
+	m_lstCutoffLines.InsertColumn(COL_TYPE,"Type",						LVCFMT_LEFT, rItem.Width()*10/100);
+	m_lstCutoffLines.InsertColumn(COL_CLASS_ABOVE_IN,"Class Above/In",	LVCFMT_LEFT, rItem.Width()*17/100);
+	m_lstCutoffLines.InsertColumn(COL_CLASS_BELOW_OUT,"Class Below/Out",LVCFMT_LEFT, rItem.Width()*18/100);
+    m_lstCutoffLines.InsertColumn(COL_APPLY,"Apply to",					LVCFMT_LEFT, rItem.Width()*10/100);
+    m_lstCutoffLines.InsertColumn(COL_GROUP,"Group",					LVCFMT_LEFT, rItem.Width()*10/100);
+
+	m_btnCSIX.ShowWindow(pDoc->IsCSIMode());
+	m_btnCSIY.ShowWindow(pDoc->IsCSIMode());
+
+	for (int i = 0; i < m_parms.m_cutoffParmsList.GetCount(); i++) {
+		CCutoffParms cutoff = m_parms.m_cutoffParmsList.GetAt(m_parms.m_cutoffParmsList.FindIndex(i));
+		m_cutoffParmsList.AddTail(cutoff);
+	}
+	CRect rect;
+	PopulateCutoffList();
+	UpdateEnableControls();
+	AdjustColumnWidth();
+	GetWindowRect(rect);
+	m_minSize.cx = rect.Width();
+	m_minSize.cy = rect.Height();
+
+	HICON hicon = AfxGetApp()->LoadIcon(IDI_CROSSPLOT_SETTINGS);
+	SetIcon(hicon, false);
+	return TRUE;
+}
+
+
+void CCrossPlotSettingsDlg::OnBrowse()
+{
+	CString fileFilter = "All Picture Files|*.png;*.jpg;*.tif;*.bmp;*.gif|";
+	fileFilter += "PNG Files (*.png)|*.png|";
+	fileFilter += "JPG Files (*.jpg)|*.jpg;*.jpeg|";
+	fileFilter += "TIF Files (*.tif)|*.tif;*.tiff|";
+	fileFilter += "BMP Files (*.bmp)|*.bmp|";
+	fileFilter += "GIF Files (*.gif)|*.gif|";
+	fileFilter += "All Files|*.*|";
+	UpdateData(TRUE);
+	CFileDialog fileDialog(TRUE, NULL, NULL, OFN_FILEMUSTEXIST, fileFilter, this);
+	if (fileDialog.DoModal() == IDOK)
+	{
+		m_ImageFile = fileDialog.GetPathName();
+	}
+	UpdateData(FALSE);
+}
+
+// populate the cutoff line list box
+void CCrossPlotSettingsDlg::PopulateCutoffList()
+{
+	m_lstCutoffLines.DeleteAllItems();
+
+	for (int i =0; i < m_cutoffParmsList.GetCount(); i++) {
+		CCutoffParms pCutoff = m_cutoffParmsList.GetAt(m_cutoffParmsList.FindIndex(i));
+		AddCutoffToList(i, pCutoff);
+	}
+}
+
+void CCrossPlotSettingsDlg::AddCutoffToList(int index, CCutoffParms& pCutoff)
+{
+	char ibuf[NBUF];
+	m_lstCutoffLines.InsertItem(index, _itoa(index + 1, ibuf, 10));
+	m_lstCutoffLines.SetCheckboxState(index, pCutoff.m_bEnabled);
+	m_lstCutoffLines.SetItem(index, COL_NAME, LVIF_TEXT, pCutoff.m_strCutoffName, 0, 0, 0, 0);
+	CString txt = (pCutoff.m_cutoffType == eLINE) ? _T("Line") :
+		(pCutoff.m_cutoffType == ePOLY) ? _T("Polygon") :
+		(pCutoff.m_cutoffType == eELLIPSE) ? _T("Ellipse") : _T("Undefined");
+	m_lstCutoffLines.SetItem(index, COL_TYPE, LVIF_TEXT, txt, 0, 0, 0, 0);
+	m_lstCutoffLines.SetItem(index, COL_CLASS_ABOVE_IN, LVIF_TEXT, _itoa(pCutoff.m_nClassAbove, ibuf, 10), 0, 0, 0, 0);
+	m_lstCutoffLines.SetItem(index, COL_CLASS_BELOW_OUT, LVIF_TEXT, _itoa(pCutoff.m_nClassBelow, ibuf, 10), 0, 0, 0, 0);
+	m_lstCutoffLines.SetItem(index, COL_APPLY, LVIF_TEXT, _itoa(pCutoff.m_applyTo, ibuf, 10), 0, 0, 0, 0);
+	m_lstCutoffLines.SetItem(index, COL_GROUP, LVIF_TEXT, _itoa(pCutoff.m_nGroupID, ibuf, 10), 0, 0, 0, 0);
+
+	COLORREF color = m_colorList[pCutoff.m_nClassAbove];
+	m_lstCutoffLines.SetSubitemColor(COL_CLASS_ABOVE_IN, index, color);
+	color = m_colorList[pCutoff.m_nClassBelow];
+	m_lstCutoffLines.SetSubitemColor(COL_CLASS_BELOW_OUT, index, color);
+	color = m_colorList[pCutoff.m_applyTo];
+	m_lstCutoffLines.SetSubitemColor(COL_APPLY, index, color);
+}
+
+void CCrossPlotSettingsDlg::OnScanXattr() 
+{
+    UpdateData(TRUE);
+    DoScan(&m_xAttrCombo, &m_xMin, &m_xMax);
+}
+
+void CCrossPlotSettingsDlg::OnScanYattr() 
+{
+    UpdateData(TRUE);
+    DoScan(&m_yAttrCombo, &m_yMin, &m_yMax);
+}
+
+void CCrossPlotSettingsDlg::OnDefaultSettingsXattr()
+{
+	UpdateData(TRUE);
+	m_xLabelInterval = NiceIncrement(m_xMax - m_xMin) / 5;
+	m_xTickInterval = NiceIncrement(m_xMax - m_xMin) / 10;
+	UpdateData(FALSE);
+}
+
+void CCrossPlotSettingsDlg::OnDefaultSettingsYattr()
+{
+	UpdateData(TRUE);
+	m_yLabelInterval = NiceIncrement(m_yMax - m_yMin) / 5;
+	m_yTickInterval = NiceIncrement(m_yMax - m_yMin) / 10;
+	UpdateData(FALSE);
+}
+
+void CCrossPlotSettingsDlg::OnScanAttribute()
+{
+    UpdateData(TRUE);
+    DoScan(&m_thirdAttribute, &m_attrColorBarMin, &m_attrColorBarMax);
+}
+
+void CCrossPlotSettingsDlg::DoScan(CComboBox *pCombo, float *pMin, float *pMax)
+{
+	CSegyUtil SegyUtil;
+	CIMACDoc* pDoc = CIMACDoc::GetIMACDocPtr();
+
+	int ix = pCombo->GetCurSel();
+	if (ix != CB_ERR) {
+		CString strAttr;
+		pCombo->GetLBText(ix, strAttr);
+		ix = FindAttrIndex(strAttr, m_attr);
+		if (ix >= 0) {
+			if (pDoc->GetAttributeIndex(strAttr) > -1) {
+				
+				if (pDoc->ScanMinMax(strAttr, 0, pMin, pMax) == 0) {
+					AfxMessageBox("No data found. Volume has not been loaded.");
+				}
+			}
+			else {
+				// scan virtual volume
+				for (int i = 0; i < pDoc->GetVirtualVolumeCount(); i++) {
+					if (pDoc->GetVirtualVolumeAttributeName(i) == strAttr) {
+						pDoc->LoadVirtualVolumes(NULL, NULL, &strAttr);
+						if (pDoc->ScanVirtualVolume(strAttr, 0, pMin, pMax) == 0) {
+							AfxMessageBox("No data found. Volume has not been loaded.");
+						}
+						break;
+					}
+				}
+			}
+		}
+	}
+	UpdateData(FALSE);
+}
+
+
+void CCrossPlotSettingsDlg::OnCSIXCheck() { UpdateEnableControls(); }
+void CCrossPlotSettingsDlg::OnCSIYCheck() { UpdateEnableControls(); }
+
+int CCrossPlotSettingsDlg::FindAttrIndex(CString strAttr, CString *arrAttr)
+{
+	int ix = -1;
+	for (int i = 0; i < NFILE; i++){
+		if (strAttr == arrAttr[i]){
+			ix = i;
+			break;
+		}
+	}
+	return ix;
+}
+
+void CCrossPlotSettingsDlg::OnDelete() 
+{
+	if (AfxMessageBox("Delete this crossplot and all associated settings?", MB_YESNO)==IDYES) {
+		EndDialog(IDDELETE);
+	}
+}
+
+void CCrossPlotSettingsDlg::OnCutoffAdd() 
+{
+	SaveActiveData();
+	CCutoffLineDlg dlg;
+	CString msg;
+	
+	dlg.m_nCutoffNumber = (int)m_cutoffParmsList.GetCount() + 1;
+	if (dlg.DoModal() == IDCANCEL) return;
+	int newCutoffNumber = dlg.m_nCutoffNumber - 1;
+	
+	if (newCutoffNumber < 0) {
+		msg.Format("Cutoff number can't be 0. It has been reset to 1.");
+		AfxMessageBox(msg);
+		newCutoffNumber = 0;
+	}
+
+	if (newCutoffNumber > m_cutoffParmsList.GetCount()) {
+		msg.Format("Cutoff number is too big. It has been reset to %d.", m_cutoffParmsList.GetCount() + 1);
+		AfxMessageBox(msg);
+		newCutoffNumber = (int)m_cutoffParmsList.GetCount();
+	}
+
+	CCutoffParms newCutoff;
+	newCutoff.m_nClassAbove   = dlg.m_selectedClassAbove;
+	newCutoff.m_nClassBelow   = dlg.m_selectedClassBelow;
+    newCutoff.m_applyTo       = dlg.m_selectedApplyClass;
+	newCutoff.m_strCutoffName = dlg.m_strCutoffName;
+	newCutoff.m_cutoffType    = dlg.m_cutoffType;
+
+	if (newCutoffNumber == 0) {
+		m_cutoffParmsList.AddHead(newCutoff);
+	} else if (newCutoffNumber == m_cutoffParmsList.GetCount()) {
+		m_cutoffParmsList.AddTail(newCutoff);
+	} else {
+		m_cutoffParmsList.InsertBefore(m_cutoffParmsList.FindIndex(newCutoffNumber), newCutoff);
+	}
+
+	PopulateCutoffList();
+	AdjustColumnWidth();
+	m_cutoffsChanged = true;
+
+	// disable the apply button when adding cutoffs
+	GetDlgItem(IDC_APPLY)->EnableWindow(FALSE);
+}
+
+void CCrossPlotSettingsDlg::OnCutoffDelete() 
+{
+	SaveActiveData();
+
+	POSITION pos = m_lstCutoffLines.GetFirstSelectedItemPosition();
+
+	if (pos == NULL) {
+		AfxMessageBox("No Cutoff Element selected. Please first select the Cutoff Element to delete.");
+		return;
+	}
+
+	CIntArray deleteList;
+
+	while (pos)
+	{
+		int nItem = m_lstCutoffLines.GetNextSelectedItem(pos);
+		deleteList.Add(nItem);
+	}
+
+	// delete from cutoff list, in reverse order.
+	for (int i = (int)deleteList.GetCount()-1; i >= 0; i--) {
+		int itemIndex = deleteList.GetAt(i);
+		m_cutoffParmsList.RemoveAt(m_cutoffParmsList.FindIndex(itemIndex));		
+	}
+
+	PopulateCutoffList();
+
+	bool needsDigitize = false;
+	for (int i = 0; i < m_lstCutoffLines.GetItemCount(); i++) {
+		CCutoffParms cutoff = m_cutoffParmsList.GetAt(m_cutoffParmsList.FindIndex(i));
+		if ((cutoff.m_cutoffType == ePOLY && !cutoff.m_bPolyCreated) ||
+			(cutoff.m_cutoffType == eELLIPSE && !cutoff.m_bPolyCreated))
+			needsDigitize = true;
+	}
+	
+	m_cutoffsChanged = true;
+	GetDlgItem(IDC_APPLY)->EnableWindow(!needsDigitize);
+}
+
+void CCrossPlotSettingsDlg::OnRadioScatterMode() 
+{
+	UpdateData(TRUE);
+	bool bScatter = m_nScatter > 0;
+	bool bDensity = bScatter && (m_nScatterMode == eDENSITY);
+	bool bAttr = bScatter && (m_nScatterMode == eATTR);
+
+	if (bAttr) {
+		m_cmbColorTemplate.SetCurSel(m_thirdAttrColorBarCurSel);
+	}
+	else if (bDensity) {
+		m_cmbColorTemplate.SetCurSel(m_densityColorBarCurSel);
+	}
+	
+	UpdateEnableControls();
+}
+
+void CCrossPlotSettingsDlg::OnEndtrackVvList(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMHEADER phdr = reinterpret_cast<LPNMHEADER>(pNMHDR);
+	CRect r;
+	AdjustColumnWidth();
+	m_lstCutoffLines.Invalidate();
+	*pResult = 0;
+}
+
+void CCrossPlotSettingsDlg::UpdateEnableControls() {
+	CIMACDoc *pDoc = CIMACDoc::GetIMACDocPtr();
+	
+	UpdateData(TRUE);
+
+	bool bScatter = m_nScatter > 0;
+	bool bDensity = bScatter && (m_nScatterMode==eDENSITY);
+	bool bAttr = bScatter && (m_nScatterMode == eATTR);
+
+	GetDlgItem(IDC_STATIC_DOTSIZE)->EnableWindow(bScatter);
+	GetDlgItem(IDC_EDIT_DOTSIZE)->EnableWindow(bScatter);
+	GetDlgItem(IDC_STATIC_COLOR_MODE)->EnableWindow(bScatter);
+	GetDlgItem(IDC_RADIO_CLASS)->EnableWindow(bScatter);
+	GetDlgItem(IDC_RADIO_DEN)->EnableWindow(bScatter);
+	GetDlgItem(IDC_RADIO_ATTR)->EnableWindow(bScatter);
+
+	GetDlgItem(IDC_STATIC_BIN_X)->EnableWindow(bDensity);
+	GetDlgItem(IDC_STATIC_BIN_Y)->EnableWindow(bDensity);
+	GetDlgItem(IDC_EDIT_BINX)->EnableWindow(bDensity);
+	GetDlgItem(IDC_EDIT_BINY)->EnableWindow(bDensity);
+	
+	GetDlgItem(IDC_STATIC_COLOR_MIN)->EnableWindow(bDensity);
+	GetDlgItem(IDC_STATIC_COLOR_MAX)->EnableWindow(bDensity);
+	GetDlgItem(IDC_EDIT_COLOR_MIN)->EnableWindow(bDensity);
+	GetDlgItem(IDC_EDIT_COLOR_MAX)->EnableWindow(bDensity);
+
+	GetDlgItem(IDC_STATIC_COLOR_MAX2)->EnableWindow(bAttr || bDensity);
+	GetDlgItem(IDC_COLORMAP_COMBO)->EnableWindow(bAttr || bDensity);
+	
+	GetDlgItem(IDC_ATTRIBUTE_COMBO)->EnableWindow(bAttr);
+	GetDlgItem(IDC_STATIC_ATTR)->EnableWindow(bAttr);
+	GetDlgItem(IDC_EDIT_AMPMIN)->EnableWindow(bAttr);
+	GetDlgItem(IDC_EDIT_AMPMAX)->EnableWindow(bAttr);
+	GetDlgItem(IDC_STATIC_ATTR_MIN)->EnableWindow(bAttr);
+	GetDlgItem(IDC_STATIC_ATTR_MAX)->EnableWindow(bAttr);
+	GetDlgItem(IDC_ATTRIBUTE_SCAN)->EnableWindow(bAttr);
+
+	//set the color flag, so the view can use the new colormap
+	DWORD theMagicBit = 0x1 << (m_viewInstance + 2);
+	pDoc->m_bNewColorFlag |= theMagicBit;		// turn on the update bit
+
+	UpdateData(TRUE);
+
+	// CSI mode...
+	GetDlgItem(IDC_X_COMBO)->EnableWindow(!m_csiXstate);
+	GetDlgItem(IDC_Y_COMBO)->EnableWindow(!m_csiYstate);
+	GetDlgItem(IDC_X_SCAN)->EnableWindow(!m_csiXstate);
+	GetDlgItem(IDC_Y_SCAN)->EnableWindow(!m_csiYstate);
+	GetDlgItem(IDC_X_MIN)->EnableWindow(!m_csiXstate);
+	GetDlgItem(IDC_Y_MIN)->EnableWindow(!m_csiYstate);
+	GetDlgItem(IDC_X_MAX)->EnableWindow(!m_csiXstate);
+	GetDlgItem(IDC_Y_MAX)->EnableWindow(!m_csiYstate);
+
+
+	if(bDensity) {
+		if(m_binXsize == 0) {
+			// use a reasonable default
+			m_binXsize = (m_xMax - m_xMin) / 25.0f;
+		}
+		if(m_binYsize == 0) {
+			// use a reasonable default
+			m_binYsize = (m_yMax - m_yMin) / 25.0f;
+		}
+	}
+	UpdateData(FALSE);
+}
+
+void CCrossPlotSettingsDlg::SaveActiveData()
+{	
+	for (int i = 0; i < m_cutoffParmsList.GetCount(); i++) {
+		CCutoffParms newCutoff = m_cutoffParmsList.GetAt(m_cutoffParmsList.FindIndex(i));
+		newCutoff.m_strCutoffName = m_lstCutoffLines.GetItemText(i, COL_NAME);
+		newCutoff.m_nClassAbove = atoi(m_lstCutoffLines.GetItemText(i, COL_CLASS_ABOVE_IN));
+		newCutoff.m_nClassBelow = atoi(m_lstCutoffLines.GetItemText(i, COL_CLASS_BELOW_OUT));
+		newCutoff.m_applyTo = atoi(m_lstCutoffLines.GetItemText(i, COL_APPLY));
+		newCutoff.m_nGroupID = atoi(m_lstCutoffLines.GetItemText(i, COL_GROUP));
+		CString txt = m_lstCutoffLines.GetItemText(i, COL_TYPE);
+		newCutoff.m_cutoffType = (txt == "Line") ? eLINE : (txt == "Polygon") ? ePOLY : eELLIPSE;
+		newCutoff.m_bEnabled = m_lstCutoffLines.GetCheckboxState(i);
+
+		m_cutoffParmsList.SetAt(m_cutoffParmsList.FindIndex(i), newCutoff);
+	}
+}
+
+void CCrossPlotSettingsDlg::OnClickedCutoffMovedown()
+{
+	SaveActiveData();
+	int nItem = m_lstCutoffLines.GetNextItem(-1, LVNI_SELECTED);
+	if (nItem<0) {
+		AfxMessageBox("No Cutoff element selected. Please first select the element to move.");
+		return;
+	} 
+	if (nItem == m_cutoffParmsList.GetCount() - 1) return;
+	
+	FlipItems(nItem);
+	m_lstCutoffLines.SetItemState(nItem,   ~LVIS_SELECTED, LVIS_SELECTED);
+	m_lstCutoffLines.SetItemState(nItem+1,  LVIS_SELECTED, LVIS_SELECTED);
+	m_lstCutoffLines.SetSelectionMark(nItem+1);
+	m_cutoffsChanged = true;
+}
+
+
+void CCrossPlotSettingsDlg::OnClickedCutoffMoveup()
+{
+	SaveActiveData();
+	int nItem = m_lstCutoffLines.GetNextItem(-1, LVNI_SELECTED);
+	if (nItem<0) {
+		AfxMessageBox("No Cutoff element selected. Please first select the element to move.");
+		return;
+	} 
+	if (nItem == 0) return;
+
+	FlipItems(nItem-1);
+	m_lstCutoffLines.SetItemState(nItem  , ~LVIS_SELECTED, LVIS_SELECTED);
+	m_lstCutoffLines.SetItemState(nItem-1,  LVIS_SELECTED, LVIS_SELECTED);
+	m_lstCutoffLines.SetSelectionMark(nItem-1);
+	m_cutoffsChanged = true;
+}
+
+void CCrossPlotSettingsDlg::OnClickedHelp()
+{
+	CCppUtil::OpenURL(CIMACApp::URL_HELP_CROSSPLOT_SETTINGS);
+}
+
+void CCrossPlotSettingsDlg::FlipItems(int nItem)
+{
+
+	CCutoffParms newCutoff1 = m_cutoffParmsList.GetAt(m_cutoffParmsList.FindIndex(nItem));
+	CCutoffParms newCutoff2 = m_cutoffParmsList.GetAt(m_cutoffParmsList.FindIndex(nItem+1));
+	m_cutoffParmsList.SetAt(m_cutoffParmsList.FindIndex(nItem), newCutoff2);
+	m_cutoffParmsList.SetAt(m_cutoffParmsList.FindIndex(nItem+1), newCutoff1);
+	PopulateCutoffList();
+}
+
+
+void CCrossPlotSettingsDlg::OnKillfocusEditScatterDecimation()
+{
+	UpdateData(TRUE);
+	UpdateEnableControls();
+}
+
+
+void CCrossPlotSettingsDlg::OnSelchangeXCombo()
+{
+	UpdateData(TRUE);
+	PopulateMinMax(&m_xAttrCombo, &m_xMin, &m_xMax);
+	UpdateData(FALSE);
+}
+
+
+void CCrossPlotSettingsDlg::OnSelchangeYCombo()
+{
+	UpdateData(TRUE);
+	PopulateMinMax(&m_yAttrCombo, &m_yMin, &m_yMax);
+	UpdateData(FALSE);
+}
+
+void CCrossPlotSettingsDlg::OnSelchangeAttributeCombo()
+{
+	UpdateData(TRUE);
+	PopulateMinMax(&m_thirdAttribute, &m_attrColorBarMin, &m_attrColorBarMax);
+	UpdateData(FALSE);
+}
+
+void CCrossPlotSettingsDlg::OnSelchangeColorBarTemplateCombo()
+{
+
+	UpdateData(TRUE);
+	CIMACDoc* pDoc = CIMACDoc::GetIMACDocPtr();
+	bool bScatter = m_nScatter > 0;
+	bool bDensity = bScatter && (m_nScatterMode == eDENSITY);
+	
+	// Save the selected color bar template item
+	if (bDensity) {
+		m_densityColorBarCurSel = m_cmbColorTemplate.GetCurSel();
+		UpdateDensityColorsFromColorComboValue(pDoc);
+	}
+	else {
+		CString colorBarItemText;
+		m_thirdAttrColorBarCurSel = m_cmbColorTemplate.GetCurSel();
+		int n = m_cmbColorTemplate.GetLBTextLen(m_thirdAttrColorBarCurSel);
+		m_cmbColorTemplate.GetLBText(m_thirdAttrColorBarCurSel,
+			colorBarItemText.GetBuffer(n));
+		m_colorbarName = colorBarItemText;
+		CArray<COLORREF> colorbarColors;
+		CString colorBarTemplateFile = colorBarItemText;
+		Utilities::LoadColorBar(colorBarTemplateFile, pDoc->GetProjectPath(), colorbarColors, pDoc->GetClassCount());
+
+		char buffer[BUFSIZE];
+		char delimiters[] = " ,\t\n";
+		CString msg;
+		const CString fname = m_cmbColorTemplate.GetSelectedColorbarFile();
+		const CString appDataDir = Utilities::GetAppDataDirectory();
+		const CString resourcesDirectory = appDataDir + "ColorBarTemplates";
+		int newCount = 0;
+
+		// Get color bar templates for this project directory
+		if (fname == DEFAULT_CLASS_COLORBAR) {
+			const CString projectDirectory = pDoc->GetProjectFullPath();
+			const int projectsPos = projectDirectory.Find("Projects");
+
+			if (projectsPos != -1) {
+				const CString projectRootDirectory = projectDirectory.Left(projectsPos);
+				const CString filePath = projectRootDirectory + fname;
+
+				if (GetFileAttributes(filePath) != INVALID_FILE_ATTRIBUTES) {
+					FILE* pf;
+
+					if ((pf = fopen(filePath, "r")) == NULL) {
+						msg.Format("Cannot open file %s", fname);
+						AfxMessageBox(msg);
+						return;
+					}
+					int red, grn, blu;
+					CString className;
+					while (!feof(pf)) {
+						memset(buffer, 0, BUFSIZE);
+						if (fgets(buffer, BUFSIZE, pf) == NULL) {
+							if (ferror(pf)) {
+								msg.Format("Error reading file %s", fname);
+								AfxMessageBox(msg);
+								fclose(pf);
+								return;
+							}
+							continue; // eof
+						}
+						char* token = strtok(buffer, delimiters);
+						if (token) {
+							sscanf(token, "%d", &red);
+							token = strtok(NULL, delimiters);
+						}
+						if (token) {
+							sscanf(token, "%d", &grn);
+							token = strtok(NULL, delimiters);
+						}
+						if (token) {
+							sscanf(token, "%d", &blu);
+						}
+						else {
+							continue;
+						}
+						char* p = &token[strlen(token) + 1];
+						if (strlen(p) > 0) {
+							className = p;
+						}
+						else {
+							className.Empty();
+						}
+						if (newCount > MAXCLASS) {
+							CString msg;
+							msg.Format("maximum colors allowed: %d", MAXCLASS);
+							AfxMessageBox(msg);
+							newCount = MAXCLASS;
+							break;
+						}
+						colorbarColors[newCount] = RGB(red, grn, blu);
+						if (!pDoc->IsThirdAttributeMode(pDoc->GetViewInstance()) && !pDoc->IsColorbarOpenedFromCSI()) {
+							pDoc->SetClassName(newCount, className);
+						}
+						newCount++;
+					}
+					fclose(pf);
+				}
+			}
+		}
+		else {
+			CString msg;
+			CStdioFile cFile;
+			CStringArray cbFileContents;
+			CStringArray fileContents;
+			const int extensionPos = fname.Find(".");
+			CString rootName = fname.Left(extensionPos);
+			CString inputFilePath = resourcesDirectory + "\\" + rootName + ".txt";
+
+			if (cFile.Open(inputFilePath, CFile::modeRead) == FALSE) {
+				msg.Format("Cannot open file %s", inputFilePath);
+				AfxMessageBox(msg);
+				return;
+			}
+
+			// Get number of lines in the source file
+			int templateSrcLineCount = 0;
+			CString row;
+			try {
+				while (cFile.ReadString(row))
+				{
+					templateSrcLineCount++;
+					fileContents.Add(row);
+				}
+			}
+			catch (CFileException& ex) {
+				TCHAR   szCause[255];
+				ex.GetErrorMessage(szCause, 255);
+				AfxMessageBox(szCause);
+			}
+			const int linesToSkip = templateSrcLineCount / pDoc->GetClassCount();
+
+			// Write template to *.cb file based on number of classes
+			CString line;
+			try {
+				int k = 0;
+				for (int j = 0; j < fileContents.GetCount(); j++) {
+					if (j % linesToSkip == 0) {
+						if (k < fileContents.GetCount()) {
+							line = fileContents[j];
+							line = line.TrimRight();
+							line.Append("\r\n");
+							cbFileContents.Add(line);
+						}
+						k++;
+					}
+				}
+			}
+			catch (CFileException& ex) {
+				TCHAR   szCause[255];
+				ex.GetErrorMessage(szCause, 255);
+				AfxMessageBox(szCause);
+			}
+
+			for (int i = 0; i < cbFileContents.GetCount() && i < pDoc->GetClassCount(); i++) {
+				const CString sFrom = cbFileContents[i];
+
+				int j = 0;
+				CStringArray saItems;
+				int nTokenPos = 0;
+				CString strToken = sFrom.Tokenize(_T("\t "), nTokenPos);
+
+				while (!strToken.IsEmpty())
+				{
+					if (strToken != " ") {
+						saItems.Add(strToken);
+					}
+					strToken = sFrom.Tokenize(_T("\t "), nTokenPos);
+				}
+				CString className;
+
+
+				if (saItems.GetCount() >= 3) {
+					int red = atoi(saItems[0]);
+					int grn = atoi(saItems[1]);
+					int blu = atoi(saItems[2]);
+					colorbarColors.Add(RGB(red, grn, blu));
+				}
+
+				if (saItems.GetCount() >= 4) {
+					for (int j = 3; j < saItems.GetCount(); j++) {
+						className = saItems[j] + " ";
+					}
+				}
+
+				if (newCount > MAXCLASS) {
+					CString msg;
+					msg.Format("maximum colors allowed: %d", MAXCLASS);
+					AfxMessageBox(msg);
+					newCount = MAXCLASS;
+					break;
+				}
+
+				if (newCount < MAXCLASS &&
+					pDoc->IsThirdAttributeMode(pDoc->GetViewInstance()) && !pDoc->IsColorbarOpenedFromCSI()) {
+					pDoc->SetClassName(newCount, className);
+				}
+				newCount++;
+			}
+		}
+		// Set view
+		pDoc->SetViewInstance(m_viewInstance);
+
+		//set the color flag, so the view can use the new colormap
+		DWORD theMagicBit = 0x1 << (m_viewInstance + 2);
+		pDoc->m_bNewColorFlag |= theMagicBit;		// turn on the update bit
+		UpdateData(FALSE);
+	}
+}
+
+void CCrossPlotSettingsDlg::PopulateMinMax(CComboBox *pCombo, float *pMin, float *pMax)
+{
+    CIMACDoc *pDoc = CIMACDoc::GetIMACDocPtr();
+	int ix = pCombo->GetCurSel();
+	if (ix != CB_ERR) {
+		CString strAttr;
+		pCombo->GetLBText(ix, strAttr);
+		ix = FindAttrIndex(strAttr, m_attr);
+		if (ix >= 0) {
+			if (!m_file[ix].IsEmpty()) {
+				*pMin = pDoc->GetScanMinMax(ix).min;
+				*pMax = pDoc->GetScanMinMax(ix).max;
+			} else {
+				// find the virtual volume
+				for (int i = 0; i < pDoc->GetVirtualVolumeCount(); i++){
+					if (pDoc->GetVirtualVolumeAttributeName(i) == strAttr) {
+						*pMin = pDoc->GetVirtualVolumeMinMax(strAttr).min;
+						*pMax = pDoc->GetVirtualVolumeMinMax(strAttr).max;
+						break;
+					}
+
+				}
+			}
+		}
+	}
+}
+
+void CCrossPlotSettingsDlg::OnClickedColormap()
+{
+	CIMACDoc *pDoc = CIMACDoc::GetIMACDocPtr();
+	pDoc->SetViewInstance(m_viewInstance);
+
+	//set the color flag, so the view can use the new colormap
+	DWORD theMagicBit = 0x1 << (m_viewInstance + 2);
+	pDoc->m_bNewColorFlag |= theMagicBit;		// turn on the update bit
+
+	AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_EDIT_COLORBAR);
+	OnOK();
+}
+
+void CCrossPlotSettingsDlg::AdjustColumnWidth()
+{
+	// Check if list controls have been created. Grab the list controls from the
+// the view and check if they have been created. Crashes without this test since
+// OnSize() is called before the view is created.
+	CEditListCtrl* pCutOffList;
+	CRect tRect;
+
+	pCutOffList = (CEditListCtrl*)GetDlgItem(IDC_CUTOFF_LIST);
+	GetClientRect(&tRect);
+
+	// Adjust second column width with window change while keeping the rest of the column the same width
+	if (pCutOffList) {
+
+		LVCOLUMN col0, col1, col2, col3, col4, col5, col6, col7;
+		col0.mask = LVCF_WIDTH;
+		col1.mask = LVCF_WIDTH;
+		col2.mask = LVCF_WIDTH;
+		col3.mask = LVCF_WIDTH;
+		col4.mask = LVCF_WIDTH;
+		col5.mask = LVCF_WIDTH;
+		col6.mask = LVCF_WIDTH;
+		col7.mask = LVCF_WIDTH;
+
+		CRect r;
+		m_lstCutoffLines.GetClientRect(r);
+		
+		m_lstCutoffLines.GetColumn(COL_ELEMENT, &col0);
+		m_lstCutoffLines.GetColumn(COL_ENABLED, &col1);
+		m_lstCutoffLines.GetColumn(COL_NAME, &col2);
+		m_lstCutoffLines.GetColumn(COL_TYPE, &col3);
+		m_lstCutoffLines.GetColumn(COL_CLASS_ABOVE_IN, &col4);
+		m_lstCutoffLines.GetColumn(COL_CLASS_BELOW_OUT, &col5);
+		m_lstCutoffLines.GetColumn(COL_APPLY, &col6);
+		m_lstCutoffLines.GetColumn(COL_GROUP, &col7);
+		col2.cx = r.Width() - (col0.cx + col1.cx + col3.cx + col4.cx + col5.cx + col6.cx + col7.cx);
+		m_lstCutoffLines.SetColumn(COL_NAME, &col2);
+	}
+}
+
+
+void CCrossPlotSettingsDlg::OnSize(UINT nType, int cx, int cy)
+{
+	AdjustColumnWidth();
+
+	CDialog::OnSize(nType, cx, cy);
+
+}
+
+void CCrossPlotSettingsDlg::OnOK()
+{
+	if (!IsValid()) {
+		return;
+	}
+	if (HasWarnings()) {
+		return;
+	}
+	ApplyChanges();
+	CIMACDoc* pDoc = CIMACApp::GetDocument();
+	pDoc->SetColorbarOpenedFromCrossplotSettings(FALSE);
+
+	CDialog::OnOK();
+}
+
+void CCrossPlotSettingsDlg::OnClickedApply()
+{
+	if (!IsValid()) {
+		return;
+	}
+	if (HasWarnings()) {
+		return;
+	}
+	ApplyChanges();
+}
+
+void CCrossPlotSettingsDlg::ApplyChanges()
+{
+	CIMACDoc* pDoc = CIMACApp::GetDocument();
+	UpdateDensityColorsFromColorComboValue(pDoc);	
+	CXplotParms* m_oldParms = pDoc->GetXplotParms(m_viewInstance);
+	UpdateAppliedParms(*m_oldParms);
+	m_applied = true;
+	UpdateCrossplot(*m_oldParms, m_appliedParms);
+}
+
+
+void CCrossPlotSettingsDlg::OnCancel()
+{
+	if (m_applied) {
+		// need to undo the applied changes
+		UpdateCrossplot(m_appliedParms, m_parms);
+	}
+	CIMACDoc* pDoc = CIMACApp::GetDocument();
+	pDoc->SetColorbarOpenedFromCrossplotSettings(FALSE);
+	CDialog::OnCancel();
+}
+
+void CCrossPlotSettingsDlg::UpdateCrossplot(CXplotParms& oldParms, CXplotParms& newParms)
+{
+	CIMACDoc* pDoc = CIMACApp::GetDocument();
+
+	// check if the axis volumes have changed. We'll need this to build the HW workflow.
+	BOOL changedFlag = FALSE;
+	if (oldParms.m_strXAttr != newParms.m_strXAttr ||
+		oldParms.m_strYAttr != newParms.m_strYAttr) {
+		changedFlag = TRUE;
+	}
+
+	// Check if the crossplot density mode has to be updated
+	if (oldParms.m_strXAttr != newParms.m_strXAttr ||
+		oldParms.m_strYAttr != newParms.m_strYAttr ||
+		oldParms.m_binXsize != newParms.m_binXsize ||
+		oldParms.m_binYsize != newParms.m_binYsize)
+	{
+		newParms.SetDensityModeUpdateFlag(TRUE);
+	}
+
+	bool bLoadFlag = false;
+	if (oldParms.m_strXAttr != newParms.m_strXAttr ||
+		oldParms.m_strYAttr != newParms.m_strYAttr ||
+		(newParms.m_nScatterMode == eATTR && oldParms.m_strColorAttr != newParms.m_strColorAttr)) {
+		bLoadFlag = true;
+	}
+
+	newParms.m_bDeleteUndoStack = m_cutoffsChanged || changedFlag ||
+		oldParms.m_fXMin != newParms.m_fXMin || oldParms.m_fYMin != newParms.m_fYMin ||
+		oldParms.m_fXMax != newParms.m_fXMax || oldParms.m_fYMax != newParms.m_fYMax;
+
+	pDoc->SetXplotParms(m_viewInstance, &newParms);
+	if (bLoadFlag) pDoc->LoadData();
+	pDoc->SetUpdateXplotPaneFlagsAll(TRUE);
+	pDoc->SetReadyToCompute();
+	pDoc->UpdateViews();
+
+	// if HW mode and crossplot axis have been changed then update the workflow.
+	if (changedFlag && !m_fromAA)
+	{
+		if (pDoc->CreateHeadwaveWorkflow() != 0) {
+			if (pDoc->IsHeadwaveConnected()) pDoc->SetHeadwaveConnected(FALSE);
+		}
+	}
+	// If HW mode, send crossplot data.
+	pDoc->SendCutoffDataToHeadwave(m_viewInstance);
+}
+
+void CCrossPlotSettingsDlg::OnItemchangedCutoffList(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+	// TODO: Add your control notification handler code here
+	*pResult = 0;
+
+	// disable buttons on multiline select 
+	if (m_lstCutoffLines.GetSelectedCount() > 1) {
+
+		if (GetDlgItem(IDC_CUTOFF_ADD)->IsWindowEnabled()) GetDlgItem(IDC_CUTOFF_ADD)->EnableWindow(FALSE);
+		if (GetDlgItem(IDC_CUTOFF_MOVEUP)->IsWindowEnabled()) GetDlgItem(IDC_CUTOFF_MOVEUP)->EnableWindow(FALSE);
+		if (GetDlgItem(IDC_CUTOFF_MOVEDOWN)->IsWindowEnabled()) GetDlgItem(IDC_CUTOFF_MOVEDOWN)->EnableWindow(FALSE);
+	}
+	else {
+		if (!GetDlgItem(IDC_CUTOFF_ADD)->IsWindowEnabled()) GetDlgItem(IDC_CUTOFF_ADD)->EnableWindow(TRUE);
+		if (!GetDlgItem(IDC_CUTOFF_MOVEUP)->IsWindowEnabled()) GetDlgItem(IDC_CUTOFF_MOVEUP)->EnableWindow(TRUE);
+		if (!GetDlgItem(IDC_CUTOFF_MOVEDOWN)->IsWindowEnabled()) GetDlgItem(IDC_CUTOFF_MOVEDOWN)->EnableWindow(TRUE);
+	}
+}
+
+void CCrossPlotSettingsDlg::AddFile(CString attr, CString file, int favorite, CHeaderMap* pHeaderMap)
+{
+	m_attr[m_fileCount] = attr;
+	m_file[m_fileCount] = file;
+	m_favorite[m_fileCount] = favorite;
+	m_pHeaderMap[m_fileCount] = pHeaderMap;
+	m_fileCount++;
+}
+
+void CCrossPlotSettingsDlg::UpdateAppliedParms(CXplotParms& oldParms)
+{
+	UpdateData(TRUE);
+
+	// save the parameters
+	m_appliedParms = oldParms;
+	m_appliedParms.m_title = m_title;
+	m_appliedParms.m_strXAttr = m_strXAttr;
+	m_appliedParms.m_strYAttr = m_strYAttr;
+	m_appliedParms.m_strColorAttr = m_strColorAttr;
+	m_appliedParms.m_strImageFile = m_ImageFile;
+	m_appliedParms.m_fXMin = m_xMin;
+	m_appliedParms.m_fXMax = m_xMax;
+	m_appliedParms.m_fYMin = m_yMin;
+	m_appliedParms.m_fYMax = m_yMax;
+	m_appliedParms.m_colorbarName = m_colorbarName;
+	m_appliedParms.m_densityColorBarCurSel = m_densityColorBarCurSel;
+	m_appliedParms.m_thirdAttrColorBarCurSel = m_thirdAttrColorBarCurSel;
+	m_appliedParms.m_bDisableImage = m_bDisableImage;
+	m_appliedParms.m_bFineTuneMode = m_bFineTuneMode;
+	m_appliedParms.m_nScatter = m_nScatter;
+	m_appliedParms.m_xLabelInterval = m_xLabelInterval;
+	m_appliedParms.m_yLabelInterval = m_yLabelInterval;
+	m_appliedParms.m_xTickInterval = m_xTickInterval;
+	m_appliedParms.m_yTickInterval = m_yTickInterval;
+	m_appliedParms.m_dotSize = m_dotSize;
+	m_appliedParms.m_nScatterMode = m_nScatterMode;
+	m_appliedParms.m_binXsize = m_binXsize;
+	m_appliedParms.m_binYsize = m_binYsize;
+	m_appliedParms.m_colorBarMin = m_colorBarMin;
+	m_appliedParms.m_colorBarMax = m_colorBarMax;
+	m_appliedParms.m_csiXstate = m_csiXstate;
+	m_appliedParms.m_csiYstate = m_csiYstate;
+	m_appliedParms.m_attrColorBarMin = m_attrColorBarMin;
+	m_appliedParms.m_attrColorBarMax = m_attrColorBarMax;
+
+	// save some info for scaling the cutoffs
+	CPoint origin = CPoint(oldParms.x1, oldParms.y2);
+	CPoint end = CPoint(oldParms.x2, oldParms.y1);
+	CFloatPoint fMin = CFloatPoint(oldParms.m_fXMin, oldParms.m_fYMin);
+	CFloatPoint fMax = CFloatPoint(oldParms.m_fXMax, oldParms.m_fYMax);
+	CFloatPoint fNewMin = CFloatPoint(m_appliedParms.m_fXMin, m_appliedParms.m_fYMin);
+	CFloatPoint fNewMax = CFloatPoint(m_appliedParms.m_fXMax, m_appliedParms.m_fYMax);
+
+	m_appliedParms.CutoffParmsRemoveAll();
+	// if the axis has changed, scale the cutoffs accordingly
+	for (int i = 0; i < m_cutoffParmsList.GetCount(); i++) {
+		CCutoffParms newCutoff = m_cutoffParmsList.GetAt(m_cutoffParmsList.FindIndex(i));
+		// if its a brand new cutoff, don't try to scale it
+		if (newCutoff.lx1 != -1 || newCutoff.lx2 != -1 || newCutoff.ly1 != -1 || newCutoff.ly2 != -1) {
+			if (fMin.x != fNewMin.x || fMax.x != fNewMax.x) {
+				newCutoff.ScaleCutoff(origin.x, end.x, fMin.x, fMax.x, fNewMin.x, fNewMax.x, eCUT_XAXIS);
+				m_appliedParms.m_bNewAxisFlag = TRUE;
+			}
+			if (fMin.y != fNewMin.y || fMax.y != fNewMax.y) {
+				newCutoff.ScaleCutoff(origin.y, end.y, fMin.y, fMax.y, fNewMin.y, fNewMax.y, eCUT_YAXIS);
+				m_appliedParms.m_bNewAxisFlag = TRUE;
+			}
+		}
+		m_cutoffParmsList.SetAt(m_cutoffParmsList.FindIndex(i), newCutoff);
+
+		m_appliedParms.CutoffParmsAddTail(&newCutoff);
+	}
+}
+
+bool CCrossPlotSettingsDlg::IsValid()
+{
+	UpdateData(TRUE);
+	SaveActiveData();
+	int xCurSel = m_xAttrCombo.GetCurSel();
+	int yCurSel = m_yAttrCombo.GetCurSel();
+	int cCurSel = m_thirdAttribute.GetCurSel();
+
+	m_strXAttr = _T("");
+	m_strYAttr = _T("");
+	m_strColorAttr = _T("");
+
+	if (xCurSel >= 0) {
+		m_xAttrCombo.GetLBText(xCurSel, m_strXAttr);
+	}
+	if (yCurSel >= 0) {
+		m_yAttrCombo.GetLBText(yCurSel, m_strYAttr);
+	}
+	if (cCurSel >= 0) {
+		m_thirdAttribute.GetLBText(cCurSel, m_strColorAttr);
+	}
+
+	bool valid = true;
+	CString msg;
+
+	// Check some parameters...
+	if (m_strXAttr.IsEmpty() || m_strYAttr.IsEmpty()) {
+		msg += "- Please fill in both X and Y attribute names. (or cancel)\n";
+		valid = false;
+	}
+	if ((m_xMin==0 && m_xMax==0) || (m_yMin==0 && m_yMax==0))
+	{
+		msg += "- Both Min and Max axis values cannot be zero.\n";
+		valid = false;
+	}
+	if (m_nScatterMode == eATTR && m_strColorAttr.IsEmpty()) {
+		msg += "- Please enter a value for the Seismic Attribute.\n";
+		valid = false;
+	}
+
+	CIMACDoc* pDoc = CIMACApp::GetDocument();
+
+	// Check that the classes are within range. 
+	for (int i = 0; i < m_cutoffParmsList.GetCount(); i++) {
+		CCutoffParms cutoff = m_cutoffParmsList.GetAt(m_cutoffParmsList.FindIndex(i));
+		if (cutoff.m_nClassAbove >= pDoc->GetClassCount() || cutoff.m_nClassBelow >= pDoc->GetClassCount() || cutoff.m_applyTo >= pDoc->GetClassCount())
+		{
+			valid = false;
+			CString text;
+			text.Format("- Assigned Class greater than maximum: %d\n", pDoc->GetClassCount() - 1);
+			msg += text;
+			break;
+		}
+	}
+
+	if (! msg.IsEmpty() ) {
+		msg = "The following errors were found:\n" + msg;
+		AfxMessageBox(msg);
+		msg.Empty();
+	}
+	return valid;
+}
+
+bool CCrossPlotSettingsDlg::HasWarnings()
+{
+	CString msg;
+	CIMACDoc* pDoc = CIMACApp::GetDocument();
+
+	if (pDoc->IsSuppressCutoffMessage()) return false;
+
+	// Validate the classes. Issue a warning if a problem is found
+	for (int i = 0; i < m_cutoffParmsList.GetCount(); i++) {
+		CCutoffParms cutoff = m_cutoffParmsList.GetAt(m_cutoffParmsList.FindIndex(i));
+		if (cutoff.m_nClassAbove == 0 &&
+			cutoff.m_nClassBelow == 0)
+		{
+			CString text;
+			text.Format("- Cutoff line %d does nothing. Classes above and below are both 0.\n", i + 1);
+			msg += text;
+		}
+		if (cutoff.m_nClassAbove != 0 &&
+			cutoff.m_nClassBelow != 0 &&
+			i < m_cutoffParmsList.GetCount() - 1)
+		{
+			CString text;
+			text.Format("- Cutoff line %d leaves nothing unclassified for the remaining cutoff lines.\n", i + 1);
+			msg += text;
+		}
+	}
+
+	if (m_cutoffParmsList.GetCount() > 0)
+	{
+		int ilast = (int)m_cutoffParmsList.GetCount() - 1;
+		CCutoffParms cutoff = m_cutoffParmsList.GetAt(m_cutoffParmsList.FindIndex(ilast));
+		if (m_viewInstance < pDoc->GetXplotCount() - 1 && cutoff.m_nClassAbove != 0 && cutoff.m_nClassBelow != 0)
+		{
+			CString text;
+			text.Format("- Cutoff line %d leaves nothing unclassified for the remaining crossplots.\n%s%s", ilast + 1,
+				"   Only the last cutoff line of the last crossplot should define the above\n",
+				"   and below classes.\n");
+			msg += text;
+		}
+	}
+	if (!msg.IsEmpty()) {
+		msg = "The following warning(s) were found:\n\n" + msg + "\n";
+		msg += "Press OK      to Ignore this warning and apply the changes.\n";
+		msg += "Press CANCEL  to go back to dialog.\n";
+		CMessageBoxDlg dlg;
+		dlg.SetMessage(msg);
+		dlg.ShowCancelButton();
+		int istat = (int) dlg.DoModal();
+		if (dlg.GetSuppressButtonState()) {
+			pDoc->SuppressCutoffMessage(TRUE);
+		}
+		if (istat == IDCANCEL) return true;
+	}
+	return false;
+}
+
+float CCrossPlotSettingsDlg::NiceIncrement(float value)
+{
+	int baseValue = (int)round(log10(value));
+	return (float) pow(10, baseValue);
+}
+
+void CCrossPlotSettingsDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
+{
+	lpMMI->ptMinTrackSize = CPoint(m_minSize.cx, m_minSize.cy);
+}
+
+
+void CCrossPlotSettingsDlg::UpdateDensityColorsFromColorComboValue(CIMACDoc* pDoc)
+{
+	bool bScatter = m_nScatter > 0;
+	bool bDensity = bScatter && (m_nScatterMode == eDENSITY);
+
+	if (bDensity) {
+		CString colorBarItemText;
+		m_cmbColorTemplate.GetLBText(m_densityColorBarCurSel, colorBarItemText);
+		CArray<COLORREF> colorbarColors;
+		//TRACE("CCrossPlotSettingsDlg::UpdateDensityColorsFromColorComboValue() colorBarItemText = %s\n", colorBarItemText);
+		bool returnCode = Utilities::LoadColorBar(colorBarItemText, pDoc->GetProjectPath(), colorbarColors, DENSITYBARSIZE);
+
+		if (returnCode) {
+			// set allocate colors for the density plots from color bar template
+			COLORREF* densitybar = pDoc->GetDensityColorBar();
+			for (int j = DENSITYBARSIZE; j > 0; j--) {
+				densitybar[j-1] = colorbarColors[j-1];
+				//TRACE("densitybar[j] = %u, R, G, B = %u, %u, %u\n", densitybar[j-1], GetRValue(densitybar[j-1]), GetGValue(densitybar[j-1]), GetBValue(densitybar[j-1]));
+			}
+		}
+	}
+}

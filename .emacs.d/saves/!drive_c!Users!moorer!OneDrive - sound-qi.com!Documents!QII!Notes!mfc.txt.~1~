@@ -1,0 +1,310 @@
+TutorialsPoint: MFC (see https://www.tutorialspoint.com/mfc/index.htm): Getting Started:
+Create Project Using Project Templates:
+-Create MFCDemo choosing "Dialog based" and unchecking all options like "Thick frame", "Minimize box", "Maximize box" etc.
+
+TutorialsPoint: MFC (see https://www.tutorialspoint.com/mfc/index.htm): Windows Fundamentals:
+
+WINDOW CREATION:
+-Create an app you must derive from MFC`s CWinApp (which stands for "Class for a Windows Application")
+
+MFCDemo.h contains:
+
+class CMFCDemoApp : public CWinApp
+{
+public:
+	CMFCDemoApp();
+
+// Overrides
+public:
+	virtual BOOL InitInstance();
+
+// Implementation
+
+	DECLARE_MESSAGE_MAP()
+};
+
+extern CMFCDemoApp theApp;
+
+-We also need a frame/window to show the content of our application
+
+class CMyFrame :
+	public CFrameWnd
+{
+public:
+	CMyFrame() {
+		Create(NULL, _T("MFC Application Tutorial"));
+	}
+};
+
+MAIN WINDOW:
+-You can use a pointer to show the class used to create a window of type CFrameWnd.
+
+class CExample : public CWinApp {
+   BOOL InitInstance() {
+      CMyFrame *Frame = new CMyFrame();  m_pMainWnd = Frame;
+      
+      Frame->ShowWindow(SW_NORMAL);
+      Frame->UpdateWindow();
+      
+      return TRUE;
+   }
+};
+
+WINDOWS STYLES:
+| Sr.No. | Style & Description                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+|      1 | WS_BORDER                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+|        | Creates a window that has a border.                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+|      2 | WS_CAPTION                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+|        | Creates a window that has a title bar (implies the WS_BORDER style). Cannot be used with the WS_DLGFRAME style.                                                                                                                                                                                                                                                                                                                                                               |
+|      3 | WS_CHILD                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+|        | Creates a child window. Cannot be used with the WS_POPUP style.                                                                                                                                                                                                                                                                                                                                                                                                               |
+|      4 | WS_CHILDWINDOW                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+|        | Same as the WS_CHILD style.                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+|      5 | WS_CLIPCHILDREN                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+|        | Excludes the area occupied by child windows when you draw within the parent window. Used when you create the parent window.                                                                                                                                                                                                                                                                                                                                                   |
+|      6 | WS_CLIPSIBLINGS                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+|        | Clips child windows relative to each other; that is, when a particular child window receives a paint message, the WS_CLIPSIBLINGS style clips all other overlapped child windows out of the region of the child window to be updated. (If WS_CLIPSIBLINGS is not given and child windows overlap, when you draw within the client area of a child window, it is possible to draw within the client area of a neighboring child window.) For use with the WS_CHILD style only. |
+|      7 | WS_DISABLED                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+|        | Creates a window that is initially disabled.                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+|      8 | WS_DLGFRAME                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+|        | Creates a window with a double border but no title.                                                                                                                                                                                                                                                                                                                                                                                                                           |
+|      9 | WS_GROUP                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+|        | Specifies the first control of a group of controls in which the user can move from one control to the next with the arrow keys. All controls defined with the WS_GROUP style FALSE after the first control belong to the same group. The next control with the WS_GROUP style starts the next group (that is, one group ends where the next begins).                                                                                                                          |
+|     10 | WS_HSCROLL                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+|        | Creates a window that has a horizontal scroll bar.                                                                                                                                                                                                                                                                                                                                                                                                                            |
+|     11 | WS_ICONIC                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+|        | Creates a window that is initially minimized. Same as the WS_MINIMIZE style.                                                                                                                                                                                                                                                                                                                                                                                                  |
+|     12 | WS_MAXIMIZE                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+|        | Creates a window of maximum size.                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+|     13 | WS_MAXIMIZEBOX                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+|        | Creates a window that has a Maximize button.                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+|     14 | WS_MINIMIZE                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+|        | Creates a window that is initially minimized. For use with the WS_OVERLAPPED style only.                                                                                                                                                                                                                                                                                                                                                                                      |
+|     15 | WS_MINIMIZEBOX                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+|        | Creates a window that has a Minimize button.                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+|     16 | WS_OVERLAPPED                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+|        | Creates an overlapped window. An overlapped window usually has a caption and a border.                                                                                                                                                                                                                                                                                                                                                                                        |
+|     17 | WS_OVERLAPPED WINDOW                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+|        | Creates an overlapped window with the WS_OVERLAPPED, WS_CAPTION, WS_SYSMENU, WS_THICKFRAME, WS_MINIMIZEBOX, and WS_MAXIMIZEBOX styles.                                                                                                                                                                                                                                                                                                                                        |
+|     18 | WS_POPUP                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+|        | Creates a pop-up window. Cannot be used with the WS_CHILD style.                                                                                                                                                                                                                                                                                                                                                                                                              |
+|     19 | WS_POPUPWINDOW                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+|        | Creates a pop-up window with the WS_BORDER, WS_POPUP, and WS_SYSMENU styles. The WS_CAPTION style must be combined with the WS_POPUPWINDOW style to make the Control menu visible.                                                                                                                                                                                                                                                                                            |
+|     20 | WS_SIZEBOX                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+|        | Creates a window that has a sizing border. Same as the WS_THICKFRAME style.                                                                                                                                                                                                                                                                                                                                                                                                   |
+|     21 | WS_SYSMENU                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+|        | Creates a window that has a Control-menu box in its title bar. Used only for windows with title bars.                                                                                                                                                                                                                                                                                                                                                                         |
+|     22 | WS_TABSTOP                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+|        | Specifies one of any number of controls through which the user can move by using the TAB key. The TAB key moves the user to the next control specified by the WS_TABSTOP style.                                                                                                                                                                                                                                                                                               |
+|     23 | WS_THICKFRAME                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+|        | Creates a window with a thick frame that can be used to size the window.                                                                                                                                                                                                                                                                                                                                                                                                      |
+|     24 | WS_TILED                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+|        | Creates an overlapped window. An overlapped window has a title bar and a border. Same as the WS_OVERLAPPED style.                                                                                                                                                                                                                                                                                                                                                             |
+|     25 | WS_TILEDWINDOW                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+|        | Creates an overlapped window with the WS_OVERLAPPED, WS_CAPTION, WS_SYSMENU, WS_THICKFRAME, WS_MINIMIZEBOX, and WS_MAXIMIZEBOX styles. Same as the WS_OVERLAPPEDWINDOW style.                                                                                                                                                                                                                                                                                                 |
+|     26 | WS_VISIBLE                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+|        | Creates a window that is initially visible.                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+|     27 | WS_VSCROLL                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+|        | Creates a window that has a vertical scroll bar.                                                                                                                                                                                                                                                                                                                                                                                                                              |
+|        |                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+
+
+
+
+-If you change the code to the following then no minimize, maximize or close buttons will be available anymore:
+
+class CMyFrame :
+	public CFrameWnd
+{
+public:
+	CMyFrame() {
+		Create(NULL, _T("MFC Application Tutorial"), WS_VISIBLE | WS_OVERLAPPED);
+	}
+};
+
+WINDOWS LOCATION:
+-You can use cartesian coordinates with the origin being in the top left corner of the screen to set or obtain a window`s location:
+-Win32 has this:
+
+typedef struct tagPOINT {
+   LONG x;
+   LONG y;
+} POINT;
+
+-Also MFC has a CPoint class:
+
+CPoint();
+CPoint(int X, int Y);
+
+WINDOWS SIZE:
+-Win32 has this:
+typedef struct tagSIZE {
+   int cx;
+   int cy;
+} SIZE;
+
+-MFC also has:
+
+CSize();
+CSize(int initCX, int initCY);
+CSize(SIZE initSize);
+CSize(POINT initPt);
+CSize(DWORD dwSize);
+
+WINDOWS DIMENSIONS:
+-Win32 has this:
+typedef struct _RECT {
+   LONG left;
+   LONG top;
+   LONG right;
+   LONG bottom;
+} RECT, *PRECT;
+
+-MFC also provides this:
+
+CRect();
+CRect(int l, int t, int r, int b);
+CRect(const RECT& srcRect);
+CRect(LPCRECT lpSrcRect);
+CRect(POINT point, SIZE size);
+CRect(POINT topLeft, POINT bottomRight);
+
+-Here is how you can specify the size and location of the window:
+
+class CMyFrame :
+	public CFrameWnd
+{
+public:
+	CMyFrame() {
+		Create(NULL, _T("MFC Application Tutorial"), WS_SYSMENU, CRect(90, 120,
+			550, 480));
+	}
+};
+
+WINDOWS PARENTS:
+-The first window created becomes the parent and can be specified with the pParentWnd argument of CFrameWnd::Create()
+-Since no parent is specified for the startup window we set the parameter to NULL:
+
+class CMyFrame : public CFrameWnd {
+   public:
+      CMyFrame() {
+         Create(NULL, _T("MFC Application Tutorial"), WS_SYSMENU, 
+            CRect(90, 120, 550, 480), NULL);
+      }
+};
+
+TutorialsPoint: MFC - Dialog Boxes(see https://www.tutorialspoint.com/mfc/mfc_dialog_boxes.htm): 
+-CDialog class is used here where the construction is composed of 2 steps:
+1) Construct the dialog object
+2) Create the dialog window
+
+-Let us demonstrate by creating a new project with "MFC in Shared DLL"
+-Create a new class:
+
+#include <afxwin.h>
+
+class CExample : public CWinApp {
+   public:
+      BOOL InitInstance();
+};
+
+Dialog Box Creation:
+1) Right-click on the "Resource Files" and choose "Add Resource"
+2) Choose Dialog and click New
+3) Now you should see the resource file MFCDialogDemo.rc with it being opened in a designer.  You could also open it in a text editor.
+4) Check the properties and ensure that the dialog box is identified such as with:
+
+    IDD_EXAMPLE_DLG
+
+Dialog Location:
+-Location is specified by X position and Y position
+
+Dialog Box Dimensions:
+...
+
+Dialog Box Methods:
+-Here are the constructors:
+
+   CDialog();
+   CDialog(UINT nIDTemplate, CWnd* pParentWnd = NULL);
+   CDialog(LPCTSTR lpszTemplateName, CWnd* pParentWnd = NULL);
+
+-Let us create a new class:
+
+class CExampleDlg : public CDialog {
+   public:
+      enum { IDD = IDD_EXAMPLE_DLG };
+   
+      CExampleDlg();
+      ~CExampleDlg();
+};
+
+CExampleDlg::CExampleDlg():CDialog(CExampleDlg::IDD) {
+
+}
+
+CExampleDlg::~CExampleDlg() {
+
+}
+
+-Now we need to instantiate CExampleDlg:
+
+BOOL CExample::InitInstance() {
+   CExampleDlg myDlg;
+   m_pMainWnd = &myDlg;
+   
+   return TRUE;
+}
+
+Modal Dialog Boxes: Modeless Dialog Box:
+-You must provide a public ctor and then call Create to load the dialog resource
+-If the dialog resource has WS_VISIBLE then the dialog appears immediately otherwise you must call the ShowWindow function
+
+Modal Dialog Boxes: Modal Dialog Box:
+-To use this call a ctor and then call the DoModal method
+
+BOOL CExample::InitInstance() {
+   CExampleDlg myDlg;
+   m_pMainWnd = &myDlg;
+   myDlg.DoModal();
+   return TRUE;
+}
+
+-----
+
+-Here is the full implementation:
+
+#include <afxwin.h>
+#include "resource.h"
+
+class CExample : public CWinApp {
+   public:
+      BOOL InitInstance();
+};
+   
+class CExampleDlg : public CDialog {
+   public:
+      enum { IDD = IDD_EXAMPLE_DLG };
+   
+      CExampleDlg();
+     ~CExampleDlg();
+};
+
+CExampleDlg::CExampleDlg():CDialog(CExampleDlg::IDD) {
+
+}
+
+CExampleDlg::~CExampleDlg() {
+
+}
+
+BOOL CExample::InitInstance() {
+   CExampleDlg myDlg;
+   m_pMainWnd = &myDlg;
+   myDlg.DoModal();
+   return TRUE;
+}
+CExample MyApp;
+
+Dialog-Based Applications:
+-Here the website instructs to create a new MFC project with "Security Development Lifecycle (SDL)" checked, along with "Use MFC in a 

@@ -1,0 +1,2 @@
+Description:
+Since each colour on the wheel gives the [R,G,B] breakdown, it would be nice if it was possible to specify a class colour by its [R,G,B] numbers. This is especially useful when moving classes around and you want to duplicate a colour that you already had.

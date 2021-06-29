@@ -1,0 +1,305 @@
+Pipeline: Feature Requests and Defects
+Priority: High
+Name: MSI - Packaging and Consolidation of QI-Pro Software Delivery
+Description: One file to have all the options for every build and dependency
+Software Component: Infrastructure
+Rank: 3 - Med
+Teams Video Link:
+
+2021.01.12
+I. Researching and implementing solution:
+
+Error: unterminated string parsing line at C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\QiPro.nsi:63
+
+-----
+
+3 installers:
+1) flex (make that option, on all installers)
+2) with headwave 
+3) with seisware (let them download correct version)
+
+QI 
+
+create sound qi splash screen 
+let them choose folder for QI pro 
+headwave - checkbox 
+seisware - checkbox - create installers for v10.3, 10.4, 10.5
+give them option for flex  
+include FlexSQI license server in installer, ask for install dir (see  Z:\Applications\QI-Pro\ClientRelease\FlexSQI64.zip\FlexSQI64)
+indicate files have been installed to N folder, please proceed according to flex docs 
+
+-----
+
+Plugin directories:
+  C:\Program Files (x86)\NSIS\Plugins\x86-ansi
+Plugin not found, cannot call newadvsplash::show
+Error in script "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\QiPro.nsi" on line 36 -- aborting creation process
+
+https://nsis.sourceforge.io/Browse_for_Folder
+
+BrowseForFolder 
+
+browse_dlg_text: Text on the "Browse For Folder" dialog, appears after clicking on "Browse" button.
+
+-----
+
+	System::Call "shell32::SHBrowseForFolder(i r1) i.r2"
+
+	; Some logic checking on its output
+	${If} $2 == 0
+		MessageBox MB_OK "User canceled browsing."
+	${Else}
+		; Get the actual path from the pidl
+		System::Call "shell32::SHGetPathFromIDList(i r2, t.r3)"
+		; and display
+			MessageBox MB_OK "User selected folder: $3"
+	${EndIf} 
+	
+2021.01.25
+I. Researching and implementing solution:
+
+-Add build step to automatically create installer after a build occurs 
+-SeisWare 
+
+msbuild RM_Branch\OSI\OSI.sln /target:IMAC:Rebuild /p:Configuration=lib-build
+
+msbuild RM_Branch\OSI\OSI.sln /target:IMAC:Rebuild /p:Configuration=SW-v10.3-CI
+
+msbuild SoundQI\OSI\OSI.sln /target:IMAC:Rebuild /p:Configuration=SW-v10.3
+
+msbuild OSI\OSI.sln /target:IMAC:Rebuild /p:Configuration=SW-v10.3
+
+http://sqi009:8080/tfs/DefaultCollection/SoundQI-Branch/_versionControl/changeset/917
+http://sqi009:8080/tfs/DefaultCollection/SoundQI/_versionControl/changeset/
+
+C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\OSI\QI-Pro\x64\SW-v10.3-CI
+
+-----
+
+  c:\teamcity\buildagent\work\cee953a17e540081\rm_branch\imac\aa_qipro.cpp(7): fatal error C1083: Cannot open include file: 'gsl/gsl_math.h': No such file or directory [C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\IMAC.vcxproj]
+13:29:01
+  Done Building Project "C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\IMAC.vcxproj" (Rebuild target(s)) -- FAILED.
+
+-----
+
+Xcopy /E /I C:\Sound-QI_Source\SoundQI\gsl_2_4_msvc2015_64_r1 RM_Branch\gsl_2_4_msvc2015_64_r1
+Xcopy /E /I C:\Sound-QI_Source\SoundQI\flexlm-x64\lib RM_Branch\flexlm-x64\lib
+Xcopy /E /I "C:\Sound-QI_Source\SoundQI\SeisWare SDK\10.5 BETA" "RM_Branch\SeisWare SDK\10.5 BETA"
+
+-----
+
+Get info with messagebox (see https://nsis.sourceforge.io/Docs//Chapter4.html#4.12):
+
+To access the section index, curly brackets must be used and the code must be located below the section in the script.
+
+Section test1 sec1_id
+SectionEnd
+
+Section test2 sec2_id
+SectionEnd
+
+Function .onInit
+  SectionGetText ${sec2_id} $0
+  MessageBox MB_OK "name of ${sec2_id}:$\n$0" # will correctly display 'name of 1: test2'
+FunctionEnd
+Function .onInit
+  SectionGetText ${sec2_id} $0
+  MessageBox MB_OK "name of ${sec2_id}:$\n$0" # will incorrectly display 'name of ${sec2_id}: test1'
+    # plus a warning stating:
+    #   unknown variable/constant "{sec2_id}" detected, ignoring
+FunctionEnd
+
+Section test1 sec1_id
+SectionEnd
+
+Section test2 sec2_id
+SectionEnd
+
+-----
+
+  SeiswareExportFunctions.cpp
+15:21:29
+  c:\teamcity\buildagent\work\fbef456932ac7c99\imac\seiswareapi.h(4): fatal error C1083: Cannot open include file: 'seisware/Connection.h': No such file or directory [C:\TeamCity\buildAgent\work\fbef456932ac7c99\IMAC\IMAC.vcxproj]
+15:21:29
+    SeiswareExportVirtualVolumesTab.cpp
+                          
+-----
+                          
+4.7.2.1.2 .onInit
+This callback will be called when the installer is nearly finished initializing. If the '.onInit' function calls Abort, the installer will quit instantly.
+
+Here are two examples of how this might be used:
+
+ Function .onInit
+   MessageBox MB_YESNO "This will install. Continue?" IDYES NoAbort
+     Abort ; causes installer to quit.
+   NoAbort:
+ FunctionEnd
+or:
+
+ Function .onInit
+   ReadINIStr $INSTDIR $WINDIR\wincmd.ini Configuration InstallDir
+   StrCmp $INSTDIR "" 0 NoAbort
+     MessageBox MB_OK "Windows Commander not found. Unable to get install path."
+     Abort ; causes installer to quit.
+   NoAbort:
+ FunctionEnd
+
+4.7.2.1.4 .onInstSuccess
+This callback is called when the install was successful, right before the install window closes (which may be after the user clicks 'Close' if AutoCloseWindow or SetAutoClose is set to false).
+
+Example:
+                          
+  Function .onInstSuccess
+    MessageBox MB_YESNO "Congrats, it worked. View readme?" IDNO NoReadme
+      Exec notepad.exe ; view readme or whatever, if you want.
+    NoReadme:
+  FunctionEnd                          
+
+                          
+4.7.2.1.10 .onVerifyInstDir
+This callback enables control over whether or not an installation path is valid for your installer. This code will be called every time the user changes the install directory, so it shouldn't do anything crazy with MessageBox or the like. If this function calls Abort, the installation path in $INSTDIR is deemed invalid.
+
+Example:
+
+  Function .onVerifyInstDir
+    IfFileExists $INSTDIR\Winamp.exe PathGood
+      Abort ; if $INSTDIR is not a winamp directory, don't let us install there
+    PathGood:
+  FunctionEnd
+
+-----
+
+4.9.4.21 MessageBox
+mb_option_list messagebox_text [/SD return] [return_check jumpto [return_check_2 jumpto_2]]
+Displays a MessageBox containing the text "messagebox_text". mb_option_list must be one or more of the following, delimited by |s (e.g. MB_YESNO|MB_ICONSTOP).
+
+MB_OK - Display with an OK button
+MB_OKCANCEL - Display with an OK and a cancel button
+MB_ABORTRETRYIGNORE - Display with abort, retry, ignore buttons
+MB_RETRYCANCEL - Display with retry and cancel buttons
+MB_YESNO - Display with yes and no buttons
+MB_YESNOCANCEL - Display with yes, no, cancel buttons
+MB_ICONEXCLAMATION - Display with exclamation icon
+MB_ICONINFORMATION - Display with information icon
+MB_ICONQUESTION - Display with question mark icon
+MB_ICONSTOP - Display with stop icon
+MB_USERICON - Display with installer`s icon
+MB_TOPMOST - Make messagebox topmost
+MB_SETFOREGROUND - Set foreground
+MB_RIGHT - Right align text
+MB_RTLREADING - RTL reading order
+MB_DEFBUTTON1 - Button 1 is default
+MB_DEFBUTTON2 - Button 2 is default
+MB_DEFBUTTON3 - Button 3 is default
+MB_DEFBUTTON4 - Button 4 is default
+Return_check can be 0 (or empty, or left off), or one of the following:
+
+IDABORT - Abort button
+IDCANCEL - Cancel button
+IDIGNORE - Ignore button
+IDNO - No button
+IDOK - OK button
+IDRETRY - Retry button
+IDYES - Yes button                          
+
+2021.01.26
+I. Researching and implementing solution:
+1) Taking many different custom steps:                          
+                          
+https://nsis.sourceforge.io/Demonstrating_Page%27s_Custom_Functions_Pre_Show_Leave
+
+-----
+
+File: "C:\HW-Data\QI-Pro-Plugins\ComputePlugin\computeplugin.xplot.dll" -> no files found.
+
+--------------------------------------------------------------------------------
+
+https://nsis.sourceforge.io/Docs/Modern%20UI/Readme.html
+
+3. Pages:
+
+Installer pages
+MUI_PAGE_WELCOME
+MUI_PAGE_LICENSE textfile
+MUI_PAGE_COMPONENTS
+MUI_PAGE_DIRECTORY
+MUI_PAGE_STARTMENU pageid variable
+MUI_PAGE_INSTFILES
+MUI_PAGE_FINISH
+
+Uninstaller pages
+MUI_UNPAGE_WELCOME
+MUI_UNPAGE_CONFIRM
+MUI_UNPAGE_LICENSE textfile
+MUI_UNPAGE_COMPONENTS
+MUI_UNPAGE_DIRECTORY
+MUI_UNPAGE_INSTFILES
+MUI_UNPAGE_FINISH
+
+-----
+
+4.1 "Script File Format" (see https://nsis.sourceforge.io/Docs/Chapter4.html#fileformat):
+
+Plug-ins
+
+To call a plug-in, use 'plugin::command [parameters]'. For more info see Plug-in DLLs.
+
+nsExec::Exec "myfile"
+
+Instead use pages?
+
+Page license skipLicense "" stayInLicense
+ Page custom customPage "" ": custom page"
+ Page instfiles
+
+ Function skipLicense
+   MessageBox MB_YESNO "Do you want to skip the license page?" IDNO no
+     Abort
+   no:
+ FunctionEnd
+
+ Function stayInLicense
+   MessageBox MB_YESNO "Do you want to stay in the license page?" IDNO no
+     Abort
+   no:
+ FunctionEnd
+
+ Function customPage
+   GetTempFileName $R0
+   File /oname=$R0 customPage.ini
+   InstallOptions::dialog $R0
+   Pop $R1
+   StrCmp $R1 "cancel" done
+   StrCmp $R1 "back" done
+   StrCmp $R1 "success" done
+   error: MessageBox MB_OK|MB_ICONSTOP "InstallOptions error:$\r$\n$R1"
+   done:
+ FunctionEnd
+
+                          ----
+
+Example of how you can set $INSTDIR:
+
+4.9.3.10 GetFullPathName
+[/SHORT] user_var(output) path_or_file
+Assign the full path of the file specified to user variable $x. If the path portion of the parameter is not found, the error flag will be set and $x will be empty. If /SHORT is specified, the path is converted to the short filename form. However, if /SHORT is not specified, the path isn`t converted to its long filename form. To get the long filename, call GetLongPathName using the System plug-in. Note that GetLongPathName is only available on Windows 98, Windows 2000 and above.
+
+StrCpy $INSTDIR $PROGRAMFILES\NSIS
+SetOutPath $INSTDIR
+GetFullPathName $0 ..
+DetailPrint $0 # will print C:\Program Files
+GetFullPathName /SHORT $0 $INSTDIR
+DetailPrint $0 # will print C:\Progra~1\NSIS
+StrCpy $0 C:\Progra~1\NSIS
+System::Call 'kernel32::GetLongPathName(t r0, t .r1, i ${NSIS_MAX_STRLEN}) i .r2'
+StrCmp $2 error +2
+StrCpy $0 $1
+DetailPrint $0 # will print C:\Program Files\NSIS, where supported
+                          
+2021.01.27
+I. Researching and implementing solution:
+
+https://stackoverflow.com/questions/1903145/nsis-vs-wix-vs-anyother-installation-package                          
+
+                          

@@ -1,0 +1,20 @@
+20201.03.02
+I. Scrum:
+
+Kaushal Pander    21 hours ago 
+Hi Developers...Can anyone look into the code and provide me with the formula on how it calculates the point density in Xplot window 
+
+-> See XplotSettingsCalculatePointDensitiesColourBar.png
+
+Kaushal Pander    21 hours ago 
+I am thinking its (number of points * multiplier)/(Bin_x * Bin_y) 
+
+Kevin Lee    20 hours ago 
+Kaushal, the point density is computed like this.  : it uses size x and y to create a rectangle. Then for every point on the crossplot it counts that points neighbors that fall within that rectangle.  So every point will have a count of the neighbors, the higher the number the greater the density.  The point with the highest count is assigned to the color bar max and the point with the least neighbors are assigned to the color bar min.  When plotting, each point's neighbor count is looked up on the color bar and displayed accordingly.   I see that perhaps the help doc could be updated with a better write up on how it works.
+
+Kaushal Pander    20 hours ago 
+Thanks Kevin & Roger. It makes sense and its inline to what I was thinking. But if we do the maths of number of points divided by area, it will be a very small number. So there is a multiplier involved. 
+
+Kevin Lee    20 hours ago 
+there is no multiplier.   If you want to get a better feel for it hit the 'b' key on the crossplot and you'll see the bin.  You can count the points yourself and look up the color on the color bar. 
+

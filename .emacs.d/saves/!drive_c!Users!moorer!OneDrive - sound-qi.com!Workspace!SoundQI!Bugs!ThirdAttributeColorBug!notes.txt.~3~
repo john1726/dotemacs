@@ -1,0 +1,168 @@
+Pipeline: Feature Requests and Defects
+Priority: High
+Name: Third Attribute color bug
+Description: The third attribute color is showing up on the drop down options on the crossplot dialog. The above/below , apply to fields should show the colors from the classifed volume.
+Software Component: Crossplots
+Rank: 4 - Med/High
+Teams Video Link: https://web.microsoftstream.com/video/c4e1a1f6-f5a6-4561-ae50-b4fae6e870c8 at 34:00ff and
+    https://web.microsoftstream.com/video/5b1d00db-e7b8-4e30-a168-66c22f614795
+
+2021.01.06
+I. Researching and implementing solution:
+
+bookmark 
+38:48
+
+2021.01.08
+I. Researching and implementing solution:
+
+-In every step in a curve on a CV, every step is a sample.  
+
+See https://web.microsoftstream.com/video/5b1d00db-e7b8-4e30-a168-66c22f614795
+
+Reproduce bug:
+1) Once a crossplot is open, pen "Crossplot N Settings" and set it to the third attribute, "Seismic Attribute"
+2) Then in "Crossplot N Settings" chosze "Color Map" button which opens "Color Bar Editor" window
+3) While the "Color Bar Editor" window is open, go back to the "Crossplot N" which will open but you will see that all the attributes are red in "Class Below/Out"
+-If you cloase the "Color Bar Editor" window then the "Class Above/In" and "Class Below/Out" go back to normal
+
+See:
+
+COLORREF *CIMACDoc::GetColorBarPtr() {
+
+    COLORREF *pColorbar = NULL;
+    if (IsThirdAttributeMode(GetViewInstance())) {
+        pColorbar = GetColorBarPtr(GetViewInstance());
+    }
+    else if (IsColorbarOpenedFromCSI()) {
+        pColorbar = GetCurrentColorBarPtr();
+    }
+    else {
+        pColorbar = GetColorBar();
+    }
+    return pColorbar;
+}
+
+a) Which calls:
+
+int  GetViewInstance() { return m_viewInstance; 
+
+b) Which calls:
+
+COLORREF *CIMACDoc::GetColorBarPtr(int viewInstance)
+{
+	if (viewInstance < 0 || viewInstance >= NXPLOT) viewInstance = 0;
+
+	return &m_thirdAttributeBar[viewInstance*MAXCBSIZE];
+}
+
+Where:
+
+viewInstance = 1
+
+Where:
+
+COLORREF m_thirdAttributeBar[MAXCBSIZE*NXPLOT]
+
+#define NXPLOT 100		// The number of crossplot windows (this can be set up to 10,000 just because in the resource file we need to reserve that number of resource ids for ID_VIEW_XPLOTS and ID_EDIT_XPLOT_PARMS                         
+#define MAXCBSIZE 128	// the maximum size of the
+
+c) Which calls:
+
+int CIMACDoc::GetColorBarSize() {
+
+    int cbSize = 0;
+    if (IsThirdAttributeMode(GetViewInstance())) {
+        cbSize = GetColorBarSize(GetViewInstance());
+    }
+    else if (IsColorbarOpenedFromCSI()) {
+        cbSize = GetCurrentColorBarCount();
+    }
+    else {
+        cbSize = m_nClass;
+    }
+    return cbSize;
+}
+
+Where:
+
+cbSize = 21
+
+-----
+
+void CColorBarView::DrawCursorColor(CDC *pDC, CRect rcClient, CRect &rcSlider, CRect &rcColorBar, 
+	float intensity, int colorbarIndex, int colorbarIndexMouseMove)
+{
+    // ...
+    int cbSize = GetColorBarSize();
+    COLORREF *pColorbar = GetColorBarPtr();
+    // ...
+		if (colorbarIndexMouseMove > -1) {
+			pixelColor = pColorbar[colorbarIndexMouseMove];
+			if (pixelColor != NOCOLOR) {
+				red = GetRValue(pixelColor);
+				grn = GetGValue(pixelColor);
+				blu = GetBValue(pixelColor);
+				sText.Format("RGB(%d,%d,%d)", red, grn, blu);
+			} else {
+				red = grn = blu = 255;
+				sText.Empty();
+			}
+    // ...                        
+}    
+
+Where:
+
+red = 255
+grn = 51
+blu = 51    
+
+#define GetRValue(rgb)      (LOBYTE(rgb))
+#define GetGValue(rgb)      (LOBYTE(((WORD)(rgb)) >> 8))
+#define GetBValue(rgb)      (LOBYTE((rgb)>>16))
+
+but shouldn`t?
+
+	int red = (int)(GetRValue(classColor) * m_intensity);
+	int grn = (int)(GetGValue(classColor) * m_intensity);
+	int blu = (int)(GetBValue(classColor) * m_intensity);
+
+		// Update color bar stored on CIMACDoc
+		int red = atoi(m_arrColorR[i]);
+		int grn = atoi(m_arrColorG[i]);
+		int blu = atoi(m_arrColorB[i]);
+
+2021.01.13
+I. Researching and implementing solution:    
+    
+	if (colorbarIndex >= -1 || colorbarIndexMouseMove > -1) {
+		if (colorbarIndex > -1) {
+			pixelColor = pPallet[colorbarIndex];
+			red = (int) (GetRValue(pixelColor) * intensity);
+			grn = (int) (GetGValue(pixelColor) * intensity);
+			blu = (int) (GetBValue(pixelColor) * intensity);
+			sText.Format("RGB(%d,%d,%d)", red, grn, blu);
+		} else if (colorbarIndex == -1) {
+			red = (int) (255 * intensity);
+			grn = (int) (255 * intensity);
+			blu = (int) (255 * intensity);
+			sText.Format("RGB(%d,%d,%d)", red, grn, blu);
+		}
+		if (colorbarIndexMouseMove > -1) {
+			pixelColor = pColorbar[colorbarIndexMouseMove];
+			if (pixelColor != NOCOLOR) {
+				red = (int)(GetRValue(pixelColor) * intensity);
+				grn = (int)(GetGValue(pixelColor) * intensity);
+				blu = (int)(GetBValue(pixelColor) * intensity);
+				sText.Format("RGB(%d,%d,%d)", red, grn, blu);
+			} else {
+				red = grn = blu = 255;
+				sText.Empty();
+			}
+		}
+	} else {
+		red = grn = blu = 255;
+		sText.Empty();
+	}
+	
+

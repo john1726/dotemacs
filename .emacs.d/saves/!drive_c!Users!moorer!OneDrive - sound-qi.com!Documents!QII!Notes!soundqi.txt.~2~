@@ -1,0 +1,271 @@
+moorer@soundqi.lan
+
+roger@sound-qi.com
+
+-----
+
+C:\Tools\emacs-27.1-x86_64\bin\runemacs.exe -fg green -bg black
+
+C:\msys64\mingw64\bin\runemacs.exe -fg green -bg black
+
+-----
+
+7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on  /cygdrive/c/Archive/qi_pro_rm_branch_20201210.7za /cygdrive/c/Sound-QI_Source/SoundQI-Branch/RM_Branch/IMAC
+
+7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on  "C:\Users\moorer\OneDrive - sound-qi.com\Archive\qi_pro_rm_branch_drawing_timeslices_20201217.7za" c:\Sound-QI_Source\SoundQI-Branch\RM_Branch -xr!bin -xr!obj -xr!Debug -xr!Release -xr!"SeisWare SDK" -xr!.vs
+
+-----
+
+ADP User ID (see https://netsecure.adp.com/ and https://teampay.adp.com/):
+
+RMoore@RR41Y5
+adF...
+
+-----
+
+What is a virtual volume?
+
+
+2020.12.07
+I. Adding required libraries to debug QI Pro:
+-Copy these files from K:\SoundQI_source\OSI\QI-Pro\Debug
+
+[.]                      [..]                     config.dat               libzmq-mt-4_3_0.dll
+libzmq-mt-gd-4_3_0.dll   QI-Pro.exe               seisware.dll             SeisWare.SDK.dll         
+seiswared.dll            SWSDKCore.dll            vcruntime140_1.dll
+
+Into the QI Pro Debug folder for your code base, e.g.,:
+
+C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\QI-Pro\x64\Debug
+
+II. Copy demo to local C:\ drive:
+-Demo name is:
+
+C:\QI-Pro Demo\Horn River Demo
+
+2020.12.08
+I. Setting up CRM:
+
+HubSpot booking meetings link:
+
+https://meetings.hubspot.com/roger144
+
+2020.12.09
+I. Setting up Python:
+
+Microsoft Windows [Version 10.0.19042.685]
+(c) 2020 Microsoft Corporation. All rights reserved.
+
+C:\Users\moorer>pip install pyspark
+Collecting pyspark
+  Downloading pyspark-3.0.1.tar.gz (204.2 MB)
+     |████████████████████████████████| 204.2 MB 2.2 MB/s
+Collecting py4j==0.10.9
+  Downloading py4j-0.10.9-py2.py3-none-any.whl (198 kB)
+     |████████████████████████████████| 198 kB 3.2 MB/s
+Using legacy 'setup.py install' for pyspark, since package 'wheel' is not installed.
+Installing collected packages: py4j, pyspark
+    Running setup.py install for pyspark ... done
+Successfully installed py4j-0.10.9 pyspark-3.0.1
+
+-----Original Appointment-----
+From: Laurie Weston <laurie@sound-qi.com> 
+Sent: December 7, 2020 11:17 AM
+To: Laurie Weston; Carl Reine; Kevin Lee; Kirk Graham; Vincent Rajic; kowther@sound-qi.com; Draga Talinga; Dave Nordin; sandi@sound-qi.com; Roger Moore; Kaushal Pander; Brenda Maloff
+Subject: Staff Meeting
+When: December 10, 2020 1:00 PM-2:00 PM (UTC-07:00) Mountain Time (US & Canada).
+Where: SQI Meeting room
+
+
+STANDARD AGENDA (To be revised as required for each meeting)
+ 
+•	Operations update
+o	Consulting projects
+o	QI-Pro update
+•	Sales update
+o	Canada & International
+o	US & Mexico
+•	Marketing update
+o	Tradeshows
+o	Website
+•	Other
+
+Attendees:
+Kevin Lee 
+Kaushal Pander 
+Kirk Graham
+Draga Talinga 
+Carl Reine
+Vincent Rajc 
+
+Carl Reine: Consulting Services:
+Two new projects:
+1) Simgen project
+2) Headwater (clearwater project)
+
+Jan. 4 starting to drill.
+-She wants some results for that campaign; is an early stage project.  Eight wells.
+
+Poseidon data
+
+Draga Talinga:
+-We are using Headwave software 
+-Used to interpret seismic data from the northwestern short of Australia
+-Carl: pretty massive 3-D data; trying to do determine how we can do things faster.
+Laurie: What about their machine learning?
+Laurie: They have machine learning algorithms for fault picking, or finding some non-conformity, so I am pretty sure that we have access to that in the next version
+Carl: We need to identify a smaller portion of the survey just because it is so large 
+Laurie: That is a good thing about the large data set, because we need to immprove the performance of QI Pro 
+Carl: That is it from the consulting side 
+
+Kirk Graham:
+-We had EAGE 
+-We had difficulties with CRNL, and why they didn't want to move forward, so we have to deal with that 
+-Laurie: They already use attribute studio to model, and they said they could rebuild ... work flow in attribute studio.  I do know that Chet, our long time user in California, he has used attribute studio for a long time, but when he saw QI Pro right away he bought our software.  They have no budget for software so they have dropped attribute studio, but Chet is still seeing if he can keep QI Pro, so I want to ask him why he likes QI Pro.  What I am concerned with is that CRNL will go with attribute studio, ..., so then they might ask attribute studio to add more features in attribute studio that already exist in QI Pro.  I think in a few months time when we get some of our development done, ..., some very clear examples of play types, and how simple it is, and the chief geophysicist was taking notes when I was telling him this, so it sounds like we are still being considered.  He is over budgeted in 2020 already.  By then, ideally, we are going to have some new features developed that are in our roadmap.
+-Kirk: We got top marks in their trialing, so they gave us extra points for ease of use and deployment.
+-Laurie: Moving on from CRNL 
+-Kirk: 
+
+Vincent: 
+-One thing they like about us compared to Geomodeling is that Geomodeling doesn't do consulting.
+-Renewels: Shapparel invoice, so that went out today.  Hopefully that goes through the queue and we get a payment on that.
+-We are going to be doing a trial for California resources, also for another company in Norway called VNO.  Just recently, I got time lapse feedback from someone at Shell.  The good news is, that QI Pro is looking good from the trial front in 2020.  
+-Laurie: If we do include the connector, do we have the ability to prevent the exporting of their result during the trial.  That is something we learned from CRNL.  Are they all using Vettrel?  I think it would be a good idea to include a connector.
+-Vincent: We have a TOTALE presentation coming up next week.  Part A is loading the data, part B is strategy.  There are ongoing discussions with companies like Enzyne.  Still trying to get on with Norway in Argentina...  Petrel had at least a 110 sq km..., now they are going to hydrate where they want to focus.  Legends is doing a stochastic enclosure..., a lot of M&A activity in the United States, so sometimes it just takes time.  BP Energy got back to me, and they don`t have any staff, hopefully focus on the Beech Energy, with John Cochrane, ...  Unfortunately, this time of the year it gets quiet...
+-Kaushel: DNI, ..., and Shell will have huge volumes of data so we need to make sure that it works well with huge volumes.
+-Laurie: We need to tell them to trim down the time window, and decimate the data on the crossplot.  We need to be prepared to tell them what they need to do if it doesn`t work the way they expected.  We have that Australian survey that we can do some benchmarking on.
+
+Kevin Lee:
+...
+
+Brenda:
+-Can now load 100 instead of 5 crossplots.
+
+Kaushal:
+-We need to market the attribute adviser, because they can do a bunch of things without any special knowledge.
+-We want to use time or depth as another attribute in the crossplot.  We need to create a SEG-Y, where instead of amplitude, we have time.
+
+Kevin:
+-It was not classifying the classes, Laurie, you wanted to classify an horizon, so we need to do that.
+
+Kaushal:
+-We want to use time or depth as another attribute in the crossplot.  We need to create a SEG-Y, where instead of amplitude, we have time.
+
+Laurie:
+-That would give us an additional level of flexibility, so sure 
+-We might want to do the training in the late afternoon for Martin who is in Perth.  He said he could get up at 4 AM which would be 3 PM our time to attend the QI Pro training.
+
+-------------------------------------------------------------------------------
+
+
+
+2020.12.15
+I. Scrum:
+
+Brenda demonstrating "Virtual Volumes" and modification to allow up to 100 Crossplots:
+
+https://web.microsoftstream.com/video/d2bd91d2-cf01-4f34-92b3-3dbd335a46e1
+
+-See "Infinite Crossplots (more than 5)" (https://app.hubspot.com/contacts/5103392/ticket/224764674/)
+-See ? for virtual volumes?
+
+II. Timesheet demo:
+
+https://web.microsoftstream.com/video/7f79f12f-eaa9-4c60-8578-80c53bbf1987
+
+
+-----Original Appointment-----
+From: Laurie Weston <laurie@sound-qi.com> 
+Sent: December 10, 2020 4:00 PM
+To: Laurie Weston; Kaushal Pander; Brenda Maloff; Roger Moore; Martin Bawden; Megayield Consulting Services Ltd
+Cc: Kirk Graham; Carl Reine; Kevin Lee; Dave Nordin; Vincent Rajic; sandi@sound-qi.com; Adebayo Okunlola; Daniel Navarrete; Blas De La Peña; jcarrero@geoprocesados.com; s.ponguta@geoilenergy.com; Adebayo Okunlola
+Subject: Introduction to QI-Pro
+When: December 16, 2020 3:00 PM-5:00 PM (UTC-07:00) Mountain Time (US & Canada).
+Where: Microsoft Teams Meeting
+
+Sorry – just realized this lands on the 16th in Australia, which was not an option for Martin. Hopefully this new day/time work better.
+
+This will be an intro to interpreting with QI-Pro for our new hires, resellers, and other interested parties. We will cover:
+
+Overview
+-	what do users want to accomplish and why would they use this tool?
+Operation
+-	loading data; standalone, plugin connectors
+-	data display options
+-	creating crossplots
+-	crossplot tools
+-	colour wheel tools
+-	map tools
+-	Attribute Advisor
+-	Virtual Volumes
+-	Volume export
+
+Workflow strategy – we likely won’t have time to get to this, but will follow up with another meeting.
+
+Notes:
+-QI Pro solves a big problem for E&P companies, which is to get the most amount of info our of their data.
+-A wiggle trace gives you some info about geometry, and some about amplitude.
+-We talk a lot about siesmic attributes, frequency attributes of the seismic data, or restack inversion, or principal components.  Laurie says she wants to be inclusive of all of those attributes. QI Pro allows you to look at all of those attributes, and it does speed up interpretation.  This is pertaining to geological predictions, or fluid content prediction.  
+-QI Pro can be used in any type of play type. 
+-QI Pro is a visual way of looking at seismic attributes.
+-We use Hamspon Russel format for horizons.
+-The crossplot is the heart of the software 
+-What is P impedance (Zp) vs Vp/Vs ratio?  How does this help to find a zone of interest in a seismic section?
+-Next time we will get to attribute advisor and virtual volumes 
+-See "Help" which contains videos on crossplot interpretation, plus a "Quick Start" guide.  
+-Quantitative Interpretation: Velocity of the primary vs the velocity of the sheer wave.  The sheer wave is always slower.  In a reservior of gluid like gas, the sheer wave won't move but the primary it will.  
+
+Video link: https://web.microsoftstream.com/video/c4e1a1f6-f5a6-4561-ae50-b4fae6e870c8
+
+-----Original Appointment-----
+From: Kaushal Pander <kaushal@sound-qi.com> 
+Sent: December 17, 2020 2:31 PM
+To: Kaushal Pander; Laurie Weston; Kevin Lee; Kirk Graham; Carl Reine
+Cc: Brenda Maloff; Roger Moore; Draga Talinga; Vincent Rajic; Dave Nordin
+Subject: QI-Pro Enhancements
+When: December 17, 2020 3:30 PM-4:00 PM (UTC-07:00) Mountain Time (US & Canada).
+Where: Microsoft Teams Meeting
+
+Dear all
+
+Lets get together to discuss some enhancements for QI-Pro
+
+Regards
+Kaushal Pander
+
+
+QI Pro Enhancements:
+1) Zoom: 
+2) Crossplot: separator between plot and class filter: in class filter, cannot see the size of the classes. 
+3) DPI Settings make fonts blurry: Brenda fixed this so it is now automatic 
+4) Must be an apply button which updates the Xplot without having to hit "OK" but this has a long list of items that are waiting to be updated so it is quite complex 
+5) Double clicking the colour bar should bnring up the colour bar settings 
+6) Add standard colour bars: 
+7) Add question marks next to each box and put a tip in there (i.e., tool tips) 
+8) Categorize attributes 
+9)
+10) On opening window is hiding 
+11) Show where timeslice is in the sction 
+12) Display horizon on map window 
+13) Can`t make the classes window bigger 
+14)
+15) Deactive crossplots on "Crossplot Manager"
+16) Label sizes get smaller when you zoom in 
+17) Map scale?  How far are the wells being projected? 
+18) Units of impedance volumes 
+19) Colour bar bug from Laurie 
+
+See video link https://web.microsoftstream.com/video/44903812-c07b-4c1e-97be-75740bc6a05c
+
+2020.12.18
+I. Scrum:
+
+Headwave plugin to interface with QI Pro:
+
+C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\HW-Plugin\python\QiProPlugin.py
+
+See video link https://web.microsoftstream.com/video/fe7f8711-d753-4e3d-ae75-934664ed2906 and https://web.microsoftstream.com/video/940875a9-f384-4482-a9fa-4a4db23719dd
+
+
+
+ 

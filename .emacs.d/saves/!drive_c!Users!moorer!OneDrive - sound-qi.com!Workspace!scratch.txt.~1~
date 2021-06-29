@@ -1,0 +1,2889 @@
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	MSB8036	The Windows SDK version 10.0 was not found. Install the required version of Windows SDK or change the SDK version in the project property pages or by right-clicking the solution and selecting "Retarget solution".	IMAC	C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\IDE\VC\VCTargets\Microsoft.Cpp.WindowsSDK.targets	46	
+
+-> Solution: Windows 10 SDK version found here:
+
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);C:\Program Files (x86)\Windows Kits\10\Include\10.0.15063.0\ucrt;</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.15063.0\ucrt\x86;</LibraryPath>
+	
+<WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>	
+
+WC:
+2101
+
+C:/Users/moorer/OneDrive - sound-qi.com/Documents/QII/University/Laurier/CP631AdvancedParallelProgramming/Lesson12AdvancedSpark
+
+C paid $600m to smartmatic
+
+-----
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+T9PredictTests.exe is a Catch v2.10.2 host application.
+Run with -? for options
+
+-------------------------------------------------------------------------------
+When called with 43556 and known word then return hello
+-------------------------------------------------------------------------------
+C:\Users\moorer\OneDrive - sound-qi.com\GResources\Courses\Pluralsight\CppUnitTestingUsingCatch2\02\demos\T9Predict\T9PredictTests\T9PredictTests.cpp(22)
+...............................................................................
+
+C:\Users\moorer\OneDrive - sound-qi.com\GResources\Courses\Pluralsight\CppUnitTestingUsingCatch2\02\demos\T9Predict\T9PredictTests\T9PredictTests.cpp(33): FAILED:
+  REQUIRE( result[0] == "hello" )
+with expansion:
+  "" == "hello"
+
+===============================================================================
+test cases: 2 | 1 passed | 1 failed
+assertions: 2 | 1 passed | 1 failed
+
+
+C:\Users\moorer\OneDrive - sound-qi.com\GResources\Courses\Pluralsight\CppUnitTestingUsingCatch2\02\demos\T9Predict\x64\Debug\T9PredictTests.exe (process 57336) exited with code 1.
+To automatically close the console when debugging stops, enable Tools->Options->Debugging->Automatically close the console when debugging stops.
+Press any key to close this window . . .
+
+-----
+
+find . -name "*.*" | xargs perl -w -p -e "s/T9PredictTests/NativeUnitTests/g"
+
+find . -type f -print0 | xargs -0 sed -i 's/T9PredictTests/NativeUnitTests/g'
+
+-----
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error (active)	E1696	cannot open source file "lm_attr.h"	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\common\FlexLicense.h	7	
+Error (active)	E1696	cannot open source file "lmclient.h"	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\common\FlexLicense.h	8	
+Error (active)	E0035	#error directive: Building MFC application with /MD[d] (CRT dll version) requires MFC shared dll version. Please #define _AFXDLL or do not use /MD[d]	NativeUnitTests	C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\atlmfc\include\afx.h	24	
+Error (active)	E0035	#error directive: WINDOWS.H already included.  MFC apps must not #include <Windows.h>	NativeUnitTests	C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\atlmfc\include\afxv_w32.h	16	
+Warning		The referenced project '..\T9Predict\T9Predict.vcxproj' does not exist.	NativeUnitTests	C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets	1889	
+Warning	MSB8028	The intermediate directory (x64\Debug\) contains files shared from another project (T9PredictTests.vcxproj).  This can lead to incorrect clean and rebuild behavior.	NativeUnitTests	C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\MSBuild\Microsoft\VC\v160\Microsoft.CppBuild.targets	491	
+Error	C1033	cannot open program database 'C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\x64\Debug\vc142.pdb'	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\stdafx.cpp	1	
+Error	C1033	cannot open program database 'C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\x64\Debug\vc142.pdb'	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\NativeUnitTests.cpp	1	
+
+-----
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	C1189	#error:  WINDOWS.H already included.  MFC apps must not #include <Windows.h>	NativeUnitTests	c:\program files (x86)\microsoft visual studio\2017\buildtools\vc\tools\msvc\14.16.27023\atlmfc\include\afxv_w32.h	16	
+Error (active)	E1696	cannot open source file "lm_attr.h"	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\common\FlexLicense.h	7	
+Error (active)	E1696	cannot open source file "lmclient.h"	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\common\FlexLicense.h	8	
+Error (active)	E0035	#error directive: WINDOWS.H already included.  MFC apps must not #include <Windows.h>	NativeUnitTests	C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\atlmfc\include\afxv_w32.h	16	
+Warning	MSB8028	The intermediate directory (x64\Debug\) contains files shared from another project (T9PredictTests.vcxproj).  This can lead to incorrect clean and rebuild behavior.	NativeUnitTests	C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\IDE\VC\VCTargets\Microsoft.CppBuild.targets	391	
+
+-----
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error (active)	E0035	#error directive: WINDOWS.H already included.  MFC apps must not #include <Windows.h>	NativeUnitTests	C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\atlmfc\include\afxv_w32.h	16	
+
+NativeUnitTestsPreprocessorDefinitions
+
+-----
+
+moorer@SQI012 /cygdrive/c/Sound-QI_Source/SoundQI-Branch/RM_Branch/OSI/NativeUnitTests
+$ find . -type f -exec grep -H -n _WINDOWS '{}' \;
+./catch.hpp:81:#  define CATCH_PLATFORM_WINDOWS
+./catch.hpp:110:// CATCH_CONFIG_WINDOWS_SEH : is Windows SEH supported?
+./catch.hpp:175:#if !defined(CATCH_PLATFORM_WINDOWS)
+./catch.hpp:200:#    define CATCH_INTERNAL_CONFIG_NO_WINDOWS_SEH
+./catch.hpp:239:#    define CATCH_INTERNAL_CONFIG_WINDOWS_SEH
+./catch.hpp:290:    #define CATCH_INTERNAL_CONFIG_NO_WINDOWS_SEH
+./catch.hpp:336:#if defined(CATCH_INTERNAL_CONFIG_WINDOWS_SEH) && !defined(CATCH_CONFIG_NO_WINDOWS_SEH) && !defined(CATCH_CONFIG_WINDOWS_SEH) && !defined(CATCH_INTERNAL_CONFIG_NO_WINDOWS_SEH)
+./catch.hpp:337:#   define CATCH_CONFIG_WINDOWS_SEH
+./catch.hpp:7847:#if defined(CATCH_PLATFORM_WINDOWS)
+./catch.hpp:7871:#endif // defined(CATCH_PLATFORM_WINDOWS)
+./catch.hpp:7874:#if defined( CATCH_CONFIG_WINDOWS_SEH )
+./catch.hpp:8672:#if !defined(CATCH_PLATFORM_WINDOWS) && ( defined(WIN32) || defined(__WIN32__) || defined(_WIN32) || defined(_MSC_VER) )
+./catch.hpp:8673:#define CATCH_PLATFORM_WINDOWS
+./catch.hpp:8730:#ifdef CATCH_PLATFORM_WINDOWS
+./catch.hpp:9240:#ifdef CATCH_PLATFORM_WINDOWS
+./catch.hpp:9337:#ifdef CATCH_PLATFORM_WINDOWS
+./catch.hpp:9934:#if !defined( CATCH_CONFIG_COLOUR_NONE ) && !defined( CATCH_CONFIG_COLOUR_WINDOWS ) && !defined( CATCH_CONFIG_COLOUR_ANSI )
+./catch.hpp:9935:#   ifdef CATCH_PLATFORM_WINDOWS
+./catch.hpp:9936:#       define CATCH_CONFIG_COLOUR_WINDOWS
+./catch.hpp:9942:#if defined ( CATCH_CONFIG_COLOUR_WINDOWS ) /////////////////////////////////////////
+./catch.hpp:10211:#elif defined(CATCH_PLATFORM_WINDOWS)
+./catch.hpp:10596:#if defined( CATCH_CONFIG_WINDOWS_SEH ) || defined( CATCH_CONFIG_POSIX_SIGNALS )
+./catch.hpp:10607:#if defined( CATCH_CONFIG_WINDOWS_SEH )
+./catch.hpp:10973:#ifdef CATCH_CONFIG_WINDOWS_CRTDBG
+
+
+-----
+
+    <ClCompile>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <StringPooling>true</StringPooling>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <Optimization>MaxSpeed</Optimization>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>_RELEASE;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>.\Release\</AssemblerListingLocation>
+      <BrowseInformation>true</BrowseInformation>
+      <PrecompiledHeaderOutputFile>.\Release\IMAC.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <ObjectFileName>.\Release\</ObjectFileName>
+      <ProgramDataBaseFileName>.\Release\</ProgramDataBaseFileName>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\gsl_2_4_msvc2015_64_r1\msvc2015_64\include;$(ProjectDir)..\SeisWare SDK\10.1\cpp\include;$(ProjectDir)..\flexlm-x64</AdditionalIncludeDirectories>
+    </ClCompile>
+	
+-----
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	C1189	#error:  WINDOWS.H already included.  MFC apps must not #include <Windows.h>	NativeUnitTests	c:\program files (x86)\microsoft visual studio\2017\buildtools\vc\tools\msvc\14.16.27023\atlmfc\include\afxv_w32.h	16	
+
+-----
+
+1>------ Build started: Project: NativeUnitTests, Configuration: Debug x64 ------
+1>stdafx.cpp
+1>Note: including file: c:\sound-qi_source\soundqi-branch\rm_branch\osi\nativeunittests\stdafx.h
+1>Note: including file:  c:\sound-qi_source\soundqi-branch\rm_branch\osi\nativeunittests\targetver.h
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\SDKDDKVer.h
+1>Note: including file:  C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\stdio.h
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt.h
+1>Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\vcruntime.h
+1>Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\sal.h
+1>Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\concurrencysal.h
+1>Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\vadefs.h
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_wstdio.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_stdio_config.h
+1>Note: including file:  C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\tchar.h
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\wchar.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_memcpy_s.h
+1>Note: including file:     C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\errno.h
+1>Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\vcruntime_string.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_wconio.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_wctype.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_wdirect.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_wio.h
+1>Note: including file:     C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_share.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_wprocess.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_wstdlib.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_wstring.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_wtime.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\sys/stat.h
+1>Note: including file:     C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\sys/types.h
+1>NativeUnitTests.cpp
+1>Note: including file: c:\sound-qi_source\soundqi-branch\rm_branch\osi\nativeunittests\stdafx.h
+1>Note: including file:  c:\sound-qi_source\soundqi-branch\rm_branch\osi\nativeunittests\targetver.h
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\SDKDDKVer.h
+1>Note: including file:  C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\stdio.h
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt.h
+1>Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\vcruntime.h
+1>Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\sal.h
+1>Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\concurrencysal.h
+1>Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\vadefs.h
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_wstdio.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_stdio_config.h
+1>Note: including file:  C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\tchar.h
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\wchar.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_memcpy_s.h
+1>Note: including file:     C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\errno.h
+1>Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\vcruntime_string.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_wconio.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_wctype.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_wdirect.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_wio.h
+1>Note: including file:     C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_share.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_wprocess.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_wstdlib.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_wstring.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_wtime.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\sys/stat.h
+1>Note: including file:     C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\sys/types.h
+1>Note: including file: c:\sound-qi_source\soundqi-branch\rm_branch\osi\nativeunittests\catch.hpp
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\iosfwd
+1>Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\cstdio
+1>Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\yvals.h
+1>Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\yvals_core.h
+1>Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\xkeycheck.h
+1>Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\crtdefs.h
+1>Note: including file:     C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\crtdbg.h
+1>Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\vcruntime_new_debug.h
+1>Note: including file:       C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\vcruntime_new.h
+1>Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\use_ansi.h
+1>Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\cstring
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\string.h
+1>Note: including file:     C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_memory.h
+1>Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\cwchar
+1>Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\xstddef
+1>Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\cstddef
+1>Note: including file:     C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\stddef.h
+1>Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\xtr1common
+1>Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\cstdlib
+1>Note: including file:     C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\stdlib.h
+1>Note: including file:      C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_malloc.h
+1>Note: including file:      C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_search.h
+1>Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\limits.h
+1>Note: including file:     C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\math.h
+1>Note: including file:      C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_math.h
+1>Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\initializer_list
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\string
+1>Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\istream
+1>Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\ostream
+1>Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\ios
+1>Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\xlocnum
+1>Note: including file:       C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\climits
+1>Note: including file:       C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\cmath
+1>Note: including file:        C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\xtgmath.h
+1>Note: including file:       C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\streambuf
+1>Note: including file:        C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\xiosbase
+1>Note: including file:         C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\xlocale
+1>Note: including file:          C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\stdexcept
+1>Note: including file:           C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\exception
+1>Note: including file:            C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\type_traits
+1>Note: including file:            C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\malloc.h
+1>Note: including file:            C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\vcruntime_exception.h
+1>Note: including file:             C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\eh.h
+1>Note: including file:              C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\corecrt_terminate.h
+1>Note: including file:           C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\xstring
+1>Note: including file:            C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\xmemory0
+1>Note: including file:             C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\cstdint
+1>Note: including file:              C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\stdint.h
+1>Note: including file:             C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\limits
+1>Note: including file:              C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\ymath.h
+1>Note: including file:              C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\cfloat
+1>Note: including file:               C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\float.h
+1>Note: including file:             C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\new
+1>Note: including file:             C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\xutility
+1>Note: including file:              C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\utility
+1>Note: including file:             C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\xatomic0.h
+1>Note: including file:             C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\intrin0.h
+1>Note: including file:          C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\typeinfo
+1>Note: including file:           C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\vcruntime_typeinfo.h
+1>Note: including file:          C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\xlocinfo
+1>Note: including file:           C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\xlocinfo.h
+1>Note: including file:            C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\ctype.h
+1>Note: including file:            C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\locale.h
+1>Note: including file:          C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\memory
+1>Note: including file:           C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\xmemory
+1>Note: including file:          C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\xfacet
+1>Note: including file:         C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\system_error
+1>Note: including file:          C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\cerrno
+1>Note: including file:          C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\xcall_once.h
+1>Note: including file:          C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\xerrc.h
+1>Note: including file:         C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\share.h
+1>Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\xstring_insert.h
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\vector
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\cassert
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\assert.h
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\ctime
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\time.h
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\ratio
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\chrono
+1>Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\thr/xtimec.h
+1>Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\thr/xthrcommon.h
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\functional
+1>Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\tuple
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\algorithm
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\cassert
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\assert.h
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\random
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\map
+1>Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\xtree
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\set
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\cassert
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\assert.h
+1>Note: including file:  C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\windows.h
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\winapifamily.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\winpackagefamily.h
+1>Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\excpt.h
+1>Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\stdarg.h
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\windef.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\minwindef.h
+1>Note: including file:     C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\specstrings.h
+1>Note: including file:      C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\specstrings_strict.h
+1>Note: including file:       C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\specstrings_undef.h
+1>Note: including file:      C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\driverspecs.h
+1>Note: including file:       c:\program files (x86)\windows kits\10\include\10.0.17763.0\shared\sdv_driverspecs.h
+1>Note: including file:     C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\winnt.h
+1>Note: including file:      C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\kernelspecs.h
+1>Note: including file:      C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\basetsd.h
+1>Note: including file:      C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\guiddef.h
+1>Note: including file:      c:\program files (x86)\windows kits\10\include\10.0.17763.0\shared\pshpack4.h
+1>Note: including file:      c:\program files (x86)\windows kits\10\include\10.0.17763.0\shared\poppack.h
+1>Note: including file:      C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\pshpack4.h
+1>Note: including file:      C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\poppack.h
+1>Note: including file:      c:\program files (x86)\windows kits\10\include\10.0.17763.0\shared\pshpack4.h
+1>Note: including file:      c:\program files (x86)\windows kits\10\include\10.0.17763.0\shared\pshpack2.h
+1>Note: including file:      c:\program files (x86)\windows kits\10\include\10.0.17763.0\shared\poppack.h
+1>Note: including file:      c:\program files (x86)\windows kits\10\include\10.0.17763.0\shared\pshpack2.h
+1>Note: including file:      C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\pshpack2.h
+1>Note: including file:      C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\poppack.h
+1>Note: including file:      c:\program files (x86)\windows kits\10\include\10.0.17763.0\shared\poppack.h
+1>Note: including file:      c:\program files (x86)\windows kits\10\include\10.0.17763.0\shared\pshpack8.h
+1>Note: including file:      c:\program files (x86)\windows kits\10\include\10.0.17763.0\shared\poppack.h
+1>Note: including file:      c:\program files (x86)\windows kits\10\include\10.0.17763.0\shared\pshpack1.h
+1>Note: including file:      c:\program files (x86)\windows kits\10\include\10.0.17763.0\shared\poppack.h
+1>Note: including file:      c:\program files (x86)\windows kits\10\include\10.0.17763.0\shared\pshpack1.h
+1>Note: including file:      c:\program files (x86)\windows kits\10\include\10.0.17763.0\shared\poppack.h
+1>Note: including file:      c:\program files (x86)\windows kits\10\include\10.0.17763.0\shared\poppack.h
+1>Note: including file:      C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\apiset.h
+1>Note: including file:      C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\ktmtypes.h
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\winbase.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\apisetcconv.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\minwinbase.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\apiquery2.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\processenv.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\fileapi.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\debugapi.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\utilapiset.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\handleapi.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\errhandlingapi.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\fibersapi.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\namedpipeapi.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\profileapi.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\heapapi.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\ioapiset.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\synchapi.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\interlockedapi.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\processthreadsapi.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\sysinfoapi.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\memoryapi.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\enclaveapi.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\threadpoollegacyapiset.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\threadpoolapiset.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\jobapi.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\jobapi2.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\wow64apiset.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\libloaderapi.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\securitybaseapi.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\namespaceapi.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\systemtopologyapi.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\processtopologyapi.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\securityappcontainer.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\realtimeapiset.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\winerror.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\timezoneapi.h
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\wingdi.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\pshpack1.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\poppack.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\pshpack2.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\poppack.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\pshpack2.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\poppack.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\pshpack4.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\poppack.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\pshpack4.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\poppack.h
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\winuser.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\pshpack2.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\poppack.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\tvout.h
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\winnls.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\datetimeapi.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\stringapiset.h
+1>Note: including file:     C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\winnls.h
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\wincon.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\wincontypes.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\consoleapi.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\consoleapi2.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\consoleapi3.h
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\winver.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\verrsrc.h
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\winreg.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\reason.h
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\winnetwk.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\wnnc.h
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared\stralign.h
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\winsvc.h
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\mcx.h
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\imm.h
+1>Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\ime_cmodes.h
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\cassert
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\assert.h
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\sstream
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\cctype
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\fstream
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\cassert
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\assert.h
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\iomanip
+1>Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\xlocmon
+1>Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\xloctime
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\regex
+1>Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\iterator
+1>Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\locale
+1>Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\xlocbuf
+1>Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\xlocmes
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\cassert
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\assert.h
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\stack
+1>Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\deque
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\cassert
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\assert.h
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\iostream
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\cassert
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\assert.h
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\cassert
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\assert.h
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\cassert
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\assert.h
+1>Note: including file:  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\cassert
+1>Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\assert.h
+1>Note: including file: c:\sound-qi_source\soundqi-branch\rm_branch\osi\nativeunittests\../../IMAC/ClassNameDlg.h
+1>Note: including file:  c:\sound-qi_source\soundqi-branch\rm_branch\imac\stdafx.h
+1>Note: including file:   C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\atlmfc\include\afxwin.h
+1>Note: including file:    C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\atlmfc\include\afx.h
+1>Note: including file:     C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt\new.h
+1>Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\include\crtdefs.h
+1>Note: including file:     C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\atlmfc\include\afxver_.h
+1>Note: including file:      C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\atlmfc\include\afxv_w32.h
+1>c:\program files (x86)\microsoft visual studio\2017\buildtools\vc\tools\msvc\14.16.27023\atlmfc\include\afxv_w32.h(16): fatal error C1189: #error:  WINDOWS.H already included.  MFC apps must not #include <Windows.h>
+1>Generating Code...
+1>Done building project "NativeUnitTests.vcxproj" -- FAILED.
+========== Build: 0 succeeded, 1 failed, 1 up-to-date, 0 skipped ==========
+
+-----
+
+netapi32.lib;Wbemuuid.lib;dhcpcsvc.lib;userenv.lib;libredir_std.lib;legacy_stdio_definitions.lib;lm_new.obj;libcrvs.lib;libsb.lib;lmgr.lib;libnoact.lib;lmgr_dongle_stub.lib;cblas.lib;gsl.lib;seiswared.lib;QI-Pro.lib;
+
+-----
+
+						for (int j = 0; j < horizonCount; j++) {
+							if (pHorizon->GetDisplayMode(j) == FALSE) continue;
+							float* pHor = pHorizon->GetHorizonDataPtr(j);
+							if (pHor[prevIndex] == NULL_HORIZON_VALUE || pHor[currIndex] == NULL_HORIZON_VALUE) {
+								// TRACE("skipping j=%d previndex=%d currindex=%d\n", j, prevIndex, currIndex);
+								continue;
+							}
+							if (flatteningOffsets[i - 1] == NULL_HORIZON_VALUE || flatteningOffsets[i] == NULL_HORIZON_VALUE) {
+								continue;
+							}
+
+							float prevTime = 0;
+							float currTime = 0;
+							int yPrev;
+							int yCurr;
+							int xPrev;
+							int xCurr;
+							if (!pDoc->IsPetrelTimeMode()) {
+								prevTime = pHor[prevIndex];
+								currTime = pHor[currIndex];
+							} else {
+								prevTime = (int)pDoc->CalculatePetrelOffset(pDoc->GetPetrelDatum()) - pHor[prevIndex];
+								currTime = (int)pDoc->CalculatePetrelOffset(pDoc->GetPetrelDatum()) - pHor[currIndex];
+							}
+							if (currTime < tstart || (tend && currTime > tend)) continue;
+							prevTime -= tstart;
+							currTime -= tstart;
+							yPrev = TOP + ((int)((std::round(flatteningOffsets[i-1]) * 1000 / si) * m_vScale)) + (int)(prevTime / si * 1000 * m_vScale) + (int)(m_vScale / 2.0);
+							yCurr = TOP + ((int)((std::round(flatteningOffsets[i]) * 1000 / si) * m_vScale)) + (int)(currTime / si * 1000 * m_vScale) + (int)(m_vScale / 2.0);
+							xPrev = traceOriginX - m_hScale / 2;
+							xCurr = xPrev + m_hScale;
+
+							// to get straight line for flattened horizon
+							if (pDoc->GetFlatteningDisplayToggle() && pDoc->GetFlattenHorizonCheck() && pHorizon->GetName(j) == pDoc->GetFlatteningHorizon()) {
+								if (pDoc->IsPetrelTimeMode()) {
+									prevTime = (float)pDoc->CalculatePetrelOffset(pDoc->GetPetrelDatum()) - pDoc->GetFlatteningDatum();
+									currTime = (float)pDoc->CalculatePetrelOffset(pDoc->GetPetrelDatum()) - pDoc->GetFlatteningDatum();
+								}
+								else {
+									prevTime = (float)pDoc->GetFlatteningDatum();
+									currTime = (float)pDoc->GetFlatteningDatum();
+								}
+								if (currTime < tstart || (tend && currTime > tend)) continue;
+								prevTime -= tstart;
+								currTime -= tstart;
+								yPrev = TOP + (int)(prevTime / si * 1000 * m_vScale) + (int)(m_vScale / 2.0);
+								yCurr = TOP + (int)(currTime / si * 1000 * m_vScale) + (int)(m_vScale / 2.0);
+							}
+
+							// don't draw above or below classified area
+							if (yPrev < TOP || yCurr < TOP || 
+								yPrev > TOP + ((m_endTime * 1000 / si) * m_vScale) + (int)(m_vScale / 2.0) || 
+								yCurr > TOP + ((m_endTime * 1000 / si) * m_vScale) + (int)(m_vScale / 2.0))
+							{
+								continue;
+							}
+
+							// save the label coords for later
+							if (horizonLabelData[j].firstFound) {
+								CString horName = pHorizon->GetName(j);
+								horizonLabelData[j].name = horName;
+								horizonLabelData[j].lastY = yPrev;
+								horizonLabelData[j].lastFound = TRUE;
+							}
+							else if (!horizonLabelData[j].firstFound) {
+								CString horName = pHorizon->GetName(j);
+								horizonLabelData[j].name = horName;
+								horizonLabelData[j].firstFound = TRUE;
+								horizonLabelData[j].firstY = yPrev;
+							}
+							
+							int lineWidth = pHorizon->GetLineWidth(j);
+							yPrev -= lineWidth / 2;
+							yCurr -= lineWidth / 2;
+							// white
+							pDC->SelectObject(m_whitePen);
+							pDC->MoveTo(xPrev, yPrev - 1);
+							pDC->LineTo(xCurr, yCurr - 1);
+							// draw color the correct width
+							pDC->SelectObject(pHorizonPen[j]);
+							for (int k = 0; k < lineWidth; k++) {
+								pDC->MoveTo(xPrev, yPrev++);
+								pDC->LineTo(xCurr, yCurr++);
+							}
+							// white
+							pDC->SelectObject(m_whitePen);
+							pDC->MoveTo(xPrev, yPrev);
+							pDC->LineTo(xCurr, yCurr);
+						}
+
+
+-----
+
+Exception thrown at 0x00007FF8D8373F06 (ntdll.dll) in QI-Pro.exe: 0xC0000005: Access violation reading location 0x0000000100000000.
+
+
+color 
+width 
+same as horizon 
+
+
+
+
+
+TF400324: Azure DevOps services are not available from server sqi009\DefaultCollection.
+Technical information (for administrator):
+  The underlying connection was closed: A connection that was expected to be kept alive was closed by the server.
+  
+-----
+
+'QI-Pro.exe' (Win32): Loaded 'C:\Windows\System32\bcryptprimitives.dll'. Symbols loaded.
+Exception thrown at 0x00007FF8CB24D759 (KernelBase.dll) in QI-Pro.exe: 0x000006A6: The binding handle is invalid.
+'QI-Pro.exe' (Win32): Loaded 'C:\Windows\System32\kernel.appcore.dll'. Symbols loaded.
+'QI-Pro.exe' (Win32): Loaded 'C:\Windows\System32\msctf.dll'. Symbols loaded.
+'QI-Pro.exe' (Win32): Loaded 'C:\Windows\System32\TextShaping.dll'. Symbols loaded.
+'QI-Pro.exe' (Win32): Loaded 'C:\Windows\System32\WindowsCodecs.dll'. Symbols loaded.
+D:\a01\_work\6\s\src\vctools\VC7Libs\Ship\ATLMFC\Src\MFC\afxtoolbarimages.cpp(966) : atlTraceGeneral - Can't load bitmap: WINDOWS7_IDB_RIBBON_BTN_PANEL_MAIN. GetLastError() = 716
+D:\a01\_work\6\s\src\vctools\VC7Libs\Ship\ATLMFC\Src\MFC\docmgr.cpp(96) : AppMsg - Warning: registration database update failed for key 'QI-Pro.Document'.
+
+-----
+
+Exception thrown: write access violation.
+**dw** was 0x2D5C0418000.
+
+Exception thrown: write access violation.
+**dw** was 0x1E4D8026000.
+
+C:\Users\panderk\OneDrive - sound-qi.com\Projects\QI_Pro\QI-Pro Blackfoot Demo\QI-Pro Blackfoot Demo\QI-Pro Blackfoot Demo\Seismic\Blackfoot.DN.1.sgy
+
+  
+void CInputAttributesDlg::OnClickedRemoveAttribute()
+{
+	SaveVariables();
+	std::vector<RemoveAttributeInfo> vctAttributes;
+	RemoveAttributeInfo removeAttributeInfo;
+
+	for (int i = m_lstSegYFile.GetItemCount() - 1; i >= 0; i--) {
+		if (m_lstSegYFile.IsSelected(i)) {
+			vctAttributes.push_back(RemoveAttribute(i));
+		}
+	}
+	BOOL isMultiple = FALSE;
+	BOOL showDialog = FALSE;
+	CString msg;
+	CString strAttributeName;
+
+	if (vctAttributes.size() > 1) {
+		isMultiple = TRUE;
+
+		for (int i = 0; i < vctAttributes.size(); i++) {
+			if (vctAttributes[i].isRemoved) {
+				strAttributeName += vctAttributes[i].name + ", ";
+				showDialog = TRUE;
+			}
+		}
+		strAttributeName = strAttributeName.TrimRight(' ');
+		strAttributeName = strAttributeName.TrimRight(',');
+	}
+	else {
+		strAttributeName = vctAttributes[0].name;
+	}
+
+	if (isMultiple && showDialog) {
+		msg.Format("The attributes '%s' have been removed.\n", strAttributeName.GetString());
+		msg += "You may now optionally use the 'Find Common Traces' feature to rescan the data files for more traces.\n";
+		msg += "However, rescanning is not necessary as you may wish to retain and use the traces from the previous scan.";
+		AfxMessageBox(msg);
+	}
+	else if (vctAttributes.size() > 0 && vctAttributes[0].isRemoved) {
+		msg.Format("The attribute '%s' has been removed.\n", strAttributeName.GetString());
+		msg += "You may now optionally use the 'Find Common Traces' feature to rescan the data files for more traces.\n";
+		msg += "However, rescanning is not necessary as you may wish to retain and use the traces from the previous scan.";
+		AfxMessageBox(msg);
+	}
+
+	PopulateListCtrl();
+	SetSelectedAttribute(0);
+}
+
+ void CIMACDoc::Serialize(CArchive& ar)
+ 
+ 
+Exception thrown at 0x00007FFD51E33F06 (ntdll.dll) in QI-Pro.exe: 0xC0000005: Access violation reading location 0x0000000100000000.
+
+ 
+
+849	Roger Moore	2021-01-08 9:31:54 AM	-Updated CV Settings dialog layout to fit better when resizing with 3 columns
+
+
+DDX_Text(pDX, IDC_FLATTEN_LABEL, m_flattenLabel);
+
+
+	
+http://sqi009:8080/tfs/DefaultCollection/SoundQI-Branch/_versionControl/changeset/857
+
+
+static_cast
+
+http://sqi009:8080/tfs/DefaultCollection/SoundQI/_versionControl/changeset/863
+
+
+
+-Resolved these three issues with TimeSlice and Horizons:
+
+1) When there are no horizons the time slices parallel to "Time Zero" don`t show up 
+2) The TimeSlice line at 10 ms it loses its color 
+3) The time zero offset slice is not quite on the exact line (i.e., it was off by 1/2 a sample)
+
+-----
+
+Exception thrown at 0x00007FFD28033F06 (ntdll.dll) in QI-Pro.exe: 0xC0000005: Access violation reading location 0x0000000100000000.
+Exception thrown at 0x00007FFD28033F06 (ntdll.dll) in QI-Pro.exe: 0xC0000005: Access violation reading location 0x0000000100000000.
+
+-> Solution: Needed to start IMAC/QI Pro not as admin 
+
+-----
+
+CSI.exe has triggered a breakpoint.
+
+Merge from RM_Branch to master:
+-Fix for third attribute color bug with crossplot settings
+
+C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\Libraries
+
+..\CodeSigningCertificate\SQI-SignTool.bat "$(OutDir)$(TargetName)$(TargetExt)"
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	MSB3073	The command "copy "C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\QI-Pro\x64\lib-build\QI-Pro.lib" ..\..\..\NativeUnitTests\Libraries
+:VCEnd" exited with code 1.	IMAC	C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\IDE\VC\VCTargets\Microsoft.CppCommon.targets	138	
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	MSB3073	The command "copy "C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\QI-Pro\x64\lib-build\QI-Pro.lib" ..\..\..\NativeUnitTests\Libraries\
+:VCEnd" exited with code 1.	IMAC	C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\IDE\VC\VCTargets\Microsoft.CppCommon.targets	138	
+
+WinMerge Compare in VS Options:
+
+Original:
+/e /u /wl /wr /dl %6 /dr %7 %1 %2
+
+Updated:
+/ub /dl %6 /dr %7 %1 %2
+
+timeSliceLabelData.lastY = yPrev + 1000 / si * m_vScale;
+
+
+Merge:
+/e /u /wl /dl %6 /dr %7 %1 %2 %4
+
+timeSliceLabelData.lastY = yPrev + 1000 / si * m_vScale;
+
+timeSliceLabelData.lastY = yPrev * 1000 / si * m_vScale;
+
+							if (timeSliceLabelData.firstFound) {
+								timeSliceLabelData.name = CTimeSlice::TIME_SLICE;
+								timeSliceLabelData.isOffsetTimeZero = FALSE;
+								timeSliceLabelData.lastY = yPrev;
+								timeSliceLabelData.lastY += sliceTime * 1000 / si * m_vScale;;
+								timeSliceLabelData.lastFound = TRUE;
+							}
+							else if (!timeSliceLabelData.firstFound) {
+								timeSliceLabelData.name = CTimeSlice::TIME_SLICE;
+								timeSliceLabelData.isOffsetTimeZero = FALSE;
+								timeSliceLabelData.firstFound = TRUE;
+								timeSliceLabelData.firstY = yPrev;
+								timeSliceLabelData.firstY += sliceTime * 1000 / si * m_vScale;
+							}
+							
+							// save the label coords for later
+							if (timeSliceLabelData.firstFound) {
+								timeSliceLabelData.name = CTimeSlice::TIME_SLICE;
+								timeSliceLabelData.isOffsetTimeZero = FALSE;
+								timeSliceLabelData.lastY = yPrev;
+								timeSliceLabelData.lastY += sliceTime * 1000 / si * m_vScale;
+								timeSliceLabelData.lastFound = TRUE;
+							}
+							else if (!timeSliceLabelData.firstFound) {
+								timeSliceLabelData.name = CTimeSlice::TIME_SLICE;
+								timeSliceLabelData.isOffsetTimeZero = FALSE;
+								timeSliceLabelData.firstFound = TRUE;
+								timeSliceLabelData.firstY = yPrev;
+								timeSliceLabelData.firstY += sliceTime * 1000 / si * m_vScale;
+							}
+							
+
+sliceTime * 1000 / si * m_vScale
+-84.0000000
+yPrev
+583
+yCurr
+583
+lineWidth
+1
+
+firstFound:
+After "timeSliceLabelData.lastY = yPrev":
+timeSliceLabelData.lastY
+667
+
+After "timeSliceLabelData.lastY += sliceTime * 1000 / si * m_vScale;":
+timeSliceLabelData.lastY
+583
+
+TOP - DXY / 2
+
+rcItem.top = TOP - DXY - DXY / 2
+
+TOP - DXY 
+
+TOP + ((flatteningOffsets[i] * 1000 / si) * m_vScale);
+
+(int)(prevTime / si * 1000 * m_vScale)
+
+							// save the label coords for later
+							if (timeSliceLabelData.firstFound) {
+								timeSliceLabelData.name = CTimeSlice::TIME_SLICE;
+								timeSliceLabelData.isOffsetTimeZero = FALSE;
+								timeSliceLabelData.lastY = yPrev;
+								//timeSliceLabelData.lastY += sliceTime * 1000 / si * m_vScale;
+								timeSliceLabelData.lastY += (int)(prevTime / si * 1000 * m_vScale);
+								timeSliceLabelData.lastFound = TRUE;
+							}
+							else if (!timeSliceLabelData.firstFound) {
+								timeSliceLabelData.name = CTimeSlice::TIME_SLICE;
+								timeSliceLabelData.isOffsetTimeZero = FALSE;
+								timeSliceLabelData.firstY = yPrev;
+								//timeSliceLabelData.firstY += sliceTime * 1000 / si * m_vScale;
+								timeSliceLabelData.firstY += (int)(prevTime / si * 1000 * m_vScale);
+								timeSliceLabelData.firstFound = TRUE;
+							}
+							
+							// save the label coords for later
+							if (timeSliceLabelData.firstFound) {
+								timeSliceLabelData.name = CTimeSlice::TIME_SLICE;
+								timeSliceLabelData.isOffsetTimeZero = FALSE;
+								timeSliceLabelData.lastY = yPrev;
+								timeSliceLabelData.lastY += (sliceTime * 1000 / si * m_vScale + TOP - DXY - DXY / 2);
+								timeSliceLabelData.lastFound = TRUE;
+							}
+							else if (!timeSliceLabelData.firstFound) {
+								timeSliceLabelData.name = CTimeSlice::TIME_SLICE;
+								timeSliceLabelData.isOffsetTimeZero = FALSE;
+								timeSliceLabelData.firstFound = TRUE;
+								timeSliceLabelData.firstY = yPrev;
+								timeSliceLabelData.firstY += (sliceTime * 1000 / si * m_vScale + TOP - DXY - DXY / 2);
+							}
+
+-----
+
+
+							// save the label coords for later
+							if (timeSliceLabelData.firstFound) {
+								timeSliceLabelData.name = CTimeSlice::TIME_SLICE;
+								timeSliceLabelData.isOffsetTimeZero = FALSE;
+								timeSliceLabelData.lastY = yPrev;
+								timeSliceLabelData.lastY += (sliceTime * 1000 / si * m_vScale + DXY);
+								timeSliceLabelData.lastFound = TRUE;
+							}
+							else if (!timeSliceLabelData.firstFound) {
+								timeSliceLabelData.name = CTimeSlice::TIME_SLICE;
+								timeSliceLabelData.isOffsetTimeZero = FALSE;
+								timeSliceLabelData.firstFound = TRUE;
+								timeSliceLabelData.firstY = yPrev;
+								timeSliceLabelData.firstY += (sliceTime * 1000 / si * m_vScale + DXY);
+							}
+
+
+Do we really need to include the headwave installer inside our installer?  It is a separate app.							
+
+
+
+
+C:\HW-Data_old2
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\QIProSetup.exe
+
+create msi 
+sign the exe with SSL 
+
+SignTool.bat 
+
+<file.exe> /s /x /b"<folder>" /v"/qn"
+
+Upgrade code:
+
+{AED45A36-9A11-40E2-9439-59D015C799DB}
+
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{245EA8AD-009F-4239-B016-85F03574EFAA}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>NativeUnitTests</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <SccProjectName>$/SoundQI/OSI/NativeUnitTests</SccProjectName>
+    <SccAuxPath>http://sqi009:8080/tfs/defaultcollection</SccAuxPath>
+    <SccLocalPath>.</SccLocalPath>
+    <SccProvider>{4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}</SccProvider>
+  </PropertyGroup>
+  
+  
+${SF_SELECTED}
+
+Please note that I have been trying to create a simple installer based on https://www.codeproject.com/Articles/24187/Creating-an-Installer?msg=5782957#xx5782957xx; however, it is not clear to me how I can determine whether the checkbox is checked or not:
+
+[![enter image description here][1]][1]
+
+When I research checkboxes, I see that you can get the state using [NSD_GetState][2] but in the case of the CodeProject article, how can I find out what the name of the `control_HWND` checkbox is?  Is there some sort of default naming convention with NSIS?
+
+
+DirectoryLeave
+
+tf history /collection:"http://sqi009:8080/tfs/DefaultCollection/" "$/SoundQI" /recursive /stopafter:50 /noprompt /login:SOUNDQI.LAN\moorer,sqF
+
+${If}
+
+CreateShortcut
+  
+  
+	${StrContains} $0 "Flex" "$INSTDIR"
+    StrCmp $0 "" notfoundFlex
+      StrCpy $FlexLmInstallDir "$INSTDIR"
+	  ;MessageBox MB_OK "SEC1 #4 FlexLmInstallDir is $FlexLmInstallDir"
+      Goto doneFlex
+    notfoundFlex:
+      ;MessageBox MB_OK 'Did not find Flex string'
+
+-----
+  ${If} ${SectionIsSelected} ${SEC3}
+  
+    ;MessageBox MB_OK "SEC3 #1 INSTDIR is $INSTDIR"
+
+	;MessageBox MB_OK "SEC1 #1 INSTDIR is $INSTDIR"
+	${StrContains} $0 "Pro" "$INSTDIR"
+	;MessageBox MB_OK "SEC1 #2 0 is $0"
+    StrCmp $0 "" notfoundQI
+      StrCpy $QiProInstallDir "$INSTDIR"
+	  ;MessageBox MB_OK "SEC1 #3 QiProInstallDir is $QiProInstallDir"
+      Goto doneQI
+    notfoundQI:
+      ;MessageBox MB_OK 'Did not find QI string'
+
+	${StrContains} $0 "Flex" "$INSTDIR"
+    StrCmp $0 "" notfoundFlex
+      StrCpy $FlexLmInstallDir "$INSTDIR"
+	  ;MessageBox MB_OK "SEC1 #4 FlexLmInstallDir is $FlexLmInstallDir"
+      Goto doneFlex
+    notfoundFlex:
+      ;MessageBox MB_OK 'Did not find Flex string'
+	doneFlex:	  
+	
+	doneQI:	
+  ${EndIf}    
+
+  File libzmq-mt-4_3_0.dll  
+  File seisware.dll  
+  File vcruntime140_1.dll 
+
+%systemroot%\system32\notepad.exe
+
+remote bmp 
+sign uninstaller 
+add icon to uninstaller 
+
+-----
+
+macOSUpd10.13.2
+
+nsExec::ExecToStack 'cmd /c "SQI-SignTool.bat $%TEMP%\uninstaller.exe"'
+
+    # define uninstaller name
+    WriteUninstaller "%TEMP%\uninstaller.exe"
+    nsExec::ExecToStack 'cmd /c "SQI-SignTool.bat %TEMP%\uninstaller.exe"'
+	
+	
+
+
+-----  
+
+
+
+$ {nsProcess :: CloseProcess} "yahoomessanger.exe" $ R0
+
+Changeset 972: Fixed equation parser when equation begins with minus, left round, minus. Also added some text to vv substitute dialog to make it more clear what the user has to do.
+
+Attempting automated recognition of virtual machine graphical user interface.
+Please wait
+Failed automated recognition of virtual machine graphical user interface.
+Please press enter as directed.
+
+
+
+
+
+Failed to open a session for the virtual machine macOS.
+
+Info on guest CPU 'Intel Core i9-10900F 2.80GHz' could not be found. Please, select a different CPU. (VERR_CPUM_DB_CPU_NOT_FOUND).
+
+Result Code: E_FAIL (0x80004005)
+Component: ConsoleWrap
+Interface: IConsole {872da645-4a9b-1727-bee2-5585105b9eed}
+
+----
+
+Exception thrown: read access violation.
+**this** was 0xFFFFFFFFFFFFFFBF.
+
+
+
+-----
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error (active)	E0433	qualifiers dropped in binding reference of type "DWORD &" to initializer of type "const DWORD"	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\CrossPlotSettingsDlg.cpp	208	
+
+-----
+
+chained comparisons are not supported inside assertions, wrap the expression inside parentheses, or decompose it
+			
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error (active)	E2624	a friend template declaration with a default template argument must be the only declaration (first declared at line 3081 of "C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\catch.hpp")	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\catch.hpp	3081	
+
+
+-----
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2005	"private: static void * Catch::FatalConditionHandler::exceptionHandlerHandle" (?exceptionHandlerHandle@FatalConditionHandler@Catch@@0PEAXEA) already defined in DoublePointShould.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\NativeUnitTests.obj	1	
+
+-----
+
+Exception has occurred: PermissionError
+[WinError 5] Access is denied: 'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.101'
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\run_installers.py", line 178, in Run
+    if os.stat(f).st_mtime < now - 7 * 86400:
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\run_installers.py", line 191, in <module>
+    returnCode = Run()
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\create_installers.py", line 5, in <module>
+    import run_installers
+	
+-----
+
+from stat import S_ISREG, ST_CTIME, ST_MODE
+import os, sys, time
+
+#Relative or absolute path to the directory
+dir_path = sys.argv[1] if len(sys.argv) == 2 else r'.'
+
+#all entries in the directory w/ stats
+data = (os.path.join(dir_path, fn) for fn in os.listdir(dir_path))
+data = ((os.stat(path), path) for path in data)
+
+# regular files, insert creation date
+data = ((stat[ST_CTIME], path)
+           for stat, path in data if S_ISREG(stat[ST_MODE]))
+
+for cdate, path in sorted(data):
+    print(time.ctime(cdate), os.path.basename(path))
+
+	
+-----
+
+    try {
+        m_file.Write(pEbcdic, 3200);
+        m_file.Write(pBinary, 400);
+    }
+    catch (...) {
+        AfxMessageBox("Error writing Seg-Y headers.");
+        returnStat = -1;
+    }
+	
+-----    
+    
+	try
+	{
+		shift = m_seismicVolumeManager.GetBulkShift(seismicKey).Value(Unit::Millisecond);
+	}
+	catch (const SDKException & e)
+	{
+		CString cerr("Failed to get all seismicVolumes.\n");
+		cerr += CString(e.what());
+		AfxMessageBox(cerr);
+	}
+
+-----
+	try
+	{
+        // ...
+        }
+#if !defined(CATCH_CONFIG_DISABLE_EXCEPTIONS)
+        catch( std::exception& ex ) {
+            Catch::cerr() << ex.what() << std::endl;
+            return MaxExitCode;
+        }
+#endif
+
+	
+
+C:\TeamCity\buildAgent\work\fbef456932ac7c99\OSI\QI-Pro\x64\Release
+
+After a quick test, the installer and QI-Pro app look to be running properly.
+
+
+#pragma omp parallel reduction(+: sum) num_threads(8)
+
+-----
+
+m_attrColorBarMin
+
+OnRadioScatterMode
+
+m_colorBarMin
+
+-----
+
+Thread generates tasks, and these are then picked up by other threads to be executed.  The usual assumption is that all the tasks can be executed independently, so that the order they are executed in does not matter.  However, as we will see, it is also possible to order the execution of tasks if required.
+
+-----
+
+ TF30063: You are not authorized to access sqi009\DefaultCollection.
+ The calling thread cannot access this object because a different thread owns it.
+ TF30063: You are not authorized to access sqi009\DefaultCollection.
+ 
+-----
+
+m_strSWLicense = "QI-Pro-SW SQI 31-dec-2025"
+
+
+	
+    
+	myfile = fopen("find_nearest_trace.log", "a+");
+	pSegyIndexPtr->FindNearestTrace(m_pX[index], m_pY[index], *pInline, *pXline);
+	m_pInline[index] = *pInline;
+	m_pXline[index] = *pXline;
+	//TRACE("%u        %u         %lf             %lf             %u\n", rInline, rXline, GetXCoord(i), GetYCoord(i), i);
+	fprintf(myfile, "%u        %u         %lf             %lf             %u", m_pInline[index], m_pXline[index], m_pX[index], m_pY[index], index);
+	fclose(myfile);
+
+    
+
+SEC0HwWorkspace
+
+CreateDirectory "$HW_WORKSPACE_DIR"  
+
+Function SelectFilesHeadwaveProg
+
+-----
+
+		//binX = m_pX[inputFileRec] / binSizeX;
+		//binY = m_pY[inputFileRec] / binSizeY;
+/*			binX = m_pX[inputFileRec];
+			binY = m_pY[inputFileRec]*/;
+
+			//for (double j = minX; j < maxX; j += binSizeX) {
+			//	for (double k = minY; k < maxY; k += binSizeY) {
+			//		DWORD inLineFound, xLineFound;
+			//		double searchX = j;
+			//		double searchY = k;
+			//		pIndex->FindNearestTrace(searchX, searchY, inLineFound, xLineFound);
+			//		m_pInline[inputFileRec] = inLineFound;
+			//		m_pXline[inputFileRec] = xLineFound;
+			//		
+			//		//if ((binX >= (j - binSizeX) && binX < (j + binSizeX)) &&
+			//		//	(binY >= (k - binSizeY) && binY < (k + binSizeY)))
+			//		//{						
+			//		//	m_pInline[inputFileRec] = pIndex->GetInline(inputFileRec);
+			//		//	m_pXline[inputFileRec] = pIndex->GetCrossline(inputFileRec);
+			//		//	fprintf(myfile, "%u        %u         %lf             %lf             %u", m_pInline[inputFileRec], m_pXline[inputFileRec], m_pX[inputFileRec], m_pY[inputFileRec], inputFileRec);
+			//		//}
+			//	}
+			//}
+            
+            
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2019	unresolved external symbol "public: void __cdecl CEditListCtrl::MoveCheckboxes(int)" (?MoveCheckboxes@CEditListCtrl@@QEAAXH@Z) referenced in function "protected: void __cdecl CSegyOutDlg::OnEndtrackVvList(struct tagNMHDR *,__int64 *)" (?OnEndtrackVvList@CSegyOutDlg@@IEAAXPEAUtagNMHDR@@PEA_J@Z)	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\SegyOutDlg.obj	1	
+
+    try {
+
+	}
+	catch (std::exception& ex) {
+		CString exceptionMessage = ex.what();
+		CIMACDoc* pDoc = CIMACDoc::GetIMACDocPtr();
+		CLogfile* pLogfile = pDoc->GetLogfilePtr();
+		CString projectPath = pDoc->GetPathName();
+		pLogfile->OpenLogfile(projectPath);
+		pLogfile->WriteLogfile("CHorizon::DestroyData", exceptionMessage);
+		pLogfile->CloseLogfile();
+		AfxMessageBox("Error destroying data: " + exceptionMessage);
+	}
+
+
+	pIndex->FindNearestTrace(minX, minY, inLine, xLine);
+	pIndex->FindNearestTrace(maxX, minY, inLine2, xLine2);
+	pIndex->FindNearestTrace(maxX, minY, inLine3, xLine3);
+    
+-----
+
+PROG0_HW_Wk_StartIndex
+
+-----
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK1104	cannot open file 'libredir_std.lib'	IMAC	C:\Projects\SoundQI-Branch\RM_Branch\IMAC\LINK	1	
+
+
+
+CSegy *pSegy = pDoc->GetSegyInPtr(segyToUse)
+
+
+
+Section "FlexLM" /o SEC3
+
+
+
+Exception thrown at 0x00007FF79F1C4390 in NativeUnitTests.exe: 0xC0000005: Access violation reading location 0x000000000001A580.
+
+
+No symbol file loaded for NativeUnitTests.exe
+
+-----
+
+1>------ Build started: Project: NativeUnitTests, Configuration: lib-build x64 ------
+1>NativeUnitTests.cpp
+1>LINK : warning LNK4098: defaultlib 'mfc140.lib' conflicts with use of other libs; use /NODEFAULTLIB:library
+1>LINK : warning LNK4098: defaultlib 'mfcs140.lib' conflicts with use of other libs; use /NODEFAULTLIB:library
+
+QI-Pro.log
+
+CSegy:
+CFile m_file;
+
+CSegyIndex:
+CString		m_filename;
+
+
+
+
+Page custom UserInfoPage 
+
+    
+-----
+
+Exception has occurred: FileNotFoundError
+[WinError 3] The system cannot find the path specified: 'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.6.140\\QI-Pro.exe'
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\run_installers.py", line 78, in Run
+    qi_pro_file_prev_installer_stats = os.stat(qi_pro_file_prev_installer_path)
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\run_installers.py", line 259, in <module>
+    returnCode = Run()
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\create_installers.py", line 5, in <module>
+    import run_installers
+
+-----
+
+Microsoft Windows [Version 10.0.19042.867]
+(c) 2020 Microsoft Corporation. All rights reserved.
+
+U:\>c:
+
+C:\>cd Users
+
+C:\Users>cd moorer
+
+C:\Users\moorer>git tfs help
+git: 'tfs' is not a git command. See 'git --help'.
+
+The most similar command is
+        lfs
+
+C:\Users\moorer>where git
+C:\Program Files\Git\cmd\git.exe
+C:\Program Files\Git\mingw64\bin\git.exe
+
+C:\Users\moorer>set
+ALLUSERSPROFILE=C:\ProgramData
+APPDATA=C:\Users\moorer\AppData\Roaming
+CLIENTNAME=GRIEG
+CommonProgramFiles=C:\Program Files\Common Files
+CommonProgramFiles(x86)=C:\Program Files (x86)\Common Files
+CommonProgramW6432=C:\Program Files\Common Files
+COMPUTERNAME=SQI012
+ComSpec=C:\Windows\system32\cmd.exe
+DriverData=C:\Windows\System32\Drivers\DriverData
+GIT_TFS_CLIENT=2019
+GTK_BASEPATH=C:\Program Files (x86)\GtkSharp\2.12\
+HEADWAVE_ROOT_DIR=C:\Program Files\Headwave 10.4.2
+HOMEDRIVE=U:
+HOMEPATH=\
+HOMESHARE=\\soundqi-dc2\users$\moorer
+JAVA_HOME=C:\Program Files\Java\jdk-15.0.1
+LOCALAPPDATA=C:\Users\moorer\AppData\Local
+LOGONSERVER=\\SOUNDQI-DC2
+NUMBER_OF_PROCESSORS=20
+OneDrive=C:\Users\moorer\OneDrive - sound-qi.com
+OneDriveCommercial=C:\Users\moorer\OneDrive - sound-qi.com
+OS=Windows_NT
+Path=C:\Program Files\Common Files\Oracle\Java\javapath;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR;C:\Program Files\dotnet\;C:\Program Files\Microsoft SQL Server\130\Tools\Binn\;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\;C:\Program Files\Microsoft VS Code\bin;C:\Program Files\Git\cmd;C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\bin;C:\Program Files\TortoiseGit\bin;C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit\;C:\Program Files (x86)\GtkSharp\2.12\bin;C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin;C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\bin\Hostx64\x64;C:\Program Files\WinMerge;C:\Program Files (x86)\NSIS;C:\Program Files (x86)\WiX Toolset v3.11\bin;C:\Program Files (x86)\Windows Kits\10\bin\10.0.17763.0\x64;C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\Common7\IDE\CommonExtensions\Microsoft\TeamFoundation\Team Explorer;C:\Program Files\Oracle\VirtualBox;C:\Users\moorer\AppData\Local\Programs\Python\Python39-32\Scripts\;C:\Users\moorer\AppData\Local\Programs\Python\Python39-32\;C:\Users\moorer\AppData\Local\Microsoft\WindowsApps;C:\Users\moorer\.dotnet\tools;C:\Tools\apache-ant-1.10.9-bin\bin;C:\Program Files\Graphviz 2.44.1\bin;C:\Program Files\7-Zip;C:\Tools\GitTfs.Vs2019;
+PATHEXT=.COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC
+PROCESSOR_ARCHITECTURE=AMD64
+PROCESSOR_IDENTIFIER=Intel64 Family 6 Model 165 Stepping 5, GenuineIntel
+PROCESSOR_LEVEL=6
+PROCESSOR_REVISION=a505
+ProgramData=C:\ProgramData
+ProgramFiles=C:\Program Files
+ProgramFiles(x86)=C:\Program Files (x86)
+ProgramW6432=C:\Program Files
+PROMPT=$P$G
+PSModulePath=C:\Program Files\WindowsPowerShell\Modules;C:\Windows\system32\WindowsPowerShell\v1.0\Modules
+PUBLIC=C:\Users\Public
+SESSIONNAME=RDP-Tcp#15
+SystemDrive=C:
+SystemRoot=C:\Windows
+TEMP=C:\Users\moorer\AppData\Local\Temp
+TMP=C:\Users\moorer\AppData\Local\Temp
+USERDNSDOMAIN=SOUNDQI.LAN
+USERDOMAIN=SOUNDQI
+USERDOMAIN_ROAMINGPROFILE=SOUNDQI
+USERNAME=moorer
+USERPROFILE=C:\Users\moorer
+VBOX_MSI_INSTALL_PATH=C:\Program Files\Oracle\VirtualBox\
+windir=C:\Windows
+WIX=C:\Program Files (x86)\WiX Toolset v3.11\
+
+C:\Users\moorer>git tfs help
+git: 'tfs' is not a git command. See 'git --help'.
+
+The most similar command is
+        lfs
+
+C:\Users\moorer>git-lfs.exe help
+git lfs <command> [<args>]
+
+Git LFS is a system for managing and versioning large files in
+association with a Git repository.  Instead of storing the large files
+within the Git repository as blobs, Git LFS stores special "pointer
+files" in the repository, while storing the actual file contents on a
+Git LFS server.  The contents of the large file are downloaded
+automatically when needed, for example when a Git branch containing
+the large file is checked out.
+
+Git LFS works by using a "smudge" filter to look up the large file
+contents based on the pointer file, and a "clean" filter to create a
+new version of the pointer file when the large file's contents change.
+It also uses a pre-push hook to upload the large file contents to
+the Git LFS server whenever a commit containing a new large file
+version is about to be pushed to the corresponding Git server.
+
+Commands
+--------
+
+Like Git, Git LFS commands are separated into high level ("porcelain")
+commands and low level ("plumbing") commands.
+
+High level commands
+--------------------
+
+* git lfs env:
+    Display the Git LFS environment.
+* git lfs checkout:
+    Populate working copy with real content from Git LFS files.
+* git lfs dedup:
+    De-duplicate Git LFS files.
+* git lfs ext:
+    Display Git LFS extension details.
+* git lfs fetch:
+    Download Git LFS files from a remote.
+* git lfs fsck:
+    Check Git LFS files for consistency.
+* git lfs install:
+    Install Git LFS configuration.
+* git lfs lock:
+    Set a file as "locked" on the Git LFS server.
+* git lfs locks:
+    List currently "locked" files from the Git LFS server.
+* git lfs logs:
+    Show errors from the Git LFS command.
+* git lfs ls-files:
+    Show information about Git LFS files in the index and working tree.
+* git lfs migrate:
+    Migrate history to or from Git LFS
+* git lfs prune:
+    Delete old Git LFS files from local storage
+* git lfs pull:
+    Fetch Git LFS changes from the remote & checkout any required working tree
+    files.
+* git lfs push:
+    Push queued large files to the Git LFS endpoint.
+* git lfs status:
+    Show the status of Git LFS files in the working tree.
+* git lfs track:
+    View or add Git LFS paths to Git attributes.
+* git lfs uninstall:
+    Uninstall Git LFS by removing hooks and smudge/clean filter configuration.
+* git lfs unlock:
+    Remove "locked" setting for a file on the Git LFS server.
+* git lfs untrack:
+    Remove Git LFS paths from Git Attributes.
+* git lfs update:
+    Update Git hooks for the current Git repository.
+* git lfs version:
+    Report the version number.
+
+Low level commands
+-------------------
+
+* git lfs clean:
+    Git clean filter that converts large files to pointers.
+* git lfs filter-process:
+    Git process filter that converts between large files and pointers.
+* git lfs pointer:
+    Build and compare pointers.
+* git lfs post-checkout:
+    Git post-checkout hook implementation.
+* git lfs post-commit:
+    Git post-commit hook implementation.
+* git lfs post-merge:
+    Git post-merge hook implementation.
+* git lfs pre-push:
+    Git pre-push hook implementation.
+* git lfs smudge:
+    Git smudge filter that converts pointer in blobs to the actual content.
+* git lfs standalone-file:
+    Git LFS standalone transfer adapter for file URLs (local paths).
+
+Examples
+--------
+
+To get started with Git LFS, the following commands can be used.
+
+ 1. Setup Git LFS on your system. You only have to do this once per
+    repository per machine:
+
+        git lfs install
+
+ 2. Choose the type of files you want to track, for examples all ISO
+    images, with git lfs track:
+
+        git lfs track "*.iso"
+
+ 3. The above stores this information in gitattributes(5) files, so
+    that file need to be added to the repository:
+
+        git add .gitattributes
+
+ 3. Commit, push and work with the files normally:
+
+        git add file.iso
+        git commit -m "Add disk image"
+        git push
+
+C:\Users\moorer>
+C:\Users\moorer>
+C:\Users\moorer>
+C:\Users\moorer>
+C:\Users\moorer>
+C:\Users\moorer>git-tfs.exe help
+'git-tfs.exe' is not recognized as an internal or external command,
+operable program or batch file.
+
+C:\Users\moorer>git tfs help
+git: 'tfs' is not a git command. See 'git --help'.
+
+The most similar command is
+        lfs
+
+C:\Users\moorer>git-tfs.exe help
+Found matching Visual Studio version at C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional
+Usage: git-tfs [command] [options]
+    bootstrap
+    branch
+    checkin
+    checkintool (ct)
+    checkout
+    cleanup
+    cleanup-workspace-local
+    cleanup-workspaces
+    clone
+    create
+    diagnostics
+    exportmap
+    fetch
+    help
+    info
+    init
+    labels
+    list-remote-branches
+    pull
+    quick-clone
+    rcheckin
+    reset-remote
+    shelve
+    shelve-delete
+    shelve-list
+    subtree
+    unshelve
+    verify
+    version
+ (use 'git-tfs help [command]' or 'git-tfs [command] --help' for more information)
+
+Find more help in our online help : https://github.com/git-tfs/git-tfs
+
+C:\Users\moorer>
+C:\Users\moorer>
+C:\Users\moorer>cd /tmp
+The system cannot find the path specified.
+
+C:\Users\moorer>cd C:\cygwin64\tmp
+
+C:\cygwin64\tmp>git-tfs.exe list-remote-branches http://sqi009:8080/tfs/DefaultCollection
+Found matching Visual Studio version at C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional
+No TFS branches were found!
+
+
+Perhaps you should convert your branch folders into a branch in TFS:
+  -> Open 'Source Control Explorer' and for each folder corresponding to a branch, right click on the folder and select 'Branching and Merging' > 'Convert to branch'.
+
+C:\cygwin64\tmp>git-tfs.exe clone http://sqi009:8080/tfs/DefaultCollection $/SoundQI-Branch
+Found matching Visual Studio version at C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional
+Initialized empty Git repository in C:/cygwin64/tmp/SoundQI-Branch/.git/
+
+warning: you are going to clone the whole repository or too high in the repository path !
+   => If you want to manage branches with git-tfs, clone one of this branch instead :
+ - $/SoundQI/KH-Branch
+
+PS:if your branch is not listed here, perhaps you should convert the containing folder to a branch in TFS.
+Fetching from TFS remote 'default'...
+C116 = ef8e4aaacc2b050b93ac0c34acc51431a99510d4
+C117 = 405f826dfcaea8e7f2f4360d23053e65ecf768ed
+error: branch not found. Verify that all the folders have been converted to branches (or something else :().
+        path $/SoundQI/common/WellCoordBulkLoadDlg.h/
+warning: this changeset 119 is a merge changeset. But git-tfs failed to find and fetch the parent changeset 118. Parent changeset will be ignored...
+C119 = 9e80a661495326993b1ebd01724e985d8df1d2b9
+C120 = 6d047f596aba84e9c4b1259a44d4ff767128b6d6
+C121 = eb324b7f2a32450dede1f2474e27321d136e2c26
+error: branch not found. Verify that all the folders have been converted to branches (or something else :().
+        path $/SoundQI/segytool/segytool/PatchSegyDlg.cpp/
+warning: this changeset 125 is a merge changeset. But git-tfs failed to find and fetch the parent changeset 124. Parent changeset will be ignored...
+C125 = 543f4f446371f69163f4e954b94c6cf6530b20a1
+C174 = 756bbd0fc579d91178fd849ba6d25a8a652fcce2
+C175 = 738867715038a5954b00778b8f5d9bc75c5e89c3
+C287 = 53c6bd59064d44194d8a4edd7383f742fb01b1ca
+C289 = 25b67e6cc3ce2b6432a7df945e37ae5c670088f0
+C290 = 4fb5d0d4c040c3d138bdb062d3179c86fdf3c2bf
+C291 = 6c5bf019b194350843836f9ce0c1d76acd93216d
+C292 = 383cc2ab641b466cef1f9fc39ce51837032411b7
+C293 = 8c251b67bb7afeb1c9ceb813ca75581d7e9c6452
+C296 = 22a29294247bbda7f09d0a1a2e187ee1e9bc47d1
+C297 = 04844892a0936e2924631754df1a1ceb31cd548f
+C298 = 33c472588b8e30ad2d066bb786b2ed4e753ea9b4
+C299 = fcba65cd074a680ce6da2cbf7201f5971363d7cc
+C302 = 6f469579abd69625112ae2565c4a1db7c4443e69
+^C
+C:\cygwin64\tmp>
+C:\cygwin64\tmp>
+C:\cygwin64\tmp>
+C:\cygwin64\tmp>
+C:\cygwin64\tmp>git-tfs.exe quick-clone http://sqi009:8080/tfs/DefaultCollection $/SoundQI-Branch
+Found matching Visual Studio version at C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional
+Initialized empty Git repository in C:/cygwin64/tmp/SoundQI-Branch/.git/
+
+Fetching from TFS remote 'default'...
+Removing workspace "git-tfs-3fec4ffe-7355-4840-b2d4-e4bd9cff5d42;Roger Moore".
+1 objects created...
+C1088 = 7e1854b7925a65657aa221f47e538d96264be444
+
+
+C:\cygwin64\tmp>cd C:\Sound-QI_Source
+
+C:\Sound-QI_Source>git-tfs.exe clone http://sqi009:8080/tfs/DefaultCollection $/SoundQI-Branch
+Found matching Visual Studio version at C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional
+Initialized empty Git repository in C:/Sound-QI_Source/SoundQI-Branch/.git/
+
+warning: you are going to clone the whole repository or too high in the repository path !
+   => If you want to manage branches with git-tfs, clone one of this branch instead :
+ - $/SoundQI/KH-Branch
+
+PS:if your branch is not listed here, perhaps you should convert the containing folder to a branch in TFS.
+Fetching from TFS remote 'default'...
+error: a problem occurred when trying to clone the repository. Try to solve the problem described below.
+In any case, after, try to continue using command `git tfs fetch`
+
+One or more errors occurred.
+The working folder C:\Sound-QI_Source is already in use by the workspace SQI012;Roger Moore on computer SQI012.
+The working folder C:\Sound-QI_Source is already in use by the workspace SQI012;Roger Moore on computer SQI012.
+All the logs could be found in the log file: C:\Users\moorer\AppData\Local\git-tfs\git-tfs_log.txt
+All the logs could be found in the log file: C:\Users\moorer\AppData\Local\git-tfs\git-tfs_log.txt
+
+C:\Sound-QI_Source>
+C:\Sound-QI_Source>
+C:\Sound-QI_Source>cd
+C:\Sound-QI_Source
+
+C:\Sound-QI_Source>cd C:\Sound-QI_Source\SoundQI-Branch
+
+C:\Sound-QI_Source\SoundQI-Branch>git-tfs.exe fetch
+Found matching Visual Studio version at C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional
+Working with tfs remote: default => $/SoundQI-Branch
+Fetching from TFS remote 'default'...
+One or more errors occurred.
+The working folder C:\Sound-QI_Source is already in use by the workspace SQI012;Roger Moore on computer SQI012.
+The working folder C:\Sound-QI_Source is already in use by the workspace SQI012;Roger Moore on computer SQI012.
+All the logs could be found in the log file: C:\Users\moorer\AppData\Local\git-tfs\git-tfs_log.txt
+
+C:\Sound-QI_Source\SoundQI-Branch>
+C:\Sound-QI_Source\SoundQI-Branch>cd ..
+
+C:\Sound-QI_Source>git-tfs.exe quick-clone http://sqi009:8080/tfs/DefaultCollection $/SoundQI-Branch
+Found matching Visual Studio version at C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional
+error: Specified git repository directory is not empty
+All the logs could be found in the log file: C:\Users\moorer\AppData\Local\git-tfs\git-tfs_log.txt
+
+C:\Sound-QI_Source>cd SoundQI-Branch
+
+C:\Sound-QI_Source\SoundQI-Branch>git-tfs.exe quick-clone http://sqi009:8080/tfs/DefaultCollection $/SoundQI-Branch/RM_Branch
+Found matching Visual Studio version at C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional
+Initialized empty Git repository in C:/Sound-QI_Source/SoundQI-Branch/RM_Branch/.git/
+
+Fetching from TFS remote 'default'...
+error: a problem occurred when trying to clone the repository. Try to solve the problem described below.
+In any case, after, try to continue using command `git tfs fetch`
+
+One or more errors occurred.
+The working folder C:\Sound-QI_Source is already in use by the workspace SQI012;Roger Moore on computer SQI012.
+The working folder C:\Sound-QI_Source is already in use by the workspace SQI012;Roger Moore on computer SQI012.
+All the logs could be found in the log file: C:\Users\moorer\AppData\Local\git-tfs\git-tfs_log.txt
+All the logs could be found in the log file: C:\Users\moorer\AppData\Local\git-tfs\git-tfs_log.txt
+
+C:\Sound-QI_Source\SoundQI-Branch>cd ..
+
+C:\Sound-QI_Source>cd ..
+
+C:\>mkdir Projects
+
+C:\>cd  Projects
+
+C:\Projects>git-tfs.exe quick-clone http://sqi009:8080/tfs/DefaultCollection $/SoundQI-Branch
+Found matching Visual Studio version at C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional
+Initialized empty Git repository in C:/Projects/SoundQI-Branch/.git/
+
+Fetching from TFS remote 'default'...
+1 objects created...
+C1104 = 69107057af4db73af791b808ebea9500fa959ca9
+
+
+C:\Projects>git-tfs.exe help
+Found matching Visual Studio version at C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional
+Usage: git-tfs [command] [options]
+    bootstrap
+    branch
+    checkin
+    checkintool (ct)
+    checkout
+    cleanup
+    cleanup-workspace-local
+    cleanup-workspaces
+    clone
+    create
+    diagnostics
+    exportmap
+    fetch
+    help
+    info
+    init
+    labels
+    list-remote-branches
+    pull
+    quick-clone
+    rcheckin
+    reset-remote
+    shelve
+    shelve-delete
+    shelve-list
+    subtree
+    unshelve
+    verify
+    version
+ (use 'git-tfs help [command]' or 'git-tfs [command] --help' for more information)
+
+Find more help in our online help : https://github.com/git-tfs/git-tfs
+
+C:\Projects>git-tfs.exe info
+Found matching Visual Studio version at C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional
+This command must be run inside a git repository!
+Already at top level, but .git not found.
+error running command: git rev-parse --show-cdup
+Command exited with error code: 128
+fatal: not a git repository (or any of the parent directories): .git
+All the logs could be found in the log file: C:\Users\moorer\AppData\Local\git-tfs\git-tfs_log.txt
+
+C:\Projects>cd C:\Projects\SoundQI-Branch\RM_BranchC:\Projects\SoundQI-Branch\RM_Branch
+
+C:\Projects>cd C:\Projects\SoundQI-Branch\RM_Branch
+
+C:\Projects\SoundQI-Branch\RM_Branch>
+C:\Projects\SoundQI-Branch\RM_Branch>
+C:\Projects\SoundQI-Branch\RM_Branch>git-tfs.exe info
+Found matching Visual Studio version at C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional
+
+git version 2.29.2.windows.2
+
+git-tfs version 0.0.1.0 (TFS client library 16.0.0.0 (MS)) (64-bit)
+ C:\Program Files\Git\cmd\git-tfs.exe
+
+Note: If you want to force git-tfs to use another version of the tfs client library,
+set the environment variable `GIT_TFS_CLIENT` with the wished version (ie: '2015' for Visual Studio 2015,...)
+Supported version: 2019, 2017, 2015
+
+cloned from tfs path:$/SoundQI-Branch
+git tfs quick-clone http://sqi009:8080/tfs/DefaultCollection $/SoundQI-Branch
+
+remote tfs id: 'default' http://sqi009:8080/tfs/DefaultCollection $/SoundQI-Branch
+               refs/remotes/tfs/default - 69107057af4db73af791b808ebea9500fa959ca9 @ 1104
+
+C:\Projects\SoundQI-Branch\RM_Branch>git-tfs.exe diff
+Found matching Visual Studio version at C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional
+Invalid argument: diff
+Usage: git-tfs [command] [options]
+    bootstrap
+    branch
+    checkin
+    checkintool (ct)
+    checkout
+    cleanup
+    cleanup-workspace-local
+    cleanup-workspaces
+    clone
+    create
+    diagnostics
+    exportmap
+    fetch
+    help
+    info
+    init
+    labels
+    list-remote-branches
+    pull
+    quick-clone
+    rcheckin
+    reset-remote
+    shelve
+    shelve-delete
+    shelve-list
+    subtree
+    unshelve
+    verify
+    version
+ (use 'git-tfs help [command]' or 'git-tfs [command] --help' for more information)
+
+Find more help in our online help : https://github.com/git-tfs/git-tfs
+
+C:\Projects\SoundQI-Branch\RM_Branch>git tfs diff
+Found matching Visual Studio version at C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional
+Invalid argument: diff
+Usage: git-tfs [command] [options]
+    bootstrap
+    branch
+    checkin
+    checkintool (ct)
+    checkout
+    cleanup
+    cleanup-workspace-local
+    cleanup-workspaces
+    clone
+    create
+    diagnostics
+    exportmap
+    fetch
+    help
+    info
+    init
+    labels
+    list-remote-branches
+    pull
+    quick-clone
+    rcheckin
+    reset-remote
+    shelve
+    shelve-delete
+    shelve-list
+    subtree
+    unshelve
+    verify
+    version
+ (use 'git-tfs help [command]' or 'git-tfs [command] --help' for more information)
+
+Find more help in our online help : https://github.com/git-tfs/git-tfs
+
+C:\Projects\SoundQI-Branch\RM_Branch>git-tfs.exe help diff
+Found matching Visual Studio version at C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional
+Invalid argument: diff
+Usage: git-tfs [command] [options]
+    bootstrap
+    branch
+    checkin
+    checkintool (ct)
+    checkout
+    cleanup
+    cleanup-workspace-local
+    cleanup-workspaces
+    clone
+    create
+    diagnostics
+    exportmap
+    fetch
+    help
+    info
+    init
+    labels
+    list-remote-branches
+    pull
+    quick-clone
+    rcheckin
+    reset-remote
+    shelve
+    shelve-delete
+    shelve-list
+    subtree
+    unshelve
+    verify
+    version
+ (use 'git-tfs help [command]' or 'git-tfs [command] --help' for more information)
+
+Find more help in our online help : https://github.com/git-tfs/git-tfs
+
+C:\Projects\SoundQI-Branch\RM_Branch>7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on  "C:\Users\moorer\OneDrive - sound-qi.com\Archive\qi_pro_rm_branch_horixonxy_2021_03_15.7za" c:\Sound-QI_Source\SoundQI-Branch\RM_Branch -xr!bin -xr!obj -xr!Debug -xr!Release -xr!"SeisWare SDK" -xr!.vs
+
+7-Zip 19.00 (x64) : Copyright (c) 1999-2018 Igor Pavlov : 2019-02-21
+
+Scanning the drive:
+445 folders, 2645 files, 1419818630 bytes (1355 MiB)
+
+Creating archive: C:\Users\moorer\OneDrive - sound-qi.com\Archive\qi_pro_rm_branch_horixonxy_2021_03_15.7za
+
+Add new data to archive: 445 folders, 2645 files, 1419818630 bytes (1355 MiB)
+
+
+Files read from disk: 2643
+Archive size: 199707692 bytes (191 MiB)
+Everything is Ok
+
+C:\Projects\SoundQI-Branch\RM_Branch>
+C:\Projects\SoundQI-Branch\RM_Branch>
+C:\Projects\SoundQI-Branch\RM_Branch>
+C:\Projects\SoundQI-Branch\RM_Branch>tf history /collection:"http://sqi009:8080/tfs/DefaultCollection/" "$/SoundQI" /recursive /stopafter:50 /format:Detailed /noprompt /login:SOUNDQI.LAN\moorer,Password1
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1117
+User: Roger Moore
+Date: March 16, 2021 8:56:47 AM
+
+Comment:
+  -Fixed problem where installer would not let the user select a custom directory if they only installed QI-Pro
+
+Items:
+  merge, edit $/SoundQI/IMAC/QiProHeadwave.nsi
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1115
+User: Kevin Lee
+Date: March 15, 2021 11:03:42 PM
+
+Comment:
+  Fixed bug: zones were not classified if there were no cutoffs.  Fixed bug: a new line was not classified.
+
+Items:
+  edit $/SoundQI/IMAC/CrossPlotView.cpp
+  edit $/SoundQI/IMAC/IMACDoc.cpp
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1113
+User: Roger Moore
+Date: March 15, 2021 3:19:06 PM
+
+Comment:
+  Merge from RM_Branch:
+  -Python scripts need to be installed in a SoundQI folder in hwtoolkits; need __init__.py as well.  Just copy the whole folder.
+  -Uncheck FlexLM by default
+  -Change "Headwave Program" to "Headwave Plugin"
+  -Remove "Headwave Data" and "Headwave Workspace" and include them with plugin.  The user would never install the "Headwave Plugin" without the Data and workspace directories
+  -Change "set 'File/User preferences'" to "select 'File/User preferences'"
+
+Items:
+  merge, edit $/SoundQI/IMAC/QiProHeadwave.nsi
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1109
+User: Kevin Lee
+Date: March 15, 2021 11:39:16 AM
+
+Comment:
+  Added function FindNearestTraceXY(). To test added GetTraceData().
+
+Items:
+  merge, edit $/SoundQI/common/SegyIndex.cpp
+  merge, edit $/SoundQI/common/SegyIndex.h
+  merge, edit $/SoundQI/common/SegyIndexData.cpp
+  merge, edit $/SoundQI/common/SegyIndexData.h
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1107
+User: Brenda Maloff
+Date: March 15, 2021 10:46:32 AM
+
+Comment:
+  Fix issue with crashing on the xplot because the segyX and segY are not set properly
+
+Items:
+  edit $/SoundQI/IMAC/IMAC.cpp
+  edit $/SoundQI/IMAC/XplotParms.cpp
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1106
+User: Brenda Maloff
+Date: March 12, 2021 3:13:41 PM
+
+Comment:
+  Fixed issue where the inline/crossline/userline combos were disabled when opening a project that had a crossplot open by default
+
+Items:
+  edit $/SoundQI/IMAC/IMAC.cpp
+  edit $/SoundQI/IMAC/IMAC.h
+  edit $/SoundQI/IMAC/IMACView.cpp
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1105
+User: Brenda Maloff
+Date: March 12, 2021 3:04:12 PM
+
+Comment:
+  Added in resizing for default bin check boxes on the crossplot paramaters dialog
+
+Items:
+  edit $/SoundQI/IMAC/IMAC.rc
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1103
+User: Roger Moore
+Date: March 12, 2021 2:02:46 PM
+
+Comment:
+  -Fixed problem with extra QI-Pro files being installed in C:\Program Files\QI-Pro if the actual directory was a custom directory such as C:\Temp\QI-Pro
+  -Updated keep latest from 7 to 20
+
+Items:
+  edit $/SoundQI/IMAC/QiProHeadwave.nsi
+  edit $/SoundQI/IMAC/run_installers.py
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1100
+User: Roger Moore
+Date: March 12, 2021 1:42:07 PM
+
+Comment:
+  -Updated QiProHeadwave.nsi but if I select a custom directory such as C:\Temp it installs QI-Pro in C:\Temp\QI-Pro and C:\Program Files\QI-Pro
+  -Updated keep latest count to 20 from 7
+
+Items:
+  merge, edit $/SoundQI/IMAC/IMAC.vcxproj
+  merge, edit $/SoundQI/IMAC/QiProHeadwave.nsi
+  merge, edit $/SoundQI/IMAC/run_installers.py
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1095
+User: Kevin Lee
+Date: March 12, 2021 10:56:28 AM
+
+Comment:
+  Added "Use Default" check boxes to point density parameters on the Crossplot Settings Dialog.
+
+Items:
+  merge, edit $/SoundQI/IMAC/CrossPlotSettingsDlg.cpp
+  merge, edit $/SoundQI/IMAC/CrossPlotSettingsDlg.h
+  merge, edit $/SoundQI/IMAC/IMAC.rc
+  merge, edit $/SoundQI/IMAC/ReleaseNotes.txt
+  merge, edit $/SoundQI/IMAC/resource.h
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1094
+User: Kevin Lee
+Date: March 12, 2021 10:53:46 AM
+
+Comment:
+  Bug fix: tile button sometimes pushed the classified window off the top of the main window hiding the window controls.
+
+Items:
+  merge, edit $/SoundQI/IMAC/IMAC.rc
+  merge, edit $/SoundQI/IMAC/IMACDoc.cpp
+  merge, edit $/SoundQI/IMAC/ReleaseNotes.txt
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1093
+User: Kevin Lee
+Date: March 12, 2021 10:46:13 AM
+
+Comment:
+  Added "Save As Version..." option for backward compatibility.
+
+Items:
+  merge, branch $/SoundQI/common/A_ArchiveVersion.h
+  merge, edit   $/SoundQI/common/Ellipse.cpp
+  merge, edit   $/SoundQI/common/Horizon.cpp
+  merge, edit   $/SoundQI/common/OSI_type.cpp
+  merge, edit   $/SoundQI/common/Segy.cpp
+  merge, edit   $/SoundQI/common/SegyHeaderMap.cpp
+  merge, edit   $/SoundQI/common/SegyIndex.cpp
+  merge, edit   $/SoundQI/common/TimeSlice.cpp
+  merge, edit   $/SoundQI/common/Well.cpp
+  merge, edit   $/SoundQI/CSI/CSI/CSI.cpp
+  merge, edit   $/SoundQI/CSI/CSI/CSIDoc.cpp
+  merge, edit   $/SoundQI/IMAC/AADialogParms.cpp
+  merge, edit   $/SoundQI/IMAC/AAEllipse.cpp
+  merge, edit   $/SoundQI/IMAC/CutoffParms.cpp
+  merge, edit   $/SoundQI/IMAC/CutoffParms.h
+  merge, edit   $/SoundQI/IMAC/IMAC.cpp
+  merge, edit   $/SoundQI/IMAC/IMAC.h
+  merge, edit   $/SoundQI/IMAC/IMAC.rc
+  merge, edit   $/SoundQI/IMAC/IMAC.vcxproj
+  merge, edit   $/SoundQI/IMAC/IMAC.vcxproj.filters
+  merge, edit   $/SoundQI/IMAC/IMACDoc.cpp
+  merge, edit   $/SoundQI/IMAC/IMACDoc.h
+  merge, edit   $/SoundQI/IMAC/IMACView.cpp
+  merge, edit   $/SoundQI/IMAC/ParmToolData.cpp
+  merge, edit   $/SoundQI/IMAC/PlotParmData.cpp
+  merge, edit   $/SoundQI/IMAC/resource.h
+  merge, branch $/SoundQI/IMAC/SaveAsVersionDlg.cpp
+  merge, branch $/SoundQI/IMAC/SaveAsVersionDlg.h
+  merge, edit   $/SoundQI/IMAC/SeisParms.cpp
+  merge         $/SoundQI/IMAC/StdAfx.h
+  merge, edit   $/SoundQI/IMAC/ViewZone.cpp
+  merge, edit   $/SoundQI/IMAC/VolType.cpp
+  merge, edit   $/SoundQI/IMAC/VVAttribute.cpp
+  merge, edit   $/SoundQI/IMAC/XplotParms.cpp
+  merge, edit   $/SoundQI/segytool/segytool/segytool.cpp
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1092
+User: Kevin Lee
+Date: March 12, 2021 9:44:02 AM
+
+Comment:
+  Add a "Do not show again" checkbox to the Cutoff warning dialog.
+
+Items:
+  merge, edit $/SoundQI/IMAC/CrossPlotSettingsDlg.cpp
+  merge, edit $/SoundQI/IMAC/CrossPlotSettingsDlg.h
+  merge, edit $/SoundQI/IMAC/IMAC.rc
+  merge, edit $/SoundQI/IMAC/IMACDoc.cpp
+  merge, edit $/SoundQI/IMAC/IMACDoc.h
+  merge, edit $/SoundQI/IMAC/MessageBoxDlg.cpp
+  merge, edit $/SoundQI/IMAC/MessageBoxDlg.h
+  merge, edit $/SoundQI/IMAC/ReleaseNotes.txt
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1082
+User: Kevin Lee
+Date: March 10, 2021 3:59:56 PM
+
+Comment:
+  Save as version option.
+
+Items:
+  edit $/SoundQI/DemoQIProInterface/Program.cs
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1081
+User: Brenda Maloff
+Date: March 10, 2021 3:54:57 PM
+
+Comment:
+  Fix issue with generating a time slice using a zone was slow
+
+Items:
+  merge, edit $/SoundQI/IMAC/IMACDoc.cpp
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1079
+User: Brenda Maloff
+Date: March 10, 2021 2:06:08 PM
+
+Comment:
+  changes for autosave, resize cursor report and fix the dead traces bug when inline or xline increments are not 1
+
+Items:
+  merge, edit $/SoundQI/common/CursorReportDlg.cpp
+  merge, edit $/SoundQI/common/CursorReportDlg.h
+  merge, edit $/SoundQI/IMAC/AAView.cpp
+  merge, edit $/SoundQI/IMAC/AAView.h
+  merge, edit $/SoundQI/IMAC/ColorBarView.cpp
+  merge, edit $/SoundQI/IMAC/ColorBarView.h
+  merge, edit $/SoundQI/IMAC/CrossPlotView.cpp
+  merge, edit $/SoundQI/IMAC/CrossPlotView.h
+  merge, edit $/SoundQI/IMAC/CSIView.cpp
+  merge, edit $/SoundQI/IMAC/CSIView.h
+  merge, edit $/SoundQI/IMAC/IMAC.cpp
+  merge, edit $/SoundQI/IMAC/IMAC.h
+  merge, edit $/SoundQI/IMAC/IMAC.rc
+  merge, edit $/SoundQI/IMAC/IMACDoc.cpp
+  merge, edit $/SoundQI/IMAC/IMACDoc.h
+  merge, edit $/SoundQI/IMAC/IMACView.cpp
+  merge, edit $/SoundQI/IMAC/IMACView.h
+  merge, edit $/SoundQI/IMAC/MainFrm.cpp
+  merge, edit $/SoundQI/IMAC/MainFrm.h
+  merge, edit $/SoundQI/IMAC/MapSelectDlg.cpp
+  merge, edit $/SoundQI/IMAC/ReleaseNotes.txt
+  merge, edit $/SoundQI/IMAC/resource.h
+  merge, edit $/SoundQI/IMAC/XplotParms.cpp
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1068
+User: Roger Moore
+Date: March 8, 2021 11:36:01 AM
+
+Comment:
+  -Now setting up PreRelease directory so QI team can run directly from that directory
+
+Items:
+  merge, edit $/SoundQI/IMAC/run_installers.py
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1065
+User: Kevin Lee
+Date: March 8, 2021 11:19:37 AM
+
+Comment:
+  Increment HW python version
+
+Items:
+  merge, edit $/SoundQI/HW-Plugin/python/QiProPlugin.py
+  merge, edit $/SoundQI/IMAC/IMAC.h
+  merge, edit $/SoundQI/IMAC/VVEquation.cpp
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1058
+User: Roger Moore
+Date: March 5, 2021 4:25:39 PM
+
+Comment:
+  Merge to master:
+  -Setting HEADWAVE_ROOT_DIR Environment variable in QiProHeadwave.nsi
+  -Presenting the user with the directory where Headwave is installed
+  -No longer uninstalling FlexLM with uninstaller
+  -Removed extra unnecessary DLLs from QiProSeisware.nsi
+  -QiProHeadwave.nsi installer script now functioning properly with default values
+  -Updated script to work if Headwave is installed in a different directory
+
+Items:
+  merge, edit $/SoundQI/IMAC/create_installers.py
+  merge, edit $/SoundQI/IMAC/QiPro.nsi
+  merge, edit $/SoundQI/IMAC/QiProHeadwave.nsi
+  merge, edit $/SoundQI/IMAC/QiProSeisware.nsi
+  merge, edit $/SoundQI/IMAC/QiProUninstaller.nsi
+  merge, edit $/SoundQI/IMAC/run_installers.py
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1054
+User: Kevin Lee
+Date: March 5, 2021 12:25:35 PM
+
+Comment:
+  update release notes.  Releasing VV for HW
+
+Items:
+  edit $/SoundQI/IMAC/ReleaseNotes.txt
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1053
+User: Kevin Lee
+Date: March 5, 2021 12:10:41 PM
+
+Comment:
+  Headwave VV, 5 inputs.  Fixed the GPU buffer. A few error checks in Qi-Pro before sending to HW.
+
+Items:
+  merge, edit $/SoundQI/HW-Plugin/python/QiProPlugin.py
+  merge, edit $/SoundQI/HW-Plugin/SoundQI_Plugin/computepluginsource/VirtualVolume/VirtualVolume.cpp
+  merge, edit $/SoundQI/HW-Plugin/SoundQI_Plugin/computepluginsource/VirtualVolume/VirtualVolume.cu
+  merge, edit $/SoundQI/HW-Plugin/SoundQI_Plugin/computepluginsource/VirtualVolume/VirtualVolume.h
+  merge, edit $/SoundQI/IMAC/IMACDoc.cpp
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1052
+User: Kevin Lee
+Date: March 5, 2021 11:37:03 AM
+
+Comment:
+  Removed unused headwave version of VVEquation
+
+Items:
+  edit $/SoundQI/IMAC/IMAC.vcxproj
+  edit $/SoundQI/IMAC/IMAC.vcxproj.filters
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1050
+User: Roger Moore
+Date: March 5, 2021 11:25:19 AM
+
+Comment:
+  -Saving attributes and SEG-Y paths in cutoffs
+
+Items:
+  merge, edit $/SoundQI/common/Segy.h
+  merge, edit $/SoundQI/IMAC/IMACDoc.cpp
+  edit        $/SoundQI/IMAC/ReleaseNotes.txt
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1047
+User: Brenda Maloff
+Date: March 4, 2021 5:04:44 PM
+
+Comment:
+  Fix an issue where the segy file wasnt being loaded properly when adding a new cross plot
+
+Items:
+  edit $/SoundQI/IMAC/IMAC.cpp
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1043
+User: Brenda Maloff
+Date: March 4, 2021 10:59:26 AM
+
+Comment:
+  fix a crash where you didn't have any cutoffs but you wanted to show the point density
+
+Items:
+  merge, edit $/SoundQI/IMAC/IMACDoc.cpp
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1038
+User: Brenda Maloff
+Date: March 3, 2021 3:15:13 PM
+
+Comment:
+  rename the GetInLineCount to GetInLineTraceCount
+
+Items:
+  edit $/SoundQI/common/SegyIndex.cpp
+  edit $/SoundQI/common/SegyIndex.h
+  edit $/SoundQI/common/SegyIndexData.h
+  edit $/SoundQI/CSI/CSI/CSIDoc.cpp
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1036
+User: Kevin Lee
+Date: March 2, 2021 3:34:10 PM
+
+Comment:
+  Fix bug where deviation survey was going through unit conversion. Got rid of CSI icon.
+
+Items:
+  edit $/SoundQI/common/Well.cpp
+  edit $/SoundQI/IMAC/IMAC.rc
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1034
+User: Kevin Lee
+Date: March 1, 2021 11:10:09 PM
+
+Comment:
+  Fixed bug loading deviation when column contains text.
+
+Items:
+  edit $/SoundQI/common/Well.cpp
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1033
+User: Kevin Lee
+Date: March 1, 2021 5:06:36 PM
+
+Comment:
+  Virtual volume on headwave.  Early release, not fully functional.
+
+Items:
+  merge, edit   $/SoundQI/HW-Plugin/SoundQI_Plugin/cmake/modules/ComputePluginUtils.cmake
+  merge, edit   $/SoundQI/HW-Plugin/SoundQI_Plugin/computepluginsource/VirtualVolume/CMakeLists.txt
+  merge, edit   $/SoundQI/HW-Plugin/SoundQI_Plugin/computepluginsource/VirtualVolume/VirtualVolume.cpp
+  merge, edit   $/SoundQI/HW-Plugin/SoundQI_Plugin/computepluginsource/VirtualVolume/VirtualVolume.cu
+  merge, edit   $/SoundQI/HW-Plugin/SoundQI_Plugin/computepluginsource/VirtualVolume/VirtualVolume.h
+  merge, edit   $/SoundQI/HW-Plugin/SoundQI_Plugin/computepluginsource/Xplot/XPlot.cu
+  merge, edit   $/SoundQI/IMAC/IMAC.vcxproj
+  merge, edit   $/SoundQI/IMAC/IMAC.vcxproj.filters
+  merge, edit   $/SoundQI/IMAC/VVEquation.h
+  merge, branch $/SoundQI/IMAC/VVEquationHW.cpp
+  merge, branch $/SoundQI/IMAC/VVEquationHW.h
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1032
+User: Brenda Maloff
+Date: March 1, 2021 4:53:06 PM
+
+Comment:
+  added the ability to export segy volumes and added the ability to not have any cutoffs
+
+Items:
+  merge, edit $/SoundQI/common/EditListCtrl.cpp
+  merge, edit $/SoundQI/common/EditListCtrl.h
+  merge, edit $/SoundQI/common/Segy.cpp
+  merge, edit $/SoundQI/common/Segy.h
+  merge, edit $/SoundQI/IMAC/CrossPlotSettingsDlg.cpp
+  merge, edit $/SoundQI/IMAC/CrossPlotSettingsDlg.h
+  merge, edit $/SoundQI/IMAC/CrossPlotView.cpp
+  merge, edit $/SoundQI/IMAC/HrzParmDlg.cpp
+  merge, edit $/SoundQI/IMAC/IMAC.rc
+  merge, edit $/SoundQI/IMAC/IMACDoc.cpp
+  merge, edit $/SoundQI/IMAC/IMACView.cpp
+  merge, edit $/SoundQI/IMAC/ReleaseNotes.txt
+  merge, edit $/SoundQI/IMAC/resource.h
+  merge, edit $/SoundQI/IMAC/SegyOutDlg.cpp
+  merge, edit $/SoundQI/IMAC/SegyOutDlg.h
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1029
+User: Brenda Maloff
+Date: March 1, 2021 1:20:38 PM
+
+Comment:
+  Only calculate the timeslice when it needs to, it was getting a sharing violation since it was calculating it too often
+
+Items:
+  edit $/SoundQI/IMAC/IMACDoc.cpp
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1028
+User: Kevin Lee
+Date: March 1, 2021 12:07:10 PM
+
+Comment:
+  Rollback previous checkin
+
+Items:
+  edit, rollback   $/SoundQI/HW-Plugin/SoundQI_Plugin/cmake/modules/ComputePluginUtils.cmake
+  edit, rollback   $/SoundQI/HW-Plugin/SoundQI_Plugin/computepluginsource/VirtualVolume/CMakeLists.txt
+  edit, rollback   $/SoundQI/HW-Plugin/SoundQI_Plugin/computepluginsource/VirtualVolume/VirtualVolume.cpp
+  edit, rollback   $/SoundQI/HW-Plugin/SoundQI_Plugin/computepluginsource/VirtualVolume/VirtualVolume.cu
+  edit, rollback   $/SoundQI/HW-Plugin/SoundQI_Plugin/computepluginsource/VirtualVolume/VirtualVolume.h
+  edit, rollback   $/SoundQI/HW-Plugin/SoundQI_Plugin/computepluginsource/Xplot/XPlot.cu
+  edit, rollback   $/SoundQI/IMAC/IMAC.vcxproj
+  edit, rollback   $/SoundQI/IMAC/IMAC.vcxproj.filters
+  edit, rollback   $/SoundQI/IMAC/IMACDoc.cpp
+  edit, rollback   $/SoundQI/IMAC/VVEquation.h
+  delete, rollback $/SoundQI/IMAC/VVEquationHW.cpp;X61
+  delete, rollback $/SoundQI/IMAC/VVEquationHW.h;X61
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1027
+User: Kevin Lee
+Date: March 1, 2021 12:00:36 PM
+
+Comment:
+  Virtual volume on headwave.  Early release, not fully functional.
+
+Items:
+  merge, edit   $/SoundQI/HW-Plugin/SoundQI_Plugin/cmake/modules/ComputePluginUtils.cmake
+  merge, edit   $/SoundQI/HW-Plugin/SoundQI_Plugin/computepluginsource/VirtualVolume/CMakeLists.txt
+  merge, edit   $/SoundQI/HW-Plugin/SoundQI_Plugin/computepluginsource/VirtualVolume/VirtualVolume.cpp
+  merge, edit   $/SoundQI/HW-Plugin/SoundQI_Plugin/computepluginsource/VirtualVolume/VirtualVolume.cu
+  merge, edit   $/SoundQI/HW-Plugin/SoundQI_Plugin/computepluginsource/VirtualVolume/VirtualVolume.h
+  merge, edit   $/SoundQI/HW-Plugin/SoundQI_Plugin/computepluginsource/Xplot/XPlot.cu
+  merge, edit   $/SoundQI/IMAC/IMAC.vcxproj
+  merge, edit   $/SoundQI/IMAC/IMAC.vcxproj.filters
+  merge, edit   $/SoundQI/IMAC/IMACDoc.cpp
+  merge, edit   $/SoundQI/IMAC/VVEquation.h
+  merge, branch $/SoundQI/IMAC/VVEquationHW.cpp
+  merge, branch $/SoundQI/IMAC/VVEquationHW.h
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1016
+User: Brenda Maloff
+Date: February 24, 2021 2:10:56 PM
+
+Comment:
+  Fixed a couple of bugs, new project adding xplot that had bad settings and changing the times on the section properties
+
+Items:
+  merge, edit $/SoundQI/IMAC/IMACDoc.cpp
+  merge, edit $/SoundQI/IMAC/XplotParms.cpp
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1014
+User: Brenda Maloff
+Date: February 24, 2021 11:29:21 AM
+
+Comment:
+  Fix issue wit the input dialog not showing a good range for the project extents
+
+Items:
+  merge, edit $/SoundQI/IMAC/InputAttributesDlg.cpp
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1011
+User: Brenda Maloff
+Date: February 23, 2021 1:40:51 PM
+
+Comment:
+  Fixed a bug when saving a new project that the consolidated indexes were not in a proper state for the first segy file
+
+Items:
+  merge, edit $/SoundQI/common/SegyIndex.cpp
+  merge, edit $/SoundQI/IMAC/IMACDoc.cpp
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1009
+User: Kevin Lee
+Date: February 23, 2021 9:25:57 AM
+
+Comment:
+  updated release notes
+
+Items:
+  edit $/SoundQI/IMAC/ReleaseNotes.txt
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1006
+User: Kevin Lee
+Date: February 22, 2021 8:31:08 AM
+
+Comment:
+  Update release notes
+
+Items:
+  edit $/SoundQI/IMAC/ReleaseNotes.txt
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 1004
+User: Roger Moore
+Date: February 20, 2021 9:32:55 AM
+
+Comment:
+  Merge from RM_Branch:
+  -Updated script to keep the newest 7 installation folders instead of ones that are 7 days old or less
+  -Deleting all files for FlexLM and QI-Pro, though QiProUninstaller.nsi is no longer necessary because uninstaller files and directory are now being deleted in QiPro.nsi
+  -Now performing a TFS get latest in run_installers.py
+  -Added .onInstSuccess to QiProUninstaller.nsi which is a better location to call SelfDel
+  -Instead of dealing with NOCOLOR settings in top UI stack layer CrossPlotSettingsDlg.cpp, setting up NOCOLOR settings for comboboxes higher up the call stack in EditListCtrl.cpp
+  -Removed Win32 build configuration because we are only interested in x64 at this time
+  -Added unit tests for CppUtil CDoublePoint
+  -Fixed problem with Seisware libs installation location
+  -Putting logs in TEMP directory
+  -Corrected problems where NOCOLOR for new classes that were created in:
+
+  1) Get rid of intensity from "Edit Class Names" dialog
+  2) When adding new classes (extending color bar, so colors are undefined), they are white which means no color in the Color Bar Editor, but then when changing to Xplot settings they change to black
+  3) When for a color the high byte is 0x0f (i.e., NOCOLOR) then then put them as an empty string  in the Edit Class Names dialog.  If the color is defined as NOCOLOR, then don/t put any zeros in and amke colors white.
+
+Items:
+  merge, edit   $/SoundQI/common/EditListCtrl.cpp
+  merge, edit   $/SoundQI/common/OSI_type.h
+  merge, edit   $/SoundQI/IMAC/ClassNameDlg.cpp
+  merge, edit   $/SoundQI/IMAC/ClassNameDlg.h
+  merge, edit   $/SoundQI/IMAC/ColorBarView.cpp
+  merge, branch $/SoundQI/IMAC/create_installers.py
+  merge, edit   $/SoundQI/IMAC/CrossPlotSettingsDlg.cpp
+  merge, edit   $/SoundQI/IMAC/IMAC.h
+  merge, edit   $/SoundQI/IMAC/IMAC.vcxproj
+  merge, edit   $/SoundQI/IMAC/IMAC.vcxproj.filters
+  merge, edit   $/SoundQI/IMAC/QiPro.nsi
+  merge, edit   $/SoundQI/IMAC/QiProHeadwave.nsi
+  merge, edit   $/SoundQI/IMAC/QiProSeisware.nsi
+  merge, branch $/SoundQI/IMAC/QiProUninstaller.nsi
+  merge, branch $/SoundQI/IMAC/run_installers.py
+  merge, edit   $/SoundQI/IMAC/RunInstallers.bat
+  merge, edit   $/SoundQI/OSI/OSI.sln
+  merge, branch $/SoundQI/OSI/NativeUnitTests/DoublePointShould.cpp
+  merge, edit   $/SoundQI/OSI/NativeUnitTests/NativeUnitTests.cpp
+  merge, edit   $/SoundQI/OSI/NativeUnitTests/NativeUnitTests.vcxproj
+  merge, edit   $/SoundQI/OSI/NativeUnitTests/stdafx.h
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 999
+User: Kevin Lee
+Date: February 19, 2021 11:03:59 AM
+
+Comment:
+  Increment version to 4.4.5
+
+Items:
+  edit $/SoundQI/IMAC/IMAC.h
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 998
+User: Kevin Lee
+Date: February 19, 2021 11:00:28 AM
+
+Comment:
+  Merging Brenda's changes.  Override project extent feature.
+
+Items:
+  merge, edit $/SoundQI/common/CursorReportDlg.cpp
+  merge, edit $/SoundQI/common/Segy.cpp
+  merge, edit $/SoundQI/common/Segy.h
+  merge, edit $/SoundQI/common/SegyIndex.cpp
+  merge, edit $/SoundQI/common/SegyIndex.h
+  merge, edit $/SoundQI/common/TimeSlice.cpp
+  merge, edit $/SoundQI/common/TimeSlice.h
+  merge, edit $/SoundQI/CSI/CSI/CSIDoc.cpp
+  merge, edit $/SoundQI/IMAC/AAParmCntrl.cpp
+  merge, edit $/SoundQI/IMAC/IMAC.cpp
+  merge, edit $/SoundQI/IMAC/IMAC.rc
+  merge, edit $/SoundQI/IMAC/IMACDoc.cpp
+  merge, edit $/SoundQI/IMAC/IMACDoc.h
+  merge, edit $/SoundQI/IMAC/IMACView.cpp
+  merge, edit $/SoundQI/IMAC/IMACView.h
+  merge, edit $/SoundQI/IMAC/InputAttributesDlg.cpp
+  merge, edit $/SoundQI/IMAC/InputAttributesDlg.h
+  merge, edit $/SoundQI/IMAC/MainFrm.cpp
+  merge, edit $/SoundQI/IMAC/MapSelectDlg.cpp
+  merge, edit $/SoundQI/IMAC/MapSelectDlg.h
+  merge, edit $/SoundQI/IMAC/resource.h
+  edit        $/SoundQI/OSI/NativeUnitTests/NativeUnitTests.vcxproj
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 994
+User: Kevin Lee
+Date: February 18, 2021 4:55:13 PM
+
+Comment:
+  Removed maximize button. Forced parameter pane to be fixed width. Removed some dead code. Fixed VVSubstitue dialog to check that all variables are substituted
+
+Items:
+  merge, edit $/SoundQI/common/CppUtil.cpp
+  merge, edit $/SoundQI/common/CppUtil.h
+  merge, edit $/SoundQI/IMAC/AAFrame.cpp
+  merge, edit $/SoundQI/IMAC/AAFrame.h
+  merge, edit $/SoundQI/IMAC/AAParmPane.cpp
+  merge, edit $/SoundQI/IMAC/AAParmPane.h
+  merge, edit $/SoundQI/IMAC/AAView.cpp
+  merge, edit $/SoundQI/IMAC/ChildFrm.cpp
+  merge, edit $/SoundQI/IMAC/ColorBarFrame.cpp
+  merge, edit $/SoundQI/IMAC/CrossPlotFrame.cpp
+  merge, edit $/SoundQI/IMAC/CrossPlotFrame.h
+  merge, edit $/SoundQI/IMAC/CrossPlotView.cpp
+  merge, edit $/SoundQI/IMAC/IMAC.h
+  merge, edit $/SoundQI/IMAC/SubstituteVariablesDlg.cpp
+  merge, edit $/SoundQI/IMAC/XplotParmPane.cpp
+  merge, edit $/SoundQI/IMAC/XplotParmPane.h
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 993
+User: Kevin Lee
+Date: February 18, 2021 4:49:17 PM
+
+Comment:
+  Fixed flashing on map window.  Changed default virtual volume name to "V_"
+
+Items:
+  merge, edit $/SoundQI/IMAC/IMACView.cpp
+  merge, edit $/SoundQI/IMAC/VirtualVolumeV2Dlg.cpp
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 992
+User: Kevin Lee
+Date: February 18, 2021 4:47:33 PM
+
+Comment:
+  Fixed equation parser when equation begins with minus, left round, minus.  Also added some text to vv substitude dialog to make it more clear what the user has to do.
+
+Items:
+  merge, edit $/SoundQI/IMAC/IMACDoc.cpp
+  merge, edit $/SoundQI/IMAC/SubstituteVariablesDlg.cpp
+  merge, edit $/SoundQI/IMAC/VVEquation.cpp
+  merge, edit $/SoundQI/OSI/OSI.sln
+  merge, edit $/SoundQI/OSI/NativeUnitTests/NativeUnitTests.vcxproj
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 985
+User: Roger Moore
+Date: February 17, 2021 1:20:03 PM
+
+Comment:
+  -Changed absolute paths to relative paths
+
+Items:
+  merge, edit $/SoundQI/OSI/NativeUnitTests/NativeUnitTests.vcxproj
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 983
+User: Roger Moore
+Date: February 17, 2021 9:43:18 AM
+
+Comment:
+  -Fixed problem with absolute directories
+
+Items:
+  merge, edit $/SoundQI/OSI/NativeUnitTests/NativeUnitTests.vcxproj
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 968
+User: Brenda Maloff
+Date: February 10, 2021 9:56:02 AM
+
+Comment:
+  Threaded the drawing of the classify section and the computing of the classify section to make it faster for large volumes
+
+Items:
+  merge, edit $/SoundQI/common/Segy.cpp
+  merge, edit $/SoundQI/common/SegyIndexData.cpp
+  merge, edit $/SoundQI/common/SegyUtil.cpp
+  merge, edit $/SoundQI/common/Well.cpp
+  merge, edit $/SoundQI/IMAC/AA_QIPro.cpp
+  merge, edit $/SoundQI/IMAC/CrossPlotSettingsDlg.cpp
+  merge, edit $/SoundQI/IMAC/CrossPlotView.cpp
+  merge, edit $/SoundQI/IMAC/CutoffParms.cpp
+  merge, edit $/SoundQI/IMAC/IMAC.cpp
+  merge, edit $/SoundQI/IMAC/IMAC.rc
+  merge, edit $/SoundQI/IMAC/IMACDoc.cpp
+  merge, edit $/SoundQI/IMAC/IMACDoc.h
+  merge, edit $/SoundQI/IMAC/IMACView.cpp
+  merge, edit $/SoundQI/IMAC/IMACView.h
+  merge, edit $/SoundQI/IMAC/MainFrm.cpp
+  merge, edit $/SoundQI/IMAC/MapSelectDlg.cpp
+  merge, edit $/SoundQI/IMAC/ReleaseNotes.txt
+  merge, edit $/SoundQI/IMAC/SeiswareExportFunctions.cpp
+  merge, edit $/SoundQI/IMAC/SeiswareImportFunctions.cpp
+  merge, edit $/SoundQI/IMAC/XplotEditor.cpp
+  merge, edit $/SoundQI/IMAC/XplotParmCntrl.cpp
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 962
+User: Roger Moore
+Date: February 8, 2021 2:40:19 PM
+
+Comment:
+  Merge from RM_Branch:
+  -Created separate uninstaller because uninstaller.exe cannot be signed when script is being generated, so it must be executed by a separate script, and then signed in RunInstallers.bat, and then embedded as a File in the QI-Pro installer
+  -Fixed install directory problem in Headwave/QiProHeadwave.nsi
+  -Deleting Sound_QI_LandingPage_114.bmp from install directory
+
+Items:
+  merge, edit $/SoundQI/IMAC/QiPro.nsi
+  merge, edit $/SoundQI/IMAC/QiProHeadwave.nsi
+  merge, edit $/SoundQI/IMAC/RunInstallers.bat
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 959
+User: Roger Moore
+Date: February 5, 2021 11:37:21 AM
+
+Comment:
+  -Re-added required files for Seisware
+
+Items:
+  merge, edit $/SoundQI/IMAC/QiProSeisware.nsi
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Changeset: 957
+User: Roger Moore
+Date: February 5, 2021 10:57:21 AM
+
+Comment:
+  -Fixed problem where if the user selects to only install FlexLM then previously the QI-Pro directory was still being created
+
+Items:
+  merge, edit $/SoundQI/IMAC/QiPro.nsi
+  merge, edit $/SoundQI/IMAC/QiProSeisware.nsi
+
+
+C:\Projects\SoundQI-Branch\RM_Branch>
+C:\Projects\SoundQI-Branch\RM_Branch>
+C:\Projects\SoundQI-Branch\RM_Branch>7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on  "C:\Users\moorer\OneDrive - sound-qi.com\Archive\qi_pro_rm_branch_horixonxy_2021_03_17.7za" c:\Sound-QI_Source\SoundQI-Branch\RM_Branch -xr!bin -xr!obj -xr!Debug -xr!Release -xr!"SeisWare SDK" -xr!.vs
+
+7-Zip 19.00 (x64) : Copyright (c) 1999-2018 Igor Pavlov : 2019-02-21
+
+Scanning the drive:
+445 folders, 2647 files, 1407358770 bytes (1343 MiB)
+
+Creating archive: C:\Users\moorer\OneDrive - sound-qi.com\Archive\qi_pro_rm_branch_horixonxy_2021_03_17.7za
+
+Add new data to archive: 445 folders, 2647 files, 1407358770 bytes (1343 MiB)
+
+
+Files read from disk: 2645
+Archive size: 201622233 bytes (193 MiB)
+Everything is Ok
+
+C:\Projects\SoundQI-Branch\RM_Branch>git-tfs.exe fetch
+Found matching Visual Studio version at C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional
+Working with tfs remote: default => $/SoundQI-Branch
+Fetching from TFS remote 'default'...
+C1108 = d657bf6e6da789500170feed94b1cd747f72676b
+
+error: branch not found. Verify that all the folders have been converted to branches (or something else :().
+        path $/SoundQI/common/SegyIndexData.h/
+warning: this changeset 1110 is a merge changeset. But git-tfs failed to find and fetch the parent changeset 1109. Parent changeset will be ignored...
+C1110 = e64e1adddb932b772a4d04ff6e6a6b7ecd28cccb
+C1111 = f68f19c7cef36ba077e88b8b013bcd834dfe2653
+C1112 = a3be6127c77b05f471d3360e31a9ca6d0fcf4327
+C1114 = 1d2571846ffacddb5840d9aa35a36ba4d61667bc
+C1116 = 36e2624863c2caad728f035871c8b0b27a83d5f9
+C1119 = 85c63ecf69b3855ad9a87ad8fb101e54de31c641
+C1120 = 84778b314264f158918824c6a139ff7eddbcbaf3
+C1123 = 31950f5bff34c92eeae2694a1da937d077592b91
+C1124 = d1d01ce0c5a6b2fbb46d00284793d2bc75c5ec7f
+
+C:\Projects\SoundQI-Branch\RM_Branch>7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on  "C:\Users\moorer\OneDrive - sound-qi.com\Archive\qi_pro_rm_branch_trying_fakeit_2021_03_17b.7za" c:\Sound-QI_Source\SoundQI-Branch\RM_Branch -xr!bin -xr!obj -xr!Debug -xr!Release -xr!"SeisWare SDK" -xr!.vs
+
+7-Zip 19.00 (x64) : Copyright (c) 1999-2018 Igor Pavlov : 2019-02-21
+
+Scanning the drive:
+445 folders, 2647 files, 1410070461 bytes (1345 MiB)
+
+Creating archive: C:\Users\moorer\OneDrive - sound-qi.com\Archive\qi_pro_rm_branch_trying_fakeit_2021_03_17b.7za
+
+Add new data to archive: 445 folders, 2647 files, 1410070461 bytes (1345 MiB)
+
+
+Files read from disk: 2644
+Archive size: 202973078 bytes (194 MiB)
+Everything is Ok
+
+C:\Projects\SoundQI-Branch\RM_Branch>
+
+-----
+
+EXE header size:               39936 / 37888 bytes
+Install code:                          (38749 bytes)
+Install data:                          (23681173 bytes)
+Compressed data:             4889206 / 23719922 bytes
+CRC (0xC2D8CBC4):                  4 / 4 bytes
+
+Total size:                  4929146 / 23757814 bytes (20.7%)
+
+8 warnings:
+  7025: "English" is not a valid language id, using language id 1033! (C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\Headwave\QiProHeadwave.nsi:156)
+  7025: "English" is not a valid language id, using language id 1033! (C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\Headwave\QiProHeadwave.nsi:159)
+  7025: "English" is not a valid language id, using language id 1033! (C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\Headwave\QiProHeadwave.nsi:161)
+  7025: "English" is not a valid language id, using language id 1033! (C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\Headwave\QiProHeadwave.nsi:163)
+  7025: "English" is not a valid language id, using language id 1033! (C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\Headwave\QiProHeadwave.nsi:165)
+  7025: "English" is not a valid language id, using language id 1033! (C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\Headwave\QiProHeadwave.nsi:167)
+  7998: ANSI targets are deprecated
+  6020: Uninstaller script code found but WriteUninstaller never used - no uninstaller will be created.
+
+-AstraZenica is banned in Germany and ...?
+-Geert Vanden Bosch, PhD 
+-France and Italy have suspended AstraZenica after they see it creating blood clots 
+  
+  pDoc->GetFile(index)  
+  
+  
+  ; MessageBox MB_OK "SEC2 #3 INSTDIR is $INSTDIR"  
+  StrCmp "$INSTDIR" "$PROGRAMFILES64\${PRODUCT_NAME}" 0 jump_to_if_not_equal
+    ;DetailPrint "myvar was somestring"
+    goto end
+  jump_to_if_not_equal:
+    Delete $PROGRAMFILES64\${PRODUCT_NAME}\config.dat
+    Delete $PROGRAMFILES64\${PRODUCT_NAME}\QI-Pro.exe
+    Delete $PROGRAMFILES64\${PRODUCT_NAME}\readme.txt
+    Delete $PROGRAMFILES64\${PRODUCT_NAME}\ReleaseNotes.txt
+    Delete $PROGRAMFILES64\${PRODUCT_NAME}\Uninst.exe
+    RMDir $PROGRAMFILES64\${PRODUCT_NAME}
+  end:
+
+-Fixed problem where python scripts were not being installed a custom selected folder 
+-Updated so user has their SoundQI python files installed in the latest version of Headwave directory 
+
+demo_angle_stack_15_shift_subset.sgy
+
+C:\Tools\INT\jgeo_36
+
+-----
+
+All files are up to date.
+163
+#pragma once
+
+#pragma warning(disable:4996) // [...] was declared deprecated.
+
+
+
+#ifndef __AFXWIN_H__
+
+        #error include 'stdafx.h' before including this file for PCH
+
+#endif
+
+
+
+#include "resource.h"       // main symbols
+
+#include "MainFrm.h"
+
+#include "../common/osi_type.h"
+
+#include "../common/License.h"
+
+#include "../common/FlexLicense.h"
+
+#include "../common/Data.h"
+
+#include "HeadwaveSocket.h"
+
+
+
+class CIMACDoc;
+
+class CIMACDocTemplate;
+
+
+
+typedef struct servermode_parm {
+
+        CIMACDoc *pDoc;
+
+        int port;
+
+} SERVERMODE_PARM;
+
+
+
+// IMAC symbols
+
+
+
+#define QI_PRO_MAJOR_REVISION 4
+
+#define QI_PRO_MINOR_REVISION 4
+#define QI_PRO_BUGFIX_REVISION 8
+
+Traceback (most recent call last):
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\run_installers.py", line 259, in <module>
+    returnCode = Run()
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\run_installers.py", line 78, in Run
+    qi_pro_file_prev_installer_stats = os.stat(qi_pro_file_prev_installer_path)
+FileNotFoundError: [WinError 3] The system cannot find the path specified: 'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.8.162\\QI-Pro.exe'
+
+-----
+
+Exception has occurred: FileNotFoundError
+[WinError 3] The system cannot find the path specified: 'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.8.162\\QI-Pro.exe'
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\run_installers.py", line 78, in Run
+    qi_pro_file_prev_installer_stats = os.stat(qi_pro_file_prev_installer_path)
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\run_installers.py", line 259, in <module>
+    returnCode = Run()
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\create_installers.py", line 5, in <module>
+    import run_installers
+
+At this line of code:
+
+        # Get the last used time on QI-Pro.exe
+        previous_build_version_int =  str(int(build_version) - 1)
+        qi_pro_file_prev_installer_path = os.path.join(os.path.join("Z:\\Applications\\QI-Pro\\PreRelease", 
+            major_version + "." + minor_version + "." + patch_version + "." + previous_build_version_int), "QI-Pro.exe")
+        qi_pro_file_prev_installer_stats = os.stat(qi_pro_file_prev_installer_path)
+        
+        
+Severity	Code	Description	Project	File	Line	Suppression State
+Error (active)	E1696	cannot open source file "unistd.h"	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\ColorBarView.cpp	20	
+
+
+-----
+
+	CIMACDoc* pDoc = CIMACDoc::GetIMACDocPtr();
+	CLogfile* pLogfile = pDoc->GetLogfilePtr();
+	int segyToUse = pDoc->GetSegyToUse();
+	CSegy* pSegy = pDoc->GetSegyInPtr(segyToUse);
+
+    1171	Roger Moore	2021-03-25 10:28:50 AM	-Cannot include IMAC.h in Horizon.cpp because CHorizon is common code between CSI and IMAC
+1167	Roger Moore	2021-03-23 1:52:55 PM	-Now automatically updating versions from IMAC.h to the *.nsi installer scripts via the python installer script
+
+Utilities::GetCurrentDir = 0x00007ff7d4109270 {QI-Pro.exe!Utilities::GetCurrentDir(char *)}
+
+GetEnvironmentVariableW
+
+1178	Roger Moore	2021-03-25 1:57:03 PM	-Should still be able to load Horizon via XY coordinates even if no horizon records presently exist
+
+
+Memory usage 2021.03.16 (see RogersTaskManagerMemory.png):
+Visual Studio: 6 GB 
+Edge: 3 GB
+Chrome: 2 GB
+Outlook: 4 GB 
+Powerpoint: 1 GB 
+Visual Studio Code: 1 GB 
+Agent Ransack: 1 GB 
+Teams: 2 GB 
+Pinta: 1 GB 
+Emacs: 500 MB 
+
+----
+
+LinearLightness.txt
+
+m_colorBarTemplateImages
+
+m_projectSaveAsName
+
+moorer@SQI012 /cygdrive/c/QI-Pro Demo/Horn River Demo
+$ git checkout 39a591753267104c48781f5dae047379140e0983
+
+Note: switching to '39a591753267104c48781f5dae047379140e0983'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+HEAD is now at 39a5917 -Updated paths of SEG-Y files from Z:\ to C:\ in Seismic Attributes
+
+afxcmn2.inl Line 334
+
+-----
+
+buildServer.AGENT.registration - Server supports the following communication protocols: [polling] Trying to register on server using 'polling' protocol.  Registered on server with id 3 and authorization token  If this is the first time this agent registered on the server make sure it is authorized by administrator in the server web UI.
+
+-----
+
+	m_hWnd = this;
+    
+git tfs clone http://tfs:8080/tfs/DefaultCollection $/some_project
+
+http://sqi009:8080/tfs/DefaultCollection/SoundQI-Branch    
+
+-----
+
+
+
+
+
+    Changeset 1190: AA dialog text changes. ColorBarView local copies CDC and CBitmap. Removed OnMove event from main window. Adjusted for window creep.
+    
+Failed to collect changes, error: Failed to get current version of TFS root: TF30063: You are not authorized to access http://sqi009:8080/tfs/DefaultCollection/., VCS root: "tfs: http://sqi009:8080/tfs/DefaultCollection/ $/SoundQI" {instance id=6, parent internal id=2, parent id=SoundQIMaster_TfsHttpSqi0098080tfsDefaultCollectionSoundQI, description: "tfs: http://sqi009:8080/tfs/DefaultCollection/ $/SoundQI"}
+16:44:49
+Failed to collect changes, error: Failed to get current version of TFS root: TF30063: You are not authorized to access http://sqi009:8080/tfs/DefaultCollection/., VCS root: "tfs: http://sqi009:8080/tfs/DefaultCollection/ $/SoundQI" {instance id=6, parent internal id=2, parent id=SoundQIMaster_TfsHttpSqi0098080tfsDefaultCollectionSoundQI, description: "tfs: http://sqi009:8080/tfs/DefaultCollection/ $/SoundQI"}
+
+   
+_bstr_t bs1
+
+	pDoc->SetColorBarComboSel(currentIndex);
+    pDoc->SetColorBarComboSel(currentIndex);
+    
+    
+    
+    
+
+
++		colorBarTemplateFile	"Baha.cb"	ATL::CStringT<char,StrTraitMFC_DLL<char,ATL::ChTraitsCRT<char>>>
+
+
+colorBarTemplateFile == "Bone.cb"
++		colorBarTemplateFile	"Bone.cb"	ATL::CStringT<char,StrTraitMFC_DLL<char,ATL::ChTraitsCRT<char>>>
+
+
+-Updated the little screen grab of the user parameters of headwave in the installer but with empty boxes where the drive is located: put a red circle and an arrow to show what needs to change 
+-Last page where we pop it up in red now has a checkbox to see if they want to view the readme file, and it is left on by default.  This also generates a readme file with the custom user values.
+
+

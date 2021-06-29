@@ -1,0 +1,718 @@
+Pipeline: Feature Requests and Defects
+Priority: Medium
+Name: QI Pro license database backup tool
+Description: Create an application to backup the license database and save it on a network drive.
+Software Component: 
+Rank: Medium
+Video Link:
+
+Tools.NewDataComparison /SrcServerName sServerName /SrcDatabaseName sDatabaseName /SrcUserName sUserName /SrcPassword sPassword /SrcDisplayName sDisplayName /TargetServerName tServerName /TargetDatabaseName tDatabaseName /TargeUserName tUserName /TargetPassword tPassword /TargetDisplayName tDisplayName  
+
+2021.05.17
+I. Researching and implementing solution:
+
+2021-05-17 14:01:40.3143|ERROR|DatabaseBackup.DatabaseBackupService|Failed to backup database: Microsoft.SqlServer.Management.Smo.FailedOperationException: Backup failed for Server 'server=SQI012\SQLEXPRESS;database=QIPro_Licences;Integrated Security=SSPI;'.  ---> Microsoft.SqlServer.Management.Common.ConnectionFailureException: Failed to connect to server server=SQI012\SQLEXPRESS;database=QIPro_Licences;Integrated Security=SSPI;. ---> Microsoft.Data.SqlClient.SqlException: A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SQL Network Interfaces, error: 26 - Error Locating Server/Instance Specified)
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\SqlClient\SqlInternalConnection.cs:line 779
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\SqlClient\TdsParser.cs:line 1677
+   at Microsoft.Data.SqlClient.TdsParser.Connect(ServerInfo serverInfo, SqlInternalConnectionTds connHandler, Boolean ignoreSniOpenTimeout, Int64 timerExpire, Boolean encrypt, Boolean trustServerCert, Boolean integratedSecurity, Boolean withFailover, Boolean isFirstTransparentAttempt, SqlAuthenticationMethod authType, String certificate, ServerCertificateValidationCallback serverCallback, ClientCertificateRetrievalCallback clientCallback, Boolean useOriginalAddressInfo, Boolean disableTnir) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\SqlClient\TdsParser.cs:line 608
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.AttemptOneLogin(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean ignoreSniOpenTimeout, TimeoutTimer timeout, Boolean withFailover, Boolean isFirstTransparentAttempt, Boolean disableTnir) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\SqlClient\SqlInternalConnectionTds.cs:line 2283
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.LoginNoFailover(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\SqlClient\SqlInternalConnectionTds.cs:line 1909
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.OpenLoginEnlist(TimeoutTimer timeout, SqlConnectionString connectionOptions, SqlCredential credential, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\SqlClient\SqlInternalConnectionTds.cs:line 1714
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds..ctor(DbConnectionPoolIdentity identity, SqlConnectionString connectionOptions, SqlCredential credential, Object providerInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString userConnectionOptions, SessionData reconnectSessionData, ServerCertificateValidationCallback serverCallback, ClientCertificateRetrievalCallback clientCallback, DbConnectionPool pool, String accessToken, SqlClientOriginalNetworkAddressInfo originalNetworkAddressInfo, Boolean applyTransientFaultHandling) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\SqlClient\SqlInternalConnectionTds.cs:line 548
+   at Microsoft.Data.SqlClient.SqlConnectionFactory.CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, Object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\SqlClient\SqlConnectionFactory.cs:line 143
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.CreatePooledConnection(DbConnectionPool pool, DbConnection owningObject, DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionOptions userOptions) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\ProviderBase\DbConnectionFactory.cs:line 163
+   at Microsoft.Data.ProviderBase.DbConnectionPool.CreateObject(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\ProviderBase\DbConnectionPool.cs:line 943
+   at Microsoft.Data.ProviderBase.DbConnectionPool.UserCreateRequest(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\ProviderBase\DbConnectionPool.cs:line 2007
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\ProviderBase\DbConnectionPool.cs:line 1412
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal& connection) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\ProviderBase\DbConnectionPool.cs:line 1296
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.TryGetConnection(DbConnection owningConnection, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal oldConnection, DbConnectionInternal& connection) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\ProviderBase\DbConnectionFactory.cs:line 354
+   at Microsoft.Data.ProviderBase.DbConnectionInternal.TryOpenConnectionInternal(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\ProviderBase\DbConnectionInternal.cs:line 768
+   at Microsoft.Data.ProviderBase.DbConnectionClosed.TryOpenConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\ProviderBase\DbConnectionClosed.cs:line 71
+   at Microsoft.Data.SqlClient.SqlConnection.TryOpenInner(TaskCompletionSource`1 retry) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\SqlClient\SqlConnection.cs:line 2028
+   at Microsoft.Data.SqlClient.SqlConnection.TryOpen(TaskCompletionSource`1 retry, SqlConnectionOverrides overrides) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\SqlClient\SqlConnection.cs:line 2016
+   at Microsoft.Data.SqlClient.SqlConnection.Open(SqlConnectionOverrides overrides) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\SqlClient\SqlConnection.cs:line 1577
+   at Microsoft.Data.SqlClient.SqlConnection.Open() in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\SqlClient\SqlConnection.cs:line 1548
+   at Microsoft.SqlServer.Management.Common.ConnectionManager.InternalConnectImpl() in C:\source\src\Microsoft\SqlServer\Management\ConnectionInfo\ConnectionManager.cs:line 558
+   at Microsoft.SqlServer.Management.Common.ConnectionManager.InternalConnect() in C:\source\src\Microsoft\SqlServer\Management\ConnectionInfo\ConnectionManager.cs:line 546
+   at Microsoft.SqlServer.Management.Common.ConnectionManager.Connect() in C:\source\src\Microsoft\SqlServer\Management\ConnectionInfo\ConnectionManager.cs:line 590
+   --- End of inner exception stack trace ---
+   at Microsoft.SqlServer.Management.Common.ConnectionManager.Connect() in C:\source\src\Microsoft\SqlServer\Management\ConnectionInfo\ConnectionManager.cs:line 620
+   at Microsoft.SqlServer.Management.Common.ConnectionManager.PoolConnect() in C:\source\src\Microsoft\SqlServer\Management\ConnectionInfo\ConnectionManager.cs:line 810
+   at Microsoft.SqlServer.Management.Common.ConnectionManager.GetServerInformation() in C:\source\src\Microsoft\SqlServer\Management\ConnectionInfo\ConnectionManager.cs:line 340
+   at Microsoft.SqlServer.Management.Smo.ExecutionManager.GetServerVersion() in C:\source\src\Microsoft\SqlServer\Management\Smo\ExecutionManager.cs:line 778
+   at Microsoft.SqlServer.Management.Smo.SqlSmoObject.get_ServerVersion() in C:\source\src\Microsoft\SqlServer\Management\Smo\SqlSmoObject.cs:line 3291
+   at Microsoft.SqlServer.Management.Smo.Backup.Script(Server targetServer) in C:\source\src\Microsoft\SqlServer\Management\Smo.Extended\Backup.cs:line 138
+   at Microsoft.SqlServer.Management.Smo.Backup.SqlBackupAsync(Server srv) in C:\source\src\Microsoft\SqlServer\Management\Smo.Extended\Backup.cs:line 117
+   --- End of inner exception stack trace ---
+   at Microsoft.SqlServer.Management.Smo.Backup.SqlBackupAsync(Server srv) in C:\source\src\Microsoft\SqlServer\Management\Smo.Extended\Backup.cs:line 127
+   at DatabaseBackup.DatabaseBackupService.Run() in C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\Tools\DatabaseBackup\DatabaseBackup\DatabaseBackupService.cs:line 78
+
+-----
+
+-		ex	{"Backup failed for Server 'server=.\\SQLExpress;database=QIPro_Licences;Integrated Security=true;'. "}	System.Exception {Microsoft.SqlServer.Management.Smo.FailedOperationException}
++		Data	{System.Collections.ListDictionaryInternal}	System.Collections.IDictionary {System.Collections.ListDictionaryInternal}
++		FailedObject	{[server=.\SQLExpress;database=QIPro_Licences;Integrated Security=true;]}	object {Microsoft.SqlServer.Management.Smo.Server}
+		HResult	-2146233088	int
+		HelpLink	"https://go.microsoft.com/fwlink?ProdName=Microsoft+SQL+Server&ProdVer=16.200.46367.54+(SMO-master-A)&EvtSrc=Microsoft.SqlServer.Management.Smo.ExceptionTemplates.FailedOperationExceptionText&EvtID=Backup+Server&LinkId=20476"	string
++		InnerException	{"Failed to connect to server server=.\\SQLExpress;database=QIPro_Licences;Integrated Security=true;."}	System.Exception {Microsoft.SqlServer.Management.Common.ConnectionFailureException}
+		Message	"Backup failed for Server 'server=.\\SQLExpress;database=QIPro_Licences;Integrated Security=true;'. "	string
+		Operation	"Backup"	string
+		SmoExceptionType	FailedOperationException	Microsoft.SqlServer.Management.Smo.SmoExceptionType
+		Source	"Microsoft.SqlServer.SmoExtended"	string
+		StackTrace	"   at Microsoft.SqlServer.Management.Smo.Backup.SqlBackupAsync(Server srv)\r\n   at DatabaseBackup.DatabaseBackupService.Run() in C:\\Sound-QI_Source\\SoundQI-Branch\\RM_Branch\\Tools\\DatabaseBackup\\DatabaseBackup\\DatabaseBackupService.cs:line 78"	string
++		TargetSite	{Void SqlBackupAsync(Microsoft.SqlServer.Management.Smo.Server)}	System.Reflection.MethodBase {System.Reflection.RuntimeMethodInfo}
++		Static members		
++		Non-Public members		
+
+-----
+
+ex
+{"Backup failed for Server 'Data Source=.\\SQLExpress;Initial Catalog=QIPro_Licences;Integrated Security=true;'. "}
+    Data: {System.Collections.ListDictionaryInternal}
+    FailedObject: {[Data Source=.\SQLExpress;Initial Catalog=QIPro_Licences;Integrated Security=true;]}
+    HResult: -2146233088
+    HelpLink: "https://go.microsoft.com/fwlink?ProdName=Microsoft+SQL+Server&ProdVer=16.200.46367.54+(SMO-master-A)&EvtSrc=Microsoft.SqlServer.Management.Smo.ExceptionTemplates.FailedOperationExceptionText&EvtID=Backup+Server&LinkId=20476"
+    InnerException: {"Failed to connect to server Data Source=.\\SQLExpress;Initial Catalog=QIPro_Licences;Integrated Security=true;."}
+    Message: "Backup failed for Server 'Data Source=.\\SQLExpress;Initial Catalog=QIPro_Licences;Integrated Security=true;'. "
+    Operation: "Backup"
+    SmoExceptionType: FailedOperationException
+    Source: "Microsoft.SqlServer.SmoExtended"
+    StackTrace: "   at Microsoft.SqlServer.Management.Smo.Backup.SqlBackupAsync(Server srv)\r\n   at DatabaseBackup.DatabaseBackupService.Run() in C:\\Sound-QI_Source\\SoundQI-Branch\\RM_Branch\\Tools\\DatabaseBackup\\DatabaseBackup\\DatabaseBackupService.cs:line 78"
+    TargetSite: {Void SqlBackupAsync(Microsoft.SqlServer.Management.Smo.Server)}
+
+    
++		InnerException	{"A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SQL Network Interfaces, error: 26 - Error Locating Server/Instance Specified)"}	System.Exception {Microsoft.Data.SqlClient.SqlException}
+
+
+-		InnerException	{"A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SQL Network Interfaces, error: 26 - Error Locating Server/Instance Specified)"}	System.Exception {Microsoft.Data.SqlClient.SqlException}
+
+
+-----
+
+C:\Windows\system32>netstat -an
+
+Active Connections
+
+  Proto  Local Address          Foreign Address        State
+  TCP    0.0.0.0:135            0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:445            0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:3395           0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:5040           0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:5357           0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:8111           0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:9090           0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49664          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49665          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49666          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49667          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49668          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49674          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49675          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49798          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:50032          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:53224          0.0.0.0:0              LISTENING
+  TCP    127.0.0.1:5939         0.0.0.0:0              LISTENING
+  TCP    127.0.0.1:8105         0.0.0.0:0              LISTENING
+  TCP    127.0.0.1:8111         127.0.0.1:53086        ESTABLISHED
+  TCP    127.0.0.1:49706        0.0.0.0:0              LISTENING
+  TCP    127.0.0.1:49706        127.0.0.1:50503        ESTABLISHED
+  TCP    127.0.0.1:49706        127.0.0.1:50898        ESTABLISHED
+  TCP    127.0.0.1:49706        127.0.0.1:52789        ESTABLISHED
+  TCP    127.0.0.1:49706        127.0.0.1:52848        ESTABLISHED
+  TCP    127.0.0.1:49706        127.0.0.1:52957        ESTABLISHED
+  TCP    127.0.0.1:49706        127.0.0.1:53030        ESTABLISHED
+  TCP    127.0.0.1:49706        127.0.0.1:53120        ESTABLISHED
+  TCP    127.0.0.1:49706        127.0.0.1:53140        ESTABLISHED
+  TCP    127.0.0.1:49706        127.0.0.1:53390        ESTABLISHED
+  TCP    127.0.0.1:49706        127.0.0.1:53435        ESTABLISHED
+  TCP    127.0.0.1:49706        127.0.0.1:53455        ESTABLISHED
+  TCP    127.0.0.1:49706        127.0.0.1:53456        ESTABLISHED
+  TCP    127.0.0.1:49706        127.0.0.1:53459        ESTABLISHED
+  TCP    127.0.0.1:49706        127.0.0.1:53475        ESTABLISHED
+  TCP    127.0.0.1:49706        127.0.0.1:53477        ESTABLISHED
+  TCP    127.0.0.1:49706        127.0.0.1:53481        ESTABLISHED
+  TCP    127.0.0.1:49706        127.0.0.1:53485        ESTABLISHED
+  TCP    127.0.0.1:49706        127.0.0.1:53487        ESTABLISHED
+  TCP    127.0.0.1:49706        127.0.0.1:53489        ESTABLISHED
+  TCP    127.0.0.1:49706        127.0.0.1:53527        ESTABLISHED
+  TCP    127.0.0.1:49706        127.0.0.1:53543        ESTABLISHED
+  TCP    127.0.0.1:49706        127.0.0.1:53579        ESTABLISHED
+  TCP    127.0.0.1:49706        127.0.0.1:53585        ESTABLISHED
+  TCP    127.0.0.1:49706        127.0.0.1:53608        ESTABLISHED
+  TCP    127.0.0.1:49706        127.0.0.1:53616        ESTABLISHED
+  TCP    127.0.0.1:49800        127.0.0.1:49801        ESTABLISHED
+  TCP    127.0.0.1:49801        127.0.0.1:49800        ESTABLISHED
+  TCP    127.0.0.1:49849        127.0.0.1:49850        ESTABLISHED
+  TCP    127.0.0.1:49850        127.0.0.1:49849        ESTABLISHED
+  TCP    127.0.0.1:49851        127.0.0.1:49852        ESTABLISHED
+  TCP    127.0.0.1:49852        127.0.0.1:49851        ESTABLISHED
+  TCP    127.0.0.1:50503        127.0.0.1:49706        ESTABLISHED
+  TCP    127.0.0.1:50558        0.0.0.0:0              LISTENING
+  TCP    127.0.0.1:50558        127.0.0.1:50570        ESTABLISHED
+  TCP    127.0.0.1:50570        127.0.0.1:50558        ESTABLISHED
+  TCP    127.0.0.1:50606        0.0.0.0:0              LISTENING
+  TCP    127.0.0.1:50606        127.0.0.1:50607        ESTABLISHED
+  TCP    127.0.0.1:50607        127.0.0.1:50606        ESTABLISHED
+  TCP    127.0.0.1:50608        0.0.0.0:0              LISTENING
+  TCP    127.0.0.1:50898        127.0.0.1:49706        ESTABLISHED
+  TCP    127.0.0.1:52113        0.0.0.0:0              LISTENING
+  TCP    127.0.0.1:52113        127.0.0.1:52122        ESTABLISHED
+  TCP    127.0.0.1:52122        127.0.0.1:52113        ESTABLISHED
+  TCP    127.0.0.1:52135        0.0.0.0:0              LISTENING
+  TCP    127.0.0.1:52135        127.0.0.1:52136        ESTABLISHED
+  TCP    127.0.0.1:52136        127.0.0.1:52135        ESTABLISHED
+  TCP    127.0.0.1:52142        0.0.0.0:0              LISTENING
+  TCP    127.0.0.1:52789        127.0.0.1:49706        ESTABLISHED
+  TCP    127.0.0.1:52848        127.0.0.1:49706        ESTABLISHED
+  TCP    127.0.0.1:52957        127.0.0.1:49706        ESTABLISHED
+  TCP    127.0.0.1:53030        127.0.0.1:49706        ESTABLISHED
+  TCP    127.0.0.1:53086        127.0.0.1:8111         ESTABLISHED
+  TCP    127.0.0.1:53120        127.0.0.1:49706        ESTABLISHED
+  TCP    127.0.0.1:53140        127.0.0.1:49706        ESTABLISHED
+  TCP    127.0.0.1:53225        0.0.0.0:0              LISTENING
+  TCP    127.0.0.1:53390        127.0.0.1:49706        ESTABLISHED
+  TCP    127.0.0.1:53435        127.0.0.1:49706        ESTABLISHED
+  TCP    127.0.0.1:53455        127.0.0.1:49706        ESTABLISHED
+  TCP    127.0.0.1:53456        127.0.0.1:49706        ESTABLISHED
+  TCP    127.0.0.1:53459        127.0.0.1:49706        ESTABLISHED
+  TCP    127.0.0.1:53475        127.0.0.1:49706        ESTABLISHED
+  TCP    127.0.0.1:53477        127.0.0.1:49706        ESTABLISHED
+  TCP    127.0.0.1:53481        127.0.0.1:49706        ESTABLISHED
+  TCP    127.0.0.1:53485        127.0.0.1:49706        ESTABLISHED
+  TCP    127.0.0.1:53487        127.0.0.1:49706        ESTABLISHED
+  TCP    127.0.0.1:53489        127.0.0.1:49706        ESTABLISHED
+  TCP    127.0.0.1:53511        127.0.0.1:49706        TIME_WAIT
+  TCP    127.0.0.1:53527        127.0.0.1:49706        ESTABLISHED
+  TCP    127.0.0.1:53543        127.0.0.1:49706        ESTABLISHED
+  TCP    127.0.0.1:53579        127.0.0.1:49706        ESTABLISHED
+  TCP    127.0.0.1:53585        127.0.0.1:49706        ESTABLISHED
+  TCP    127.0.0.1:53608        127.0.0.1:49706        ESTABLISHED
+  TCP    127.0.0.1:53616        127.0.0.1:49706        ESTABLISHED
+  TCP    127.0.0.1:58251        0.0.0.0:0              LISTENING
+  TCP    127.0.0.1:63330        0.0.0.0:0              LISTENING
+  TCP    127.0.0.1:63331        0.0.0.0:0              LISTENING
+  TCP    192.168.1.112:139      0.0.0.0:0              LISTENING
+  TCP    192.168.1.112:3395     174.0.175.219:2192     ESTABLISHED
+  TCP    192.168.1.112:3395     185.202.2.139:39503    ESTABLISHED
+  TCP    192.168.1.112:49737    3.14.169.239:443       ESTABLISHED
+  TCP    192.168.1.112:49813    192.168.1.71:445       ESTABLISHED
+  TCP    192.168.1.112:49858    40.97.140.210:443      ESTABLISHED
+  TCP    192.168.1.112:49861    40.97.140.210:443      ESTABLISHED
+  TCP    192.168.1.112:49871    40.126.26.160:443      CLOSE_WAIT
+  TCP    192.168.1.112:49872    40.126.26.160:443      CLOSE_WAIT
+  TCP    192.168.1.112:49873    40.126.26.160:443      CLOSE_WAIT
+  TCP    192.168.1.112:50171    52.114.132.33:443      ESTABLISHED
+  TCP    192.168.1.112:50504    172.253.117.188:5228   ESTABLISHED
+  TCP    192.168.1.112:50525    192.168.1.113:8080     ESTABLISHED
+  TCP    192.168.1.112:50676    52.177.166.224:443     ESTABLISHED
+  TCP    192.168.1.112:50899    52.109.96.61:443       ESTABLISHED
+  TCP    192.168.1.112:51530    52.112.113.1:443       ESTABLISHED
+  TCP    192.168.1.112:51609    40.84.185.67:9354      ESTABLISHED
+  TCP    192.168.1.112:51862    192.168.1.113:53769    ESTABLISHED
+  TCP    192.168.1.112:52070    192.168.1.71:445       ESTABLISHED
+  TCP    192.168.1.112:52071    192.168.1.71:445       ESTABLISHED
+  TCP    192.168.1.112:52072    192.168.1.71:445       ESTABLISHED
+  TCP    192.168.1.112:52414    192.168.1.113:8080     ESTABLISHED
+  TCP    192.168.1.112:52417    192.168.1.113:8080     ESTABLISHED
+  TCP    192.168.1.112:52438    52.96.164.82:443       ESTABLISHED
+  TCP    192.168.1.112:52515    40.84.185.67:9354      ESTABLISHED
+  TCP    192.168.1.112:52522    65.8.61.151:443        ESTABLISHED
+  TCP    192.168.1.112:52525    52.96.113.130:443      ESTABLISHED
+  TCP    192.168.1.112:52562    52.177.165.30:443      ESTABLISHED
+  TCP    192.168.1.112:52790    65.8.61.151:443        ESTABLISHED
+  TCP    192.168.1.112:52849    65.8.61.151:443        ESTABLISHED
+  TCP    192.168.1.112:52958    198.252.206.25:443     ESTABLISHED
+  TCP    192.168.1.112:53031    198.252.206.25:443     ESTABLISHED
+  TCP    192.168.1.112:53121    198.252.206.25:443     ESTABLISHED
+  TCP    192.168.1.112:53141    198.252.206.25:443     ESTABLISHED
+  TCP    192.168.1.112:53289    192.168.1.71:49669     ESTABLISHED
+  TCP    192.168.1.112:53308    52.96.113.210:443      ESTABLISHED
+  TCP    192.168.1.112:53391    140.82.113.25:443      ESTABLISHED
+  TCP    192.168.1.112:53404    52.98.63.18:443        ESTABLISHED
+  TCP    192.168.1.112:53437    151.101.1.140:443      ESTABLISHED
+  TCP    192.168.1.112:53457    104.123.194.82:443     ESTABLISHED
+  TCP    192.168.1.112:53458    104.123.194.82:443     ESTABLISHED
+  TCP    192.168.1.112:53460    104.123.194.82:443     ESTABLISHED
+  TCP    192.168.1.112:53476    199.232.192.134:443    ESTABLISHED
+  TCP    192.168.1.112:53478    151.101.64.134:443     ESTABLISHED
+  TCP    192.168.1.112:53482    151.101.64.134:443     ESTABLISHED
+  TCP    192.168.1.112:53486    52.5.112.135:443       ESTABLISHED
+  TCP    192.168.1.112:53488    199.232.194.49:443     ESTABLISHED
+  TCP    192.168.1.112:53490    199.232.192.64:443     ESTABLISHED
+  TCP    192.168.1.112:53528    199.232.196.134:443    ESTABLISHED
+  TCP    192.168.1.112:53544    151.101.2.49:443       ESTABLISHED
+  TCP    192.168.1.112:53580    23.41.208.52:443       ESTABLISHED
+  TCP    192.168.1.112:53586    23.41.208.52:443       ESTABLISHED
+  TCP    192.168.1.112:53609    104.19.155.83:443      ESTABLISHED
+  TCP    192.168.1.112:53617    140.82.114.25:443      ESTABLISHED
+  TCP    192.168.1.112:53632    40.97.142.34:443       ESTABLISHED
+  TCP    192.168.1.112:53634    192.168.1.113:8080     TIME_WAIT
+  TCP    192.168.1.112:53635    35.162.22.144:443      TIME_WAIT
+  TCP    192.168.1.112:53636    52.114.142.205:443     ESTABLISHED
+  TCP    192.168.1.112:53638    52.35.219.183:443      TIME_WAIT
+  TCP    192.168.1.112:53639    52.35.219.183:443      TIME_WAIT
+  TCP    192.168.1.112:53640    63.32.147.35:443       TIME_WAIT
+  TCP    192.168.1.112:53641    63.32.147.35:443       TIME_WAIT
+  TCP    192.168.1.112:53642    192.168.1.113:8080     TIME_WAIT
+  TCP    192.168.1.112:53643    34.210.151.85:443      TIME_WAIT
+  TCP    192.168.1.112:53646    64.4.54.254:443        ESTABLISHED
+  TCP    192.168.1.112:53647    192.168.1.113:8080     ESTABLISHED
+  TCP    192.168.1.112:53648    52.149.8.148:443       SYN_SENT
+  TCP    192.168.56.1:139       0.0.0.0:0              LISTENING
+  TCP    [::]:135               [::]:0                 LISTENING
+  TCP    [::]:445               [::]:0                 LISTENING
+  TCP    [::]:3395              [::]:0                 LISTENING
+  TCP    [::]:5357              [::]:0                 LISTENING
+  TCP    [::]:8111              [::]:0                 LISTENING
+  TCP    [::]:9090              [::]:0                 LISTENING
+  TCP    [::]:49664             [::]:0                 LISTENING
+  TCP    [::]:49665             [::]:0                 LISTENING
+  TCP    [::]:49666             [::]:0                 LISTENING
+  TCP    [::]:49667             [::]:0                 LISTENING
+  TCP    [::]:49668             [::]:0                 LISTENING
+  TCP    [::]:49674             [::]:0                 LISTENING
+  TCP    [::]:49675             [::]:0                 LISTENING
+  TCP    [::]:49798             [::]:0                 LISTENING
+  TCP    [::]:50032             [::]:0                 LISTENING
+  TCP    [::]:53224             [::]:0                 LISTENING
+  TCP    [::1]:8111             [::1]:52733            ESTABLISHED
+  TCP    [::1]:8111             [::1]:52766            ESTABLISHED
+  TCP    [::1]:8111             [::1]:53630            FIN_WAIT_2
+  TCP    [::1]:49676            [::]:0                 LISTENING
+  TCP    [::1]:52733            [::1]:8111             ESTABLISHED
+  TCP    [::1]:52766            [::1]:8111             ESTABLISHED
+  TCP    [::1]:53225            [::]:0                 LISTENING
+  TCP    [::1]:53630            [::1]:8111             CLOSE_WAIT
+  UDP    0.0.0.0:123            *:*
+  UDP    0.0.0.0:3395           *:*
+  UDP    0.0.0.0:3702           *:*
+  UDP    0.0.0.0:3702           *:*
+  UDP    0.0.0.0:5050           *:*
+  UDP    0.0.0.0:5353           *:*
+  UDP    0.0.0.0:5353           *:*
+  UDP    0.0.0.0:5353           *:*
+  UDP    0.0.0.0:5353           *:*
+  UDP    0.0.0.0:5353           *:*
+  UDP    0.0.0.0:5353           *:*
+  UDP    0.0.0.0:5353           *:*
+  UDP    0.0.0.0:5353           *:*
+  UDP    0.0.0.0:5353           *:*
+  UDP    0.0.0.0:5353           *:*
+  UDP    0.0.0.0:5353           *:*
+  UDP    0.0.0.0:5353           *:*
+  UDP    0.0.0.0:5353           *:*
+  UDP    0.0.0.0:5355           *:*
+  UDP    0.0.0.0:49398          *:*
+  UDP    0.0.0.0:49400          *:*
+  UDP    0.0.0.0:52411          *:*
+  UDP    0.0.0.0:56305          *:*
+  UDP    0.0.0.0:57589          *:*
+  UDP    0.0.0.0:57684          *:*
+  UDP    0.0.0.0:57687          *:*
+  UDP    0.0.0.0:57690          *:*
+  UDP    0.0.0.0:59273          *:*
+  UDP    0.0.0.0:59896          *:*
+  UDP    0.0.0.0:59963          *:*
+  UDP    0.0.0.0:59964          *:*
+  UDP    0.0.0.0:65307          *:*
+  UDP    127.0.0.1:1900         *:*
+  UDP    127.0.0.1:49950        *:*
+  UDP    127.0.0.1:55230        *:*
+  UDP    127.0.0.1:56376        *:*
+  UDP    127.0.0.1:57065        *:*
+  UDP    127.0.0.1:57070        *:*
+  UDP    127.0.0.1:57228        *:*
+  UDP    127.0.0.1:57642        *:*
+  UDP    127.0.0.1:57643        *:*
+  UDP    127.0.0.1:61768        *:*
+  UDP    127.0.0.1:65295        *:*
+  UDP    127.0.0.1:65308        *:*
+  UDP    192.168.1.112:137      *:*
+  UDP    192.168.1.112:138      *:*
+  UDP    192.168.1.112:1900     *:*
+  UDP    192.168.1.112:5353     *:*
+  UDP    192.168.1.112:49948    *:*
+  UDP    192.168.56.1:137       *:*
+  UDP    192.168.56.1:138       *:*
+  UDP    192.168.56.1:1900      *:*
+  UDP    192.168.56.1:5353      *:*
+  UDP    192.168.56.1:49949     *:*
+  UDP    [::]:123               *:*
+  UDP    [::]:3395              *:*
+  UDP    [::]:3702              *:*
+  UDP    [::]:3702              *:*
+  UDP    [::]:5353              *:*
+  UDP    [::]:5353              *:*
+  UDP    [::]:5353              *:*
+  UDP    [::]:5353              *:*
+  UDP    [::]:5353              *:*
+  UDP    [::]:5353              *:*
+  UDP    [::]:5353              *:*
+  UDP    [::]:5355              *:*
+  UDP    [::]:49399             *:*
+  UDP    [::]:56305             *:*
+  UDP    [::]:59274             *:*
+  UDP    [::]:59896             *:*
+  UDP    [::1]:1900             *:*
+  UDP    [::1]:5353             *:*
+  UDP    [::1]:49947            *:*
+  UDP    [fe80::a083:a8f8:ac95:59f6%9]:1900  *:*
+  UDP    [fe80::a083:a8f8:ac95:59f6%9]:49946  *:*
+  UDP    [fe80::e835:2fb0:a700:c6de%2]:1900  *:*
+  UDP    [fe80::e835:2fb0:a700:c6de%2]:49945  *:*
+
+  
+--------------------------------------------------------------------------------
+
+ex.InnerException.InnerException
+{"A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SQL Network Interfaces, error: 26 - Error Locating Server/Instance Specified)"}
+    Class: 20
+    ClientConnectionId: {00000000-0000-0000-0000-000000000000}
+    Data: {System.Collections.ListDictionaryInternal}
+    ErrorCode: -2146232060
+    Errors: {Microsoft.Data.SqlClient.SqlErrorCollection}
+    HResult: -2146232060
+    HelpLink: null
+    InnerException: null
+    LineNumber: 0
+    Message: "A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SQL Network Interfaces, error: 26 - Error Locating Server/Instance Specified)"
+    Number: -1
+    Procedure: null
+    Server: ""
+    Source: "Framework Microsoft SqlClient Data Provider"
+    StackTrace: "   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)\r\n   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)\r\n   at Microsoft.Data.SqlClient.TdsParser.Connect(ServerInfo serverInfo, SqlInternalConnectionTds connHandler, Boolean ignoreSniOpenTimeout, Int64 timerExpire, Boolean encrypt, Boolean trustServerCert, Boolean integratedSecurity, Boolean withFailover, Boolean isFirstTransparentAttempt, SqlAuthenticationMethod authType, String certificate, ServerCertificateValidationCallback serverCallback, ClientCertificateRetrievalCallback clientCallback, Boolean useOriginalAddressInfo, Boolean disableTnir)\r\n   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.AttemptOneLogin(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean ignoreSniOpenTimeout, TimeoutTimer timeout, Boolean withFail
+over, Boolean isFirstTransparentAttempt, Boolean disableTnir)\r\n   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.LoginNoFailover(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout)\r\n   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.OpenLoginEnlist(TimeoutTimer timeout, SqlConnectionString connectionOptions, SqlCredential credential, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance)\r\n   at Microsoft.Data.SqlClient.SqlInternalConnectionTds..ctor(DbConnectionPoolIdentity identity, SqlConnectionString connectionOptions, SqlCredential credential, Object providerInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString userConnectionOptions, SessionData reconnectSessionData, ServerCertificateValidationCallback serverCallback, ClientCertificateRetrievalCallback clientCallback
+, DbConnectionPool pool, String accessToken, SqlClientOriginalNetworkAddressInfo originalNetworkAddressInfo, Boolean applyTransientFaultHandling)\r\n   at Microsoft.Data.SqlClient.SqlConnectionFactory.CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, Object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions)\r\n   at Microsoft.Data.ProviderBase.DbConnectionFactory.CreatePooledConnection(DbConnectionPool pool, DbConnection owningObject, DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionOptions userOptions)\r\n   at Microsoft.Data.ProviderBase.DbConnectionPool.CreateObject(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)\r\n   at Microsoft.Data.ProviderBase.DbConnectionPool.UserCreateRequest(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)\r\n   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnect
+ion owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)\r\n   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal& connection)\r\n   at Microsoft.Data.ProviderBase.DbConnectionFactory.TryGetConnection(DbConnection owningConnection, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal oldConnection, DbConnectionInternal& connection)\r\n   at Microsoft.Data.ProviderBase.DbConnectionInternal.TryOpenConnectionInternal(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)\r\n   at Microsoft.Data.ProviderBase.DbConnectionClosed.TryOpenConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOpt
+ions)\r\n   at Microsoft.Data.SqlClient.SqlConnection.TryOpenInner(TaskCompletionSource`1 retry)\r\n   at Microsoft.Data.SqlClient.SqlConnection.TryOpen(TaskCompletionSource`1 retry, SqlConnectionOverrides overrides)\r\n   at Microsoft.Data.SqlClient.SqlConnection.Open(SqlConnectionOverrides overrides)\r\n   at Microsoft.Data.SqlClient.SqlConnection.Open()\r\n   at Microsoft.SqlServer.Management.Common.ConnectionManager.InternalConnectImpl()\r\n   at Microsoft.SqlServer.Management.Common.ConnectionManager.InternalConnect()\r\n   at Microsoft.SqlServer.Management.Common.ConnectionManager.Connect()"
+    State: 0
+    TargetSite: {Void OnError(Microsoft.Data.SqlClient.SqlException, Boolean, System.Action`1[System.Action])}
+
+2021.05.18
+I. Researching and implementing solution:
+
+1)
+
+The build is removed from the queue to be prepared for the start
+Collecting changes in 1 VCS root
+  VCS Root details
+    "tfs: http://sqi009:8080/tfs/DefaultCollection/ $/SoundQI-Branch" {instance id=7, parent internal id=1, parent id=SoundQIBranch_TfsHttpSqi0098080tfsDefaultCollectionSoundQIBranch, description: "tfs: http://sqi009:8080/tfs/DefaultCollection/ $/SoundQI-Branch"}
+Failed to collect changes, error: Failed to get current version of TFS root: TF30063: You are not authorized to access http://sqi009:8080/tfs/DefaultCollection/., VCS root: "tfs: http://sqi009:8080/tfs/DefaultCollection/ $/SoundQI-Branch" {instance id=7, parent internal id=1, parent id=SoundQIBranch_TfsHttpSqi0098080tfsDefaultCollectionSoundQIBranch, description: "tfs: http://sqi009:8080/tfs/DefaultCollection/ $/SoundQI-Branch"}
+Failed to collect changes, error: Failed to get current version of TFS root: TF30063: You are not authorized to access http://sqi009:8080/tfs/DefaultCollection/., VCS root: "tfs: http://sqi009:8080/tfs/DefaultCollection/ $/SoundQI-Branch" {instance id=7, parent internal id=1, parent id=SoundQIBranch_TfsHttpSqi0098080tfsDefaultCollectionSoundQIBranch, description: "tfs: http://sqi009:8080/tfs/DefaultCollection/ $/SoundQI-Branch"}
+Build finished    
+
+-----
+
+2)
+
+-		ex	{"Backup failed for Server 'Data Source=SQI012\\SQLEXPRESS;Initial Catalog=QIPro_Licences;Integrated Security=SSPI;user=sa;password=%5U4:-j&fDw[m4n*<h!d'. "}	System.Exception {Microsoft.SqlServer.Management.Smo.FailedOperationException}
++		Data	{System.Collections.ListDictionaryInternal}	System.Collections.IDictionary {System.Collections.ListDictionaryInternal}
++		FailedObject	{[Data Source=SQI012\SQLEXPRESS;Initial Catalog=QIPro_Licences;Integrated Security=SSPI;user=sa;password=%5U4:-j&fDw[m4n*<h!d]}	object {Microsoft.SqlServer.Management.Smo.Server}
+		HResult	-2146233088	int
+		HelpLink	"https://go.microsoft.com/fwlink?ProdName=Microsoft+SQL+Server&ProdVer=16.200.46367.54+(SMO-master-A)&EvtSrc=Microsoft.SqlServer.Management.Smo.ExceptionTemplates.FailedOperationExceptionText&EvtID=Backup+Server&LinkId=20476"	string
+-		InnerException	{"Failed to connect to server Data Source=SQI012\\SQLEXPRESS;Initial Catalog=QIPro_Licences;Integrated Security=SSPI;user=sa;password=%5U4:-j&fDw[m4n*<h!d."}	System.Exception {Microsoft.SqlServer.Management.Common.ConnectionFailureException}
++		Data	{System.Collections.ListDictionaryInternal}	System.Collections.IDictionary {System.Collections.ListDictionaryInternal}
+		HResult	-2146233087	int
+		HelpLink	null	string
+-		InnerException	{"A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SQL Network Interfaces, error: 25 - Connection string is not valid)"}	System.Exception {Microsoft.Data.SqlClient.SqlException}
+		Class	20	byte
++		ClientConnectionId	{00000000-0000-0000-0000-000000000000}	System.Guid
++		Data	{System.Collections.ListDictionaryInternal}	System.Collections.IDictionary {System.Collections.ListDictionaryInternal}
+		ErrorCode	-2146232060	int
++		Errors	{Microsoft.Data.SqlClient.SqlErrorCollection}	Microsoft.Data.SqlClient.SqlErrorCollection
+		HResult	-2146232060	int
+		HelpLink	null	string
++		InnerException	{"The parameter is incorrect"}	System.Exception {System.ComponentModel.Win32Exception}
+		LineNumber	0	int
+		Message	"A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SQL Network Interfaces, error: 25 - Connection string is not valid)"	string
+		Number	87	int
+		Procedure	null	string
+		Server	""	string
+		Source	"Framework Microsoft SqlClient Data Provider"	string
+		StackTrace	"   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction) in H:\\tsaagent1\\_work\\46\\s\\src\\Microsoft.Data.SqlClient\\netfx\\src\\Microsoft\\Data\\SqlClient\\SqlInternalConnection.cs:line 779\r\n   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose) in H:\\tsaagent1\\_work\\46\\s\\src\\Microsoft.Data.SqlClient\\netfx\\src\\Microsoft\\Data\\SqlClient\\TdsParser.cs:line 1677\r\n   at Microsoft.Data.SqlClient.TdsParser.Connect(ServerInfo serverInfo, SqlInternalConnectionTds connHandler, Boolean ignoreSniOpenTimeout, Int64 timerExpire, Boolean encrypt, Boolean trustServerCert, Boolean integratedSecurity, Boolean withFailover, Boolean isFirstTransparentAttempt, SqlAuthenticationMethod authType, String certificate, ServerCertificateValidationCallback serverCallback, ClientCertificateRetrievalCallback clientCallback, Boolean useOriginalAddressInfo, Boolean disableTnir) in H:\\tsaagent1\\_work\\46\\s\\src\\Microsoft.Data.SqlClient\\netfx\\src\\Microsoft\\Data\\SqlClient\\TdsParser.cs:line 608\r\n   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.AttemptOneLogin(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean ignoreSniOpenTimeout, TimeoutTimer timeout, Boolean withFailover, Boolean isFirstTransparentAttempt, Boolean disableTnir) in H:\\tsaagent1\\_work\\46\\s\\src\\Microsoft.Data.SqlClient\\netfx\\src\\Microsoft\\Data\\SqlClient\\SqlInternalConnectionTds.cs:line 2283\r\n   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.LoginNoFailover(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout) in H:\\tsaagent1\\_work\\46\\s\\src\\Microsoft.Data.SqlClient\\netfx\\src\\Microsoft\\Data\\SqlClient\\SqlInternalConnectionTds.cs:line 1909\r\n   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.OpenLoginEnlist(TimeoutTimer timeout, SqlConnectionString connectionOptions, SqlCredential credential, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance) in H:\\tsaagent1\\_work\\46\\s\\src\\Microsoft.Data.SqlClient\\netfx\\src\\Microsoft\\Data\\SqlClient\\SqlInternalConnectionTds.cs:line 1714\r\n   at Microsoft.Data.SqlClient.SqlInternalConnectionTds..ctor(DbConnectionPoolIdentity identity, SqlConnectionString connectionOptions, SqlCredential credential, Object providerInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString userConnectionOptions, SessionData reconnectSessionData, ServerCertificateValidationCallback serverCallback, ClientCertificateRetrievalCallback clientCallback, DbConnectionPool pool, String accessToken, SqlClientOriginalNetworkAddressInfo originalNetworkAddressInfo, Boolean applyTransientFaultHandling) in H:\\tsaagent1\\_work\\46\\s\\src\\Microsoft.Data.SqlClient\\netfx\\src\\Microsoft\\Data\\SqlClient\\SqlInternalConnectionTds.cs:line 548\r\n   at Microsoft.Data.SqlClient.SqlConnectionFactory.CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, Object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions) in H:\\tsaagent1\\_work\\46\\s\\src\\Microsoft.Data.SqlClient\\netfx\\src\\Microsoft\\Data\\SqlClient\\SqlConnectionFactory.cs:line 143\r\n   at Microsoft.Data.ProviderBase.DbConnectionFactory.CreatePooledConnection(DbConnectionPool pool, DbConnection owningObject, DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionOptions userOptions) in H:\\tsaagent1\\_work\\46\\s\\src\\Microsoft.Data.SqlClient\\netfx\\src\\Microsoft\\Data\\ProviderBase\\DbConnectionFactory.cs:line 163\r\n   at Microsoft.Data.ProviderBase.DbConnectionPool.CreateObject(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection) in H:\\tsaagent1\\_work\\46\\s\\src\\Microsoft.Data.SqlClient\\netfx\\src\\Microsoft\\Data\\ProviderBase\\DbConnectionPool.cs:line 943\r\n   at Microsoft.Data.ProviderBase.DbConnectionPool.UserCreateRequest(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection) in H:\\tsaagent1\\_work\\46\\s\\src\\Microsoft.Data.SqlClient\\netfx\\src\\Microsoft\\Data\\ProviderBase\\DbConnectionPool.cs:line 2007\r\n   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection) in H:\\tsaagent1\\_work\\46\\s\\src\\Microsoft.Data.SqlClient\\netfx\\src\\Microsoft\\Data\\ProviderBase\\DbConnectionPool.cs:line 1412\r\n   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal& connection) in H:\\tsaagent1\\_work\\46\\s\\src\\Microsoft.Data.SqlClient\\netfx\\src\\Microsoft\\Data\\ProviderBase\\DbConnectionPool.cs:line 1296\r\n   at Microsoft.Data.ProviderBase.DbConnectionFactory.TryGetConnection(DbConnection owningConnection, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal oldConnection, DbConnectionInternal& connection) in H:\\tsaagent1\\_work\\46\\s\\src\\Microsoft.Data.SqlClient\\netfx\\src\\Microsoft\\Data\\ProviderBase\\DbConnectionFactory.cs:line 354\r\n   at Microsoft.Data.ProviderBase.DbConnectionInternal.TryOpenConnectionInternal(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions) in H:\\tsaagent1\\_work\\46\\s\\src\\Microsoft.Data.SqlClient\\netfx\\src\\Microsoft\\Data\\ProviderBase\\DbConnectionInternal.cs:line 768\r\n   at Microsoft.Data.ProviderBase.DbConnectionClosed.TryOpenConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions) in H:\\tsaagent1\\_work\\46\\s\\src\\Microsoft.Data.SqlClient\\netfx\\src\\Microsoft\\Data\\ProviderBase\\DbConnectionClosed.cs:line 71\r\n   at Microsoft.Data.SqlClient.SqlConnection.TryOpenInner(TaskCompletionSource`1 retry) in H:\\tsaagent1\\_work\\46\\s\\src\\Microsoft.Data.SqlClient\\netfx\\src\\Microsoft\\Data\\SqlClient\\SqlConnection.cs:line 2028\r\n   at Microsoft.Data.SqlClient.SqlConnection.TryOpen(TaskCompletionSource`1 retry, SqlConnectionOverrides overrides) in H:\\tsaagent1\\_work\\46\\s\\src\\Microsoft.Data.SqlClient\\netfx\\src\\Microsoft\\Data\\SqlClient\\SqlConnection.cs:line 2016\r\n   at Microsoft.Data.SqlClient.SqlConnection.Open(SqlConnectionOverrides overrides) in H:\\tsaagent1\\_work\\46\\s\\src\\Microsoft.Data.SqlClient\\netfx\\src\\Microsoft\\Data\\SqlClient\\SqlConnection.cs:line 1577\r\n   at Microsoft.Data.SqlClient.SqlConnection.Open() in H:\\tsaagent1\\_work\\46\\s\\src\\Microsoft.Data.SqlClient\\netfx\\src\\Microsoft\\Data\\SqlClient\\SqlConnection.cs:line 1548\r\n   at Microsoft.SqlServer.Management.Common.ConnectionManager.InternalConnectImpl() in C:\\source\\src\\Microsoft\\SqlServer\\Management\\ConnectionInfo\\ConnectionManager.cs:line 558\r\n   at Microsoft.SqlServer.Management.Common.ConnectionManager.InternalConnect() in C:\\source\\src\\Microsoft\\SqlServer\\Management\\ConnectionInfo\\ConnectionManager.cs:line 546\r\n   at Microsoft.SqlServer.Management.Common.ConnectionManager.Connect() in C:\\source\\src\\Microsoft\\SqlServer\\Management\\ConnectionInfo\\ConnectionManager.cs:line 590"	string
+		State	0	byte
++		TargetSite	{Void OnError(Microsoft.Data.SqlClient.SqlException, Boolean, System.Action`1[System.Action])}	System.Reflection.MethodBase {System.Reflection.RuntimeMethodInfo}
++		Static members		
++		Non-Public members		
+		Message	"Failed to connect to server Data Source=SQI012\\SQLEXPRESS;Initial Catalog=QIPro_Licences;Integrated Security=SSPI;user=sa;password=%5U4:-j&fDw[m4n*<h!d."	string
+		Source	"Microsoft.SqlServer.ConnectionInfo"	string
+		StackTrace	"   at Microsoft.SqlServer.Management.Common.ConnectionManager.Connect() in C:\\source\\src\\Microsoft\\SqlServer\\Management\\ConnectionInfo\\ConnectionManager.cs:line 620\r\n   at Microsoft.SqlServer.Management.Common.ConnectionManager.PoolConnect() in C:\\source\\src\\Microsoft\\SqlServer\\Management\\ConnectionInfo\\ConnectionManager.cs:line 810\r\n   at Microsoft.SqlServer.Management.Common.ConnectionManager.GetServerInformation() in C:\\source\\src\\Microsoft\\SqlServer\\Management\\ConnectionInfo\\ConnectionManager.cs:line 340\r\n   at Microsoft.SqlServer.Management.Smo.ExecutionManager.GetServerVersion() in C:\\source\\src\\Microsoft\\SqlServer\\Management\\Smo\\ExecutionManager.cs:line 778\r\n   at Microsoft.SqlServer.Management.Smo.SqlSmoObject.get_ServerVersion() in C:\\source\\src\\Microsoft\\SqlServer\\Management\\Smo\\SqlSmoObject.cs:line 3291\r\n   at Microsoft.SqlServer.Management.Smo.Backup.Script(Server targetServer) in C:\\source\\src\\Microsoft\\SqlServer\\Management\\Smo.Extended\\Backup.cs:line 138\r\n   at Microsoft.SqlServer.Management.Smo.Backup.SqlBackupAsync(Server srv) in C:\\source\\src\\Microsoft\\SqlServer\\Management\\Smo.Extended\\Backup.cs:line 117"	string
++		TargetSite	{Void Connect()}	System.Reflection.MethodBase {System.Reflection.RuntimeMethodInfo}
++		Static members		
++		Non-Public members		
+		Message	"Backup failed for Server 'Data Source=SQI012\\SQLEXPRESS;Initial Catalog=QIPro_Licences;Integrated Security=SSPI;user=sa;password=%5U4:-j&fDw[m4n*<h!d'. "	string
+		Operation	"Backup"	string
+		SmoExceptionType	FailedOperationException	Microsoft.SqlServer.Management.Smo.SmoExceptionType
+		Source	"Microsoft.SqlServer.SmoExtended"	string
+		StackTrace	"   at Microsoft.SqlServer.Management.Smo.Backup.SqlBackupAsync(Server srv) in C:\\source\\src\\Microsoft\\SqlServer\\Management\\Smo.Extended\\Backup.cs:line 127\r\n   at DatabaseBackup.DatabaseBackupService.Run() in C:\\Sound-QI_Source\\SoundQI-Branch\\RM_Branch\\Tools\\DatabaseBackup\\DatabaseBackup\\DatabaseBackupService.cs:line 79"	string
++		TargetSite	{Void SqlBackupAsync(Microsoft.SqlServer.Management.Smo.Server)}	System.Reflection.MethodBase {System.Reflection.RuntimeMethodInfo}
++		Static members		
++		Non-Public members		
+
+
+    <add name="SoundQiConnection" connectionString="Data Source=SQI012\SQLEXPRESS;Initial Catalog=QIPro_Licences;Integrated Security=SSPI;User Id=sa;Password=%5U4:-j&amp;fDw[m4n*&lt;h!d" providerName="System.Data.SqlClient"/>
+	
+    <add name="SoundQiConnection" connectionString="Data Source=.\SQLEXPRESS;Initial Catalog=QIPro_Licences;Integrated Security=SSPI;MultipleActiveResultSets=True;" providerName="System.Data.SqlClient"/>	
+	
+-----
+
+3)
+                                 
+2021-05-18 13:07:12.3543|INFO|Topshelf.HostFactory|Configuration Result:
+[Success] Name Sound QI Database Backup Service
+[Success] Description A service to back up licenses database.
+[Success] ServiceName Sound QI Database Backup Service
+2021-05-18 13:07:12.3972|INFO|Topshelf.HostConfigurators.HostConfiguratorImpl|Topshelf v4.3.0.0, .NET Framework 4.8.4341.0 (4.0.30319.42000)
+2021-05-18 13:07:12.4301|DEBUG|Topshelf.Builders.RunBuilder|Running as a console application, creating the console host.
+2021-05-18 13:07:12.4301|DEBUG|Topshelf.Hosts.ConsoleRunHost|Starting up as a console application
+2021-05-18 13:07:12.7069|INFO|Topshelf.Hosts.ConsoleRunHost|The Sound QI Database Backup Service service is now running, press Control+C to exit.
+2021-05-18 13:07:27.5611|ERROR|DatabaseBackup.DatabaseBackupService|Failed to backup database: Microsoft.SqlServer.Management.Smo.FailedOperationException: Backup failed for Server 'Data Source=SQI012\SQLEXPRESS;Initial Catalog=QIPro_Licences;Integrated Security=SSPI;User Id=sa;Password=%5U4:-jAfDw[m4n*Lh!d'.  ---> Microsoft.SqlServer.Management.Common.ConnectionFailureException: Failed to connect to server Data Source=SQI012\SQLEXPRESS;Initial Catalog=QIPro_Licences;Integrated Security=SSPI;User Id=sa;Password=%5U4:-jAfDw[m4n*Lh!d. ---> Microsoft.Data.SqlClient.SqlException: A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SQL Network Interfaces, error: 25 - Connection string is not valid) ---> System.ComponentModel.Win32Exception: The parameter is incorrect
+   --- End of inner exception stack trace ---
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\SqlClient\SqlInternalConnection.cs:line 779
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\SqlClient\TdsParser.cs:line 1677
+   at Microsoft.Data.SqlClient.TdsParser.Connect(ServerInfo serverInfo, SqlInternalConnectionTds connHandler, Boolean ignoreSniOpenTimeout, Int64 timerExpire, Boolean encrypt, Boolean trustServerCert, Boolean integratedSecurity, Boolean withFailover, Boolean isFirstTransparentAttempt, SqlAuthenticationMethod authType, String certificate, ServerCertificateValidationCallback serverCallback, ClientCertificateRetrievalCallback clientCallback, Boolean useOriginalAddressInfo, Boolean disableTnir) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\SqlClient\TdsParser.cs:line 608
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.AttemptOneLogin(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean ignoreSniOpenTimeout, TimeoutTimer timeout, Boolean withFailover, Boolean isFirstTransparentAttempt, Boolean disableTnir) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\SqlClient\SqlInternalConnectionTds.cs:line 2283
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.LoginNoFailover(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\SqlClient\SqlInternalConnectionTds.cs:line 1909
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.OpenLoginEnlist(TimeoutTimer timeout, SqlConnectionString connectionOptions, SqlCredential credential, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\SqlClient\SqlInternalConnectionTds.cs:line 1714
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds..ctor(DbConnectionPoolIdentity identity, SqlConnectionString connectionOptions, SqlCredential credential, Object providerInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString userConnectionOptions, SessionData reconnectSessionData, ServerCertificateValidationCallback serverCallback, ClientCertificateRetrievalCallback clientCallback, DbConnectionPool pool, String accessToken, SqlClientOriginalNetworkAddressInfo originalNetworkAddressInfo, Boolean applyTransientFaultHandling) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\SqlClient\SqlInternalConnectionTds.cs:line 548
+   at Microsoft.Data.SqlClient.SqlConnectionFactory.CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, Object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\SqlClient\SqlConnectionFactory.cs:line 143
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.CreatePooledConnection(DbConnectionPool pool, DbConnection owningObject, DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionOptions userOptions) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\ProviderBase\DbConnectionFactory.cs:line 163
+   at Microsoft.Data.ProviderBase.DbConnectionPool.CreateObject(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\ProviderBase\DbConnectionPool.cs:line 943
+   at Microsoft.Data.ProviderBase.DbConnectionPool.UserCreateRequest(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\ProviderBase\DbConnectionPool.cs:line 2007
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\ProviderBase\DbConnectionPool.cs:line 1412
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal& connection) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\ProviderBase\DbConnectionPool.cs:line 1296
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.TryGetConnection(DbConnection owningConnection, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal oldConnection, DbConnectionInternal& connection) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\ProviderBase\DbConnectionFactory.cs:line 354
+   at Microsoft.Data.ProviderBase.DbConnectionInternal.TryOpenConnectionInternal(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\ProviderBase\DbConnectionInternal.cs:line 768
+   at Microsoft.Data.ProviderBase.DbConnectionClosed.TryOpenConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\ProviderBase\DbConnectionClosed.cs:line 71
+   at Microsoft.Data.SqlClient.SqlConnection.TryOpenInner(TaskCompletionSource`1 retry) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\SqlClient\SqlConnection.cs:line 2028
+   at Microsoft.Data.SqlClient.SqlConnection.TryOpen(TaskCompletionSource`1 retry, SqlConnectionOverrides overrides) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\SqlClient\SqlConnection.cs:line 2016
+   at Microsoft.Data.SqlClient.SqlConnection.Open(SqlConnectionOverrides overrides) in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\SqlClient\SqlConnection.cs:line 1577
+   at Microsoft.Data.SqlClient.SqlConnection.Open() in H:\tsaagent1\_work\46\s\src\Microsoft.Data.SqlClient\netfx\src\Microsoft\Data\SqlClient\SqlConnection.cs:line 1548
+   at Microsoft.SqlServer.Management.Common.ConnectionManager.InternalConnectImpl() in C:\source\src\Microsoft\SqlServer\Management\ConnectionInfo\ConnectionManager.cs:line 558
+   at Microsoft.SqlServer.Management.Common.ConnectionManager.InternalConnect() in C:\source\src\Microsoft\SqlServer\Management\ConnectionInfo\ConnectionManager.cs:line 546
+   at Microsoft.SqlServer.Management.Common.ConnectionManager.Connect() in C:\source\src\Microsoft\SqlServer\Management\ConnectionInfo\ConnectionManager.cs:line 590
+   --- End of inner exception stack trace ---
+   at Microsoft.SqlServer.Management.Common.ConnectionManager.Connect() in C:\source\src\Microsoft\SqlServer\Management\ConnectionInfo\ConnectionManager.cs:line 620
+   at Microsoft.SqlServer.Management.Common.ConnectionManager.PoolConnect() in C:\source\src\Microsoft\SqlServer\Management\ConnectionInfo\ConnectionManager.cs:line 810
+   at Microsoft.SqlServer.Management.Common.ConnectionManager.GetServerInformation() in C:\source\src\Microsoft\SqlServer\Management\ConnectionInfo\ConnectionManager.cs:line 340
+   at Microsoft.SqlServer.Management.Smo.ExecutionManager.GetServerVersion() in C:\source\src\Microsoft\SqlServer\Management\Smo\ExecutionManager.cs:line 778
+   at Microsoft.SqlServer.Management.Smo.SqlSmoObject.get_ServerVersion() in C:\source\src\Microsoft\SqlServer\Management\Smo\SqlSmoObject.cs:line 3291
+   at Microsoft.SqlServer.Management.Smo.Backup.Script(Server targetServer) in C:\source\src\Microsoft\SqlServer\Management\Smo.Extended\Backup.cs:line 138
+   at Microsoft.SqlServer.Management.Smo.Backup.SqlBackupAsync(Server srv) in C:\source\src\Microsoft\SqlServer\Management\Smo.Extended\Backup.cs:line 117
+   --- End of inner exception stack trace ---
+   at Microsoft.SqlServer.Management.Smo.Backup.SqlBackupAsync(Server srv) in C:\source\src\Microsoft\SqlServer\Management\Smo.Extended\Backup.cs:line 127
+   at DatabaseBackup.DatabaseBackupService.Run() in C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\Tools\DatabaseBackup\DatabaseBackup\DatabaseBackupService.cs:line 79
+
+
+-----
+
+4)
+
+2021-05-18 14:29:38.7656|INFO|Topshelf.HostFactory|Configuration Result:
+[Success] Name Sound QI Database Backup Service
+[Success] Description A service to back up licenses database.
+[Success] ServiceName Sound QI Database Backup Service
+2021-05-18 14:29:38.8065|INFO|Topshelf.HostConfigurators.HostConfiguratorImpl|Topshelf v4.3.0.0, .NET Framework 4.8.4341.0 (4.0.30319.42000)
+2021-05-18 14:29:38.8574|DEBUG|Topshelf.Builders.RunBuilder|Running as a console application, creating the console host.
+2021-05-18 14:29:38.8694|DEBUG|Topshelf.Hosts.ConsoleRunHost|Starting up as a console application
+2021-05-18 14:29:39.1781|ERROR|SoundQI.Apps.DatabaseBackup.App.DatabaseBackupService|Failed to backup database: System.InvalidOperationException: The Entity Framework provider type 'System.Data.Entity.SqlServer.SqlProviderServices, EntityFramework.SqlServer' registered in the application config file for the ADO.NET provider with invariant name 'System.Data.SqlClient' could not be loaded. Make sure that the assembly-qualified name is used and that the assembly is available to the running application. See http://go.microsoft.com/fwlink/?LinkId=260882 for more information.
+   at System.Data.Entity.Infrastructure.DependencyResolution.ProviderServicesFactory.GetInstance(String providerTypeName, String providerInvariantName)
+   at System.Data.Entity.Internal.AppConfig.<.ctor>b__2(ProviderElement e)
+   at System.Linq.Enumerable.WhereSelectEnumerableIterator`2.MoveNext()
+   at System.Collections.Generic.List`1..ctor(IEnumerable`1 collection)
+   at System.Linq.Enumerable.ToList[TSource](IEnumerable`1 source)
+   at System.Lazy`1.CreateValue()
+   at System.Lazy`1.LazyInitValue()
+   at System.Data.Entity.Infrastructure.DependencyResolution.AppConfigDependencyResolver.RegisterDbProviderServices()
+   at System.Data.Entity.Infrastructure.DependencyResolution.AppConfigDependencyResolver.GetServiceFactory(Type type, String name)
+   at System.Collections.Concurrent.ConcurrentDictionary`2.GetOrAdd(TKey key, Func`2 valueFactory)
+   at System.Data.Entity.Infrastructure.DependencyResolution.AppConfigDependencyResolver.GetService(Type type, Object key)
+   at System.Linq.Enumerable.WhereSelectArrayIterator`2.MoveNext()
+   at System.Linq.Enumerable.FirstOrDefault[TSource](IEnumerable`1 source, Func`2 predicate)
+   at System.Data.Entity.Infrastructure.DependencyResolution.CompositeResolver`2.GetService(Type type, Object key)
+   at System.Data.Entity.Infrastructure.DependencyResolution.DbDependencyResolverExtensions.GetService[T](IDbDependencyResolver resolver)
+   at System.Data.Entity.DbContext.InitializeLazyInternalContext(IInternalConnection internalConnection, DbCompiledModel model)
+   at SoundQI.Apps.DatabaseBackup.Entities.SoundQIAppsDatabaseBackupDbContext..ctor() in C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\Tools\DatabaseBackup\SoundQI.Apps.DatabaseBackup.Entities\SoundQI.Apps.DatabaseBackup.DbContext.cs:line 11
+   at SoundQI.Apps.DatabaseBackup.App.DatabaseBackupService.Run() in C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\Tools\DatabaseBackup\SoundQI.Apps.DatabaseBackup.App\DatabaseBackupService.cs:line 82
+2021-05-18 14:29:49.1810|INFO|Topshelf.Hosts.ConsoleRunHost|The Sound QI Database Backup Service service is now running, press Control+C to exit.
+
+-----
+
+2021-05-18 14:35:45.6311|INFO|Topshelf.HostFactory|Configuration Result:
+[Success] Name Sound QI Database Backup Service
+[Success] Description A service to back up licenses database.
+[Success] ServiceName Sound QI Database Backup Service
+2021-05-18 14:35:45.6810|INFO|Topshelf.HostConfigurators.HostConfiguratorImpl|Topshelf v4.3.0.0, .NET Framework 4.8.4341.0 (4.0.30319.42000)
+2021-05-18 14:35:45.7329|DEBUG|Topshelf.Builders.RunBuilder|Running as a console application, creating the console host.
+2021-05-18 14:35:45.7418|DEBUG|Topshelf.Hosts.ConsoleRunHost|Starting up as a console application
+2021-05-18 14:35:45.9586|ERROR|SoundQI.Apps.DatabaseBackup.App.DatabaseBackupService|Failed to backup database: System.InvalidOperationException: The Entity Framework provider type 'System.Data.Entity.SqlServer.SqlProviderServices, EntityFramework.SqlServer' registered in the application config file for the ADO.NET provider with invariant name 'System.Data.SqlClient' could not be loaded. Make sure that the assembly-qualified name is used and that the assembly is available to the running application. See http://go.microsoft.com/fwlink/?LinkId=260882 for more information.
+   at System.Data.Entity.Infrastructure.DependencyResolution.ProviderServicesFactory.GetInstance(String providerTypeName, String providerInvariantName)
+   at System.Data.Entity.Internal.AppConfig.<.ctor>b__2(ProviderElement e)
+   at System.Linq.Enumerable.WhereSelectEnumerableIterator`2.MoveNext()
+   at System.Collections.Generic.List`1..ctor(IEnumerable`1 collection)
+   at System.Linq.Enumerable.ToList[TSource](IEnumerable`1 source)
+   at System.Lazy`1.CreateValue()
+   at System.Lazy`1.LazyInitValue()
+   at System.Data.Entity.Infrastructure.DependencyResolution.AppConfigDependencyResolver.RegisterDbProviderServices()
+   at System.Data.Entity.Infrastructure.DependencyResolution.AppConfigDependencyResolver.GetServiceFactory(Type type, String name)
+   at System.Collections.Concurrent.ConcurrentDictionary`2.GetOrAdd(TKey key, Func`2 valueFactory)
+   at System.Data.Entity.Infrastructure.DependencyResolution.AppConfigDependencyResolver.GetService(Type type, Object key)
+   at System.Linq.Enumerable.WhereSelectArrayIterator`2.MoveNext()
+   at System.Linq.Enumerable.FirstOrDefault[TSource](IEnumerable`1 source, Func`2 predicate)
+   at System.Data.Entity.Infrastructure.DependencyResolution.CompositeResolver`2.GetService(Type type, Object key)
+   at System.Data.Entity.Infrastructure.DependencyResolution.DbDependencyResolverExtensions.GetService[T](IDbDependencyResolver resolver)
+   at System.Data.Entity.DbContext.InitializeLazyInternalContext(IInternalConnection internalConnection, DbCompiledModel model)
+   at SoundQI.Apps.DatabaseBackup.Entities.SoundQIAppsDatabaseBackupDbContext..ctor() in C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\Tools\DatabaseBackup\SoundQI.Apps.DatabaseBackup.Entities\SoundQI.Apps.DatabaseBackup.DbContext.cs:line 11
+   at SoundQI.Apps.DatabaseBackup.App.DatabaseBackupService.Run() in C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\Tools\DatabaseBackup\SoundQI.Apps.DatabaseBackup.App\DatabaseBackupService.cs:line 82
+2021-05-18 14:35:55.9621|INFO|Topshelf.Hosts.ConsoleRunHost|The Sound QI Database Backup Service service is now running, press Control+C to exit.
+
+                                                                                                                                                                                                                                          -> Solution: Added reference to EntityFramework.SqlServer.dll
+
+--------------------------------------------------------------------------------
+
+5) 
+
+ex
+{"No connection string named 'SoundQiConnectionString' could be found in the application config file."}
+    Data: {System.Collections.ListDictionaryInternal}
+    HResult: -2146233079
+    HelpLink: null
+    InnerException: null
+    Message: "No connection string named 'SoundQiConnectionString' could be found in the application config file."
+    Source: "EntityFramework"
+    StackTrace: "   at System.Data.Entity.Internal.LazyInternalConnection.get_ConnectionHasModel()\r\n   at System.Data.Entity.Internal.LazyInternalContext.InitializeContext()\r\n   at System.Data.Entity.Internal.InternalContext.ExecuteSqlCommand(TransactionalBehavior transactionalBehavior, String sql, Object[] parameters)\r\n   at SoundQI.Apps.DatabaseBackup.App.DatabaseBackupService.Run() in C:\\Sound-QI_Source\\SoundQI-Branch\\RM_Branch\\Tools\\DatabaseBackup\\SoundQI.Apps.DatabaseBackup.App\\DatabaseBackupService.cs:line 84"
+    TargetSite: {Boolean get_ConnectionHasModel()}
+                                                                                                                                                                                                                                          --------------------------------------------------------------------------------
+
+6)
+
+ex
+{"Cannot perform a backup or restore operation within a transaction.\r\nBACKUP DATABASE is terminating abnormally."}
+    Class: 16
+    ClientConnectionId: {c479749f-10af-4718-8504-243bd89db5b7}
+    Data: {System.Collections.ListDictionaryInternal}
+    ErrorCode: -2146232060
+    Errors: {System.Data.SqlClient.SqlErrorCollection}
+    HResult: -2146232060
+    HelpLink: null
+    InnerException: null
+    LineNumber: 1
+    Message: "Cannot perform a backup or restore operation within a transaction.\r\nBACKUP DATABASE is terminating abnormally."
+    Number: 3021
+    Procedure: ""
+    Server: ".\\SQLEXPRESS"
+    Source: ".Net SqlClient Data Provider"
+    StackTrace: "   at System.Data.SqlClient.SqlConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)\r\n   at System.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)\r\n   at System.Data.SqlClient.TdsParser.TryRun(RunBehavior runBehavior, SqlCommand cmdHandler, SqlDataReader dataStream, BulkCopySimpleResultSet bulkCopyHandler, TdsParserStateObject stateObj, Boolean& dataReady)\r\n   at System.Data.SqlClient.SqlCommand.RunExecuteNonQueryTds(String methodName, Boolean async, Int32 timeout, Boolean asyncWrite)\r\n   at System.Data.SqlClient.SqlCommand.InternalExecuteNonQuery(TaskCompletionSource`1 completion, String methodName, Boolean sendToPipe, Int32 timeout, Boolean& usedCache, Boolean asyncWrite, Boolean inRetry)\r\n   at System.Data.SqlClient.SqlCommand.ExecuteNonQuery()\r\n   at System.Data.Entity.Infrastructure.Interception.InternalDispatcher`1.Dispatch[TTarget,TInterceptionConte
+xt,TResult](TTarget target, Func`3 operation, TInterceptionContext interceptionContext, Action`3 executing, Action`3 executed)\r\n   at System.Data.Entity.Infrastructure.Interception.DbCommandDispatcher.NonQuery(DbCommand command, DbCommandInterceptionContext interceptionContext)\r\n   at System.Data.Entity.Core.Objects.ObjectContext.ExecuteInTransaction[T](Func`1 func, IDbExecutionStrategy executionStrategy, Boolean startLocalTransaction, Boolean releaseConnectionOnSuccess)\r\n   at System.Data.Entity.Core.Objects.ObjectContext.<>c__DisplayClass59.<ExecuteStoreCommand>b__57()\r\n   at System.Data.Entity.SqlServer.DefaultSqlExecutionStrategy.Execute[TResult](Func`1 operation)\r\n   at SoundQI.Apps.DatabaseBackup.App.DatabaseBackupService.Run() in C:\\Sound-QI_Source\\SoundQI-Branch\\RM_Branch\\Tools\\DatabaseBackup\\SoundQI.Apps.DatabaseBackup.App\\DatabaseBackupService.cs:line 84"
+    State: 0
+    TargetSite: {Void OnError(System.Data.SqlClient.SqlException, Boolean, System.Action`1[System.Action])}
+
+--------------------------------------------------------------------------------
+
+2021-05-18 15:38:12.7819|INFO|Topshelf.HostFactory|Configuration Result:
+[Success] Name Sound QI Database Backup Service
+[Success] Description A service to back up licenses database.
+[Success] ServiceName Sound QI Database Backup Service
+2021-05-18 15:38:12.8208|INFO|Topshelf.HostConfigurators.HostConfiguratorImpl|Topshelf v4.3.0.0, .NET Framework 4.8.4341.0 (4.0.30319.42000)
+2021-05-18 15:38:12.8646|DEBUG|Topshelf.Builders.RunBuilder|Running as a console application, creating the console host.
+2021-05-18 15:38:12.8646|DEBUG|Topshelf.Hosts.ConsoleRunHost|Starting up as a console application
+2021-05-18 15:38:22.8784|INFO|Topshelf.Hosts.ConsoleRunHost|The Sound QI Database Backup Service service is now running, press Control+C to exit.
+2021-05-18 15:38:24.7286|ERROR|SoundQI.Apps.DatabaseBackup.App.DatabaseBackupService|Failed to backup database: System.Data.SqlClient.SqlException (0x80131904): Cannot open backup device 'Z:\Applications\QI-Pro\DatabaseBackups\QiProLicense_2021_05_18_3_38_PM.bak'. Operating system error 3(The system cannot find the path specified.).
+BACKUP DATABASE is terminating abnormally.
+   at System.Data.SqlClient.SqlConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at System.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at System.Data.SqlClient.TdsParser.TryRun(RunBehavior runBehavior, SqlCommand cmdHandler, SqlDataReader dataStream, BulkCopySimpleResultSet bulkCopyHandler, TdsParserStateObject stateObj, Boolean& dataReady)
+   at System.Data.SqlClient.SqlCommand.RunExecuteNonQueryTds(String methodName, Boolean async, Int32 timeout, Boolean asyncWrite)
+   at System.Data.SqlClient.SqlCommand.InternalExecuteNonQuery(TaskCompletionSource`1 completion, String methodName, Boolean sendToPipe, Int32 timeout, Boolean& usedCache, Boolean asyncWrite, Boolean inRetry)
+   at System.Data.SqlClient.SqlCommand.ExecuteNonQuery()
+   at System.Data.Entity.Infrastructure.Interception.InternalDispatcher`1.Dispatch[TTarget,TInterceptionContext,TResult](TTarget target, Func`3 operation, TInterceptionContext interceptionContext, Action`3 executing, Action`3 executed)
+   at System.Data.Entity.Infrastructure.Interception.DbCommandDispatcher.NonQuery(DbCommand command, DbCommandInterceptionContext interceptionContext)
+   at System.Data.Entity.Core.Objects.ObjectContext.ExecuteInTransaction[T](Func`1 func, IDbExecutionStrategy executionStrategy, Boolean startLocalTransaction, Boolean releaseConnectionOnSuccess)
+   at System.Data.Entity.Core.Objects.ObjectContext.<>c__DisplayClass59.<ExecuteStoreCommand>b__57()
+   at System.Data.Entity.SqlServer.DefaultSqlExecutionStrategy.Execute[TResult](Func`1 operation)
+   at SoundQI.Apps.DatabaseBackup.App.DatabaseBackupService.Run() in C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\Tools\DatabaseBackup\SoundQI.Apps.DatabaseBackup.App\DatabaseBackupService.cs:line 98
+ClientConnectionId:ee7251fb-ed66-4118-889b-b6395ca65c85
+Error Number:3201,State:1,Class:16
+
+2021.05.19
+I. Researching and implementing solution:
+
+ex
+{"Cannot open backup device 'C:\\DatabaseBackups\\QiProLicense_2021_05_19_10_12_AM.bak'. Operating system error 3(The system cannot find the path specified.).\r\nBACKUP DATABASE is terminating abnormally."}
+    Class: 16
+    ClientConnectionId: {42e77cf5-f18b-40a0-8539-12096d4510cb}
+    Data: {System.Collections.ListDictionaryInternal}
+    ErrorCode: -2146232060
+    Errors: {System.Data.SqlClient.SqlErrorCollection}
+    HResult: -2146232060
+    HelpLink: null
+    InnerException: null
+    LineNumber: 1
+    Message: "Cannot open backup device 'C:\\DatabaseBackups\\QiProLicense_2021_05_19_10_12_AM.bak'. Operating system error 3(The system cannot find the path specified.).\r\nBACKUP DATABASE is terminating abnormally."
+    Number: 3201
+    Procedure: ""
+    Server: "SQI009\\SQLEXPRESS"
+    Source: ".Net SqlClient Data Provider"
+    StackTrace: "   at System.Data.SqlClient.SqlConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)\r\n   at System.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)\r\n   at System.Data.SqlClient.TdsParser.TryRun(RunBehavior runBehavior, SqlCommand cmdHandler, SqlDataReader dataStream, BulkCopySimpleResultSet bulkCopyHandler, TdsParserStateObject stateObj, Boolean& dataReady)\r\n   at System.Data.SqlClient.SqlCommand.RunExecuteNonQueryTds(String methodName, Boolean async, Int32 timeout, Boolean asyncWrite)\r\n   at System.Data.SqlClient.SqlCommand.InternalExecuteNonQuery(TaskCompletionSource`1 completion, String methodName, Boolean sendToPipe, Int32 timeout, Boolean& usedCache, Boolean asyncWrite, Boolean inRetry)\r\n   at System.Data.SqlClient.SqlCommand.ExecuteNonQuery()\r\n   at System.Data.Entity.Infrastructure.Interception.InternalDispatcher`1.Dispatch[TTarget,TInterceptionConte
+xt,TResult](TTarget target, Func`3 operation, TInterceptionContext interceptionContext, Action`3 executing, Action`3 executed)\r\n   at System.Data.Entity.Infrastructure.Interception.DbCommandDispatcher.NonQuery(DbCommand command, DbCommandInterceptionContext interceptionContext)\r\n   at System.Data.Entity.Core.Objects.ObjectContext.ExecuteInTransaction[T](Func`1 func, IDbExecutionStrategy executionStrategy, Boolean startLocalTransaction, Boolean releaseConnectionOnSuccess)\r\n   at System.Data.Entity.Core.Objects.ObjectContext.<>c__DisplayClass59.<ExecuteStoreCommand>b__57()\r\n   at System.Data.Entity.SqlServer.DefaultSqlExecutionStrategy.Execute[TResult](Func`1 operation)\r\n   at SoundQI.Apps.DatabaseBackup.App.DatabaseBackupService.Run() in C:\\Sound-QI_Source\\SoundQI-Branch\\RM_Branch\\Tools\\DatabaseBackup\\SoundQI.Apps.DatabaseBackup.App\\DatabaseBackupService.cs:line 92"
+    State: 1
+    TargetSite: {Void OnError(System.Data.SqlClient.SqlException, Boolean, System.Action`1[System.Action])}
+
+
+
+-----
+
+
+ex
+{"Cannot open backup device 'Z:\\Applications\\QI-Pro\\DatabaseBackups\\QiProLicense_2021_05_19_10_15_AM.bak'. Operating system error 3(The system cannot find the path specified.).\r\nBACKUP DATABASE is terminating abnormally."}
+    Class: 16
+    ClientConnectionId: {c90e1ab3-ab82-4064-a4b6-465899b7025b}
+    Data: {System.Collections.ListDictionaryInternal}
+    ErrorCode: -2146232060
+    Errors: {System.Data.SqlClient.SqlErrorCollection}
+    HResult: -2146232060
+    HelpLink: null
+    InnerException: null
+    LineNumber: 1
+    Message: "Cannot open backup device 'Z:\\Applications\\QI-Pro\\DatabaseBackups\\QiProLicense_2021_05_19_10_15_AM.bak'. Operating system error 3(The system cannot find the path specified.).\r\nBACKUP DATABASE is terminating abnormally."
+    Number: 3201
+    Procedure: ""
+    Server: "SQI009\\SQLEXPRESS"
+    Source: ".Net SqlClient Data Provider"
+    StackTrace: "   at System.Data.SqlClient.SqlConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)\r\n   at System.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)\r\n   at System.Data.SqlClient.TdsParser.TryRun(RunBehavior runBehavior, SqlCommand cmdHandler, SqlDataReader dataStream, BulkCopySimpleResultSet bulkCopyHandler, TdsParserStateObject stateObj, Boolean& dataReady)\r\n   at System.Data.SqlClient.SqlCommand.RunExecuteNonQueryTds(String methodName, Boolean async, Int32 timeout, Boolean asyncWrite)\r\n   at System.Data.SqlClient.SqlCommand.InternalExecuteNonQuery(TaskCompletionSource`1 completion, String methodName, Boolean sendToPipe, Int32 timeout, Boolean& usedCache, Boolean asyncWrite, Boolean inRetry)\r\n   at System.Data.SqlClient.SqlCommand.ExecuteNonQuery()\r\n   at System.Data.Entity.Infrastructure.Interception.InternalDispatcher`1.Dispatch[TTarget,TInterceptionConte
+xt,TResult](TTarget target, Func`3 operation, TInterceptionContext interceptionContext, Action`3 executing, Action`3 executed)\r\n   at System.Data.Entity.Infrastructure.Interception.DbCommandDispatcher.NonQuery(DbCommand command, DbCommandInterceptionContext interceptionContext)\r\n   at System.Data.Entity.Core.Objects.ObjectContext.ExecuteInTransaction[T](Func`1 func, IDbExecutionStrategy executionStrategy, Boolean startLocalTransaction, Boolean releaseConnectionOnSuccess)\r\n   at System.Data.Entity.Core.Objects.ObjectContext.<>c__DisplayClass59.<ExecuteStoreCommand>b__57()\r\n   at System.Data.Entity.SqlServer.DefaultSqlExecutionStrategy.Execute[TResult](Func`1 operation)\r\n   at SoundQI.Apps.DatabaseBackup.App.DatabaseBackupService.Run() in C:\\Sound-QI_Source\\SoundQI-Branch\\RM_Branch\\Tools\\DatabaseBackup\\SoundQI.Apps.DatabaseBackup.App\\DatabaseBackupService.cs:line 92"
+    State: 1
+    TargetSite: {Void OnError(System.Data.SqlClient.SqlException, Boolean, System.Action`1[System.Action])}
+
+NT Service\MSSQL$SQLEXPRESS
+
+User Id=sa;Password=%5U4:-jAfDw[m4n*Lh!d
+
++		ex	{"Cannot open backup device 'Z:\\Applications\\QI-Pro\\DatabaseBackups\\QiProLicense_2021_05_19_10_23_AM.bak'. Operating system error 3(The system cannot find the path specified.).\r\nBACKUP DATABASE is terminating abnormally."}	System.Data.Common.DbException {System.Data.SqlClient.SqlException}
+
+
+Z:\Applications\QI-Pro\DatabaseBackups
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	

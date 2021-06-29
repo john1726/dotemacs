@@ -1,0 +1,483 @@
+#include "stdafx.h"
+
+#define CATCH_CONFIG_MAIN
+
+#include <windows.h>
+#include <windef.h>
+#include "NativeUnitTests.h"
+//#include "catch.hpp"
+#include "A_ArchiveVersion.h"
+#include "ClassNameDlg.h"
+#include "IMACView.h"
+#include "../../IMAC/ColorBarView.h"
+#include "../../common/OSI_type.h"
+#include "../../common/Segy.h"
+#include "SegyDerived.h"
+#include "CppUtil.h"
+#include "CrossPlotSettingsDlg.h"
+#include "Utilities.h"
+
+class CTestWnd : public CWnd
+{
+public:
+    CTestWnd();
+    virtual ~CTestWnd();
+
+protected:
+    virtual void OnDraw(CDC* pDC);
+};
+
+CTestWnd::CTestWnd()
+{
+}
+
+CTestWnd::~CTestWnd()
+{
+}
+
+void CTestWnd::OnDraw(CDC* pDCin)
+{
+}
+
+//TEST_CASE("Should initialize CClassNameDlg object")
+//{
+//	// Arrange
+//	CTestWnd* view = new CTestWnd();
+//	CClassNameDlg dlg(view, 1.0);
+//
+//	// Act 
+//	int returnCode = dlg.OnInitDialog();
+//
+//	// Assert
+//	REQUIRE(returnCode == 1);
+//}
+
+//TEST_CASE("Should create CClassNameDlg object")
+//{
+//	// Arrange
+//	CTestWnd* view = new CTestWnd();
+//
+//	// Act 
+//	CClassNameDlg dlg(view, 1.0);
+//
+//	// Assert
+//	REQUIRE(typeof(dlg != NULL);
+//}
+
+//TEST_CASE("Should create CColorBarView object")
+//{
+//	// Arrange
+//	CIMACApp* pApp = (CIMACApp*)AfxGetApp();
+//
+//	// Act 
+//	pApp->SetMainViewPtr(NULL);
+//	//CIMACDoc* pDoc = CIMACDoc::GetIMACDocPtr();
+//	CIMACDoc* pDoc = CIMACApp::GetDocument();
+//	COLORREF* colorBarViewPtr = pDoc->GetColorBarPtr();
+//
+//	// Assert
+//	REQUIRE(colorBarViewPtr == NULL);
+//}
+
+//=============================================================================
+// CppUtil.cpp tests
+TEST_CASE("Project point to line", "CppUtil")
+{
+    // Arrange
+    CDoublePoint a(1.0, 1.0);
+    CDoublePoint b(2.0, 2.0);
+    CDoublePoint point, D;
+    CCppUtil* cppUtil = new CCppUtil();
+
+    // Act 
+    point.SetPoint(1.0, 2.0);
+    D = cppUtil->ProjectPointToLine(point, a, b);
+
+    // Assert
+    double expectedX = D.x;
+    REQUIRE(expectedX == 1.5);
+    double expectedY = D.y;
+    REQUIRE(expectedY == 1.5);
+
+    point.SetPoint(3.0, 2.0);
+    D = cppUtil->ProjectPointToLine(point, a, b);
+    expectedX = D.x;
+    REQUIRE(expectedX == 2.5);
+    expectedY = D.y;
+    REQUIRE(expectedY == 2.5);
+
+    point.SetPoint(-1.0, -2.0);
+    D = cppUtil->ProjectPointToLine(point, a, b);
+    expectedX = D.x;
+    REQUIRE(expectedX == -1.5);
+    expectedY = D.y;
+    REQUIRE(expectedY == -1.5);
+
+    delete cppUtil;
+}
+
+//=============================================================================
+// IMAC.cpp tests
+TEST_CASE("Should set CIMACView object for CIMACApp", "CIMACApp")
+{
+    // Arrange
+    CIMACApp *pApp = (CIMACApp*)AfxGetApp();
+
+    // Act 
+    pApp->SetMainViewPtr(NULL);
+
+    // Assert
+    REQUIRE(pApp->GetMainViewPtr() == NULL);
+}
+
+
+TEST_CASE("Should check if CIMACApp is in demo mode", "CIMACApp")
+{
+    // Arrange
+    CIMACApp* pApp = (CIMACApp*)AfxGetApp();
+
+    // Act 
+    pApp->SetMainViewPtr(NULL);
+
+    // Assert
+    REQUIRE(pApp->IsDemoMode() == FALSE);
+}
+
+//=============================================================================
+// SegyIndex.cpp tests
+
+//class CIMACAppMock : public CIMACApp
+//{
+//public:
+//    // MAKE_CONST_MOCK2(hasInventory, bool(const QString&, int));
+//    MAKE_MOCK2(LoadState, bool(LPCTSTR, CFrameImpl*));
+//    MAKE_MOCK0(AfxGetApp());
+//};
+
+TEST_CASE("Should load a horizon using inline/xline values", "SegyIndex")
+{
+    // Arrange
+    CSegyDerived* pSegy = new CSegyDerived;
+    CString segyFile = "C:\\QI-Pro Demo\\Horn River Demo\\Seismic\\demo_angle_stack_15_shift_subset.sgy";
+    pSegy->Open(segyFile, 0);
+    pSegy->Reset();
+    //pSegy->ReadHeaders();
+    pSegy->Create(551, 651);
+
+    CSegyIndex* pSegyIndex = pSegy->GetSegyIndexPtr();
+    float nullValue = -999.25;
+    int headerCount = 1;
+    int wordCount = 7;
+    CStringArray* arrTitles = new CStringArray();
+    arrTitles->Add("Inline");
+    arrTitles->Add("Crossline");
+    arrTitles->Add("X");
+    arrTitles->Add("Y");
+    arrTitles->Add("<Lwr_Keg_River>");
+    arrTitles->Add("<Mid_Dev_Carb>");
+    arrTitles->Add("<Muskwa>");
+    CString testData = "TestData";
+    CHorizon* pNewHor = new CHorizon;
+    pNewHor->SetNullValue(nullValue);
+
+    // Load test data file
+    CStringArray files;
+    TCHAR currentDir[MAX_PATH];
+    GetCurrentDirectory(MAX_PATH, currentDir);
+    CString workingDirectory(currentDir);
+    const CString resourcesDirectory = workingDirectory + "\\" + testData;
+    CFileFind finder;
+    // start working for files
+    BOOL bWorking = finder.FindFile(resourcesDirectory + "\\*");
+    TCHAR workingDir[MAX_PATH];
+    GetCurrentDirectory(MAX_PATH, workingDir);
+    const CString currentDirectory(workingDir);
+
+    while (bWorking)
+    {
+        bWorking = finder.FindNextFile();
+
+        // skip . and .. files
+        if (!finder.IsDots())
+        {
+            CString fileName = finder.GetFileName();
+
+            if (fileName == "horizon_InlineXline.txt") {
+                files.Add(fileName);
+                CopyFile(resourcesDirectory + "\\" + fileName, currentDirectory + "\\" + fileName, FALSE);
+            }
+        }
+    }
+
+    // Act
+    CString testFile = files[0];
+    int actual = pNewHor->LoadTxtFile(testFile, headerCount, wordCount, arrTitles, pSegyIndex);
+
+    // Assert
+    int expected = 418248;
+    REQUIRE(actual == expected);
+}
+
+TEST_CASE("Should load a horizon using inline/xline values with 2 ignore columns", "SegyIndex")
+{
+    // Arrange
+    CSegyDerived* pSegy = new CSegyDerived;
+    CString segyFile = "C:\\QI-Pro Demo\\Horn River Demo\\Seismic\\demo_angle_stack_15_shift_subset.sgy";
+    pSegy->Open(segyFile, 0);
+    pSegy->Reset();
+    //pSegy->ReadHeaders();
+    pSegy->Create(551, 651);
+
+    CSegyIndex* pSegyIndex = pSegy->GetSegyIndexPtr();
+    float nullValue = -999.25;
+    int headerCount = 1;
+    int wordCount = 7;
+    CStringArray* arrTitles = new CStringArray();
+    arrTitles->Add("Inline");
+    arrTitles->Add("Crossline");
+    arrTitles->Add("...");
+    arrTitles->Add("...");
+    arrTitles->Add("<Lwr_Keg_River>");
+    arrTitles->Add("<Mid_Dev_Carb>");
+    arrTitles->Add("<Muskwa>");
+    CString testData = "TestData";
+    CHorizon* pNewHor = new CHorizon;
+    pNewHor->SetNullValue(nullValue);
+
+    // Load test data file
+    CStringArray files;
+    TCHAR currentDir[MAX_PATH];
+    GetCurrentDirectory(MAX_PATH, currentDir);
+    CString workingDirectory(currentDir);
+    const CString resourcesDirectory = workingDirectory + "\\" + testData;
+    CFileFind finder;
+    // start working for files
+    BOOL bWorking = finder.FindFile(resourcesDirectory + "\\*");
+    TCHAR workingDir[MAX_PATH];
+    GetCurrentDirectory(MAX_PATH, workingDir);
+    const CString currentDirectory(workingDir);
+
+    while (bWorking)
+    {
+        bWorking = finder.FindNextFile();
+
+        // skip . and .. files
+        if (!finder.IsDots())
+        {
+            CString fileName = finder.GetFileName();
+
+            if (fileName == "horizon_InlineXline.txt") {
+                files.Add(fileName);
+                CopyFile(resourcesDirectory + "\\" + fileName, currentDirectory + "\\" + fileName, FALSE);
+            }
+        }
+    }
+
+    // Act
+    CString testFile = files[0];
+    int actual = pNewHor->LoadTxtFile(testFile, headerCount, wordCount, arrTitles, pSegyIndex);
+
+    // Assert
+    int expected = 418248;
+    REQUIRE(actual == expected);
+}
+
+TEST_CASE("Should load a horizon which finds inline/xline from X/Y coordinates", "SegyIndex")
+{
+    // Arrange
+    CSegyDerived* pSegy = new CSegyDerived;
+    CString segyFile = "C:\\QI-Pro Demo\\Horn River Demo\\Seismic\\demo_angle_stack_15_shift_subset.sgy";
+    pSegy->Open(segyFile, 0);
+    pSegy->Reset();
+    //pSegy->ReadHeaders();
+    pSegy->Create(551, 651);
+    
+    CSegyIndex* pSegyIndex = pSegy->GetSegyIndexPtr();
+    float nullValue = -999.25;
+    int headerCount = 1;
+    int wordCount = 5;
+    CStringArray* arrTitles = new CStringArray();
+    arrTitles->Add("X");
+    arrTitles->Add("Y");
+    arrTitles->Add("<Lwr_Keg_River>");
+    arrTitles->Add("<Mid_Dev_Carb>");
+    arrTitles->Add("<Muskwa>");
+    CString testData = "TestData";
+    CHorizon* pNewHor = new CHorizon;
+    pNewHor->SetNullValue(nullValue);
+
+    // Load test data file
+    CStringArray files;
+    TCHAR currentDir[MAX_PATH];
+    GetCurrentDirectory(MAX_PATH, currentDir);
+    CString workingDirectory(currentDir);
+    const CString resourcesDirectory = workingDirectory + "\\" + testData;
+    CFileFind finder;
+    // start working for files
+    BOOL bWorking = finder.FindFile(resourcesDirectory + "\\*");
+    TCHAR workingDir[MAX_PATH];
+    GetCurrentDirectory(MAX_PATH, workingDir);
+    const CString currentDirectory(workingDir);
+    
+    while (bWorking)
+    {
+        bWorking = finder.FindNextFile();
+
+        // skip . and .. files
+        if (!finder.IsDots())
+        {
+            CString fileName = finder.GetFileName();
+
+            if (fileName == "horizon_XY.txt") {
+                files.Add(fileName);
+                CopyFile(resourcesDirectory + "\\" + fileName, currentDirectory + "\\" + fileName, FALSE);
+            }
+        }
+    }
+	
+    // Act
+    CString testFile = files[0];
+    int actual = pNewHor->LoadTxtFile(testFile, headerCount, wordCount, arrTitles, pSegyIndex);
+
+    // Assert
+    int expected = 418248;
+    REQUIRE(actual == expected);
+}
+
+//=============================================================================
+// CCrossPlotSettingsDlg.cpp tests
+
+class CCrossPlotSettingsDlgMock : public CCrossPlotSettingsDlg
+{
+public:
+    // MAKE_CONST_MOCK2(hasInventory, bool(const QString&, int));
+    MAKE_MOCK2(ApplyChanges, void);
+    //MAKE_MOCK0(AfxGetApp());
+};
+
+TEST_CASE("Should create a CCrossPlotSettingsDlg dialog", "CCrossPlotSettingsDlg")
+{
+	// Arrange
+    CCrossPlotSettingsDlg crossPlotSettingsDlg;
+    CString attribute = "angle_stack_15";
+    CString file = "C:\\QI-Pro Demo\\Horn River Demo\\Seismic\\demo_angle_stack_15_shift_subset.sgy";
+    const int favorite = 1;
+    CHeaderMap headerMap;
+	
+    CHeaderVar sampleInterval;
+    sampleInterval.SetIndex(16);
+    sampleInterval.SetType(eUINT);
+    sampleInterval.SetSize(eVAR_2BYTE * 2);
+    sampleInterval.SetEndian(eBIGENDIAN);
+    sampleInterval.SetName("Sample interval");
+    sampleInterval.SetValue(0);
+    headerMap.sampleInterval = sampleInterval;
+	
+    CHeaderVar nSamps;
+    nSamps.SetIndex(20);
+    nSamps.SetType(eUINT);
+	nSamps.SetSize(eVAR_2BYTE * 2);
+    nSamps.SetEndian(eBIGENDIAN);
+    nSamps.SetName("Number of samples");
+    nSamps.SetValue(0);
+    headerMap.nSamps = nSamps;
+
+    CHeaderVar formatCode;
+    formatCode.SetIndex(24);
+    formatCode.SetType(eUINT);
+    formatCode.SetSize(eVAR_2BYTE * 2);
+    formatCode.SetEndian(eBIGENDIAN);
+    formatCode.SetName("Format code");
+    formatCode.SetValue(0);
+    headerMap.formatCode = formatCode;
+
+    CHeaderVar coordUnits;
+    coordUnits.SetIndex(54);
+    coordUnits.SetType(eUINT);
+    coordUnits.SetSize(eVAR_2BYTE * 2);
+    coordUnits.SetEndian(eBIGENDIAN);
+    coordUnits.SetName("Coordinate Units");
+    coordUnits.SetValue(0);
+    headerMap.coordUnits = coordUnits;
+
+    CHeaderVar revisionNumber;
+    revisionNumber.SetIndex(300);
+    revisionNumber.SetType(eUINT);
+    revisionNumber.SetSize(eVAR_2BYTE * 2);
+    revisionNumber.SetEndian(eBIGENDIAN);
+    revisionNumber.SetName("SGY Revision Number");
+    revisionNumber.SetValue(0);
+    headerMap.revisionNumber = revisionNumber;
+
+    CHeaderVar fixedLengthFlag;
+    fixedLengthFlag.SetIndex(302);
+    fixedLengthFlag.SetType(eUINT);
+    fixedLengthFlag.SetSize(eVAR_2BYTE * 2);
+    fixedLengthFlag.SetEndian(eBIGENDIAN);
+    fixedLengthFlag.SetName("");
+    fixedLengthFlag.SetValue(0);
+    headerMap.fixedLengthFlag = fixedLengthFlag;
+	
+    CHeaderVar lineseqno;
+    lineseqno.SetIndex(0);
+    lineseqno.SetType(eUINT);
+    lineseqno.SetSize(eVAR_2BYTE * 4);
+    lineseqno.SetEndian(eBIGENDIAN);
+    lineseqno.SetName("");
+    lineseqno.SetValue(0);
+    headerMap.lineseqno = lineseqno;
+
+    CHeaderVar fileseqno;
+    fileseqno.SetIndex(4);
+    fileseqno.SetType(eUINT);
+    fileseqno.SetSize(eVAR_2BYTE * 4);
+    fileseqno.SetEndian(eBIGENDIAN);
+    fileseqno.SetName("");
+    fileseqno.SetValue(0);
+    headerMap.fileseqno = fileseqno;
+
+    CHeaderVar ff;
+    ff.SetIndex(8);
+    ff.SetType(eUINT);
+    ff.SetSize(eVAR_2BYTE * 4);
+    ff.SetEndian(eBIGENDIAN);
+    ff.SetName("");
+    ff.SetValue(0);
+    headerMap.ff = ff;
+
+    CHeaderVar fftr;
+    fftr.SetIndex(12);
+    fftr.SetType(eUINT);
+    fftr.SetSize(eVAR_2BYTE * 4);
+    fftr.SetEndian(eBIGENDIAN);
+    fftr.SetName("");
+    fftr.SetValue(0);
+    headerMap.fftr = fftr;
+
+    CHeaderVar shotPoint;
+    shotPoint.SetIndex(16);
+    shotPoint.SetType(eUINT);
+    shotPoint.SetSize(eVAR_2BYTE * 4);
+    shotPoint.SetEndian(eBIGENDIAN);
+    shotPoint.SetName("");
+    shotPoint.SetValue(0);
+    headerMap.shotPoint = shotPoint;
+
+    CHeaderVar cdp;
+    cdp.SetIndex(20);
+    cdp.SetType(eUINT);
+    cdp.SetSize(eVAR_2BYTE * 4);
+    cdp.SetEndian(eBIGENDIAN);
+    cdp.SetName("CDP Number");
+    fftr.SetValue(0);
+    headerMap.cdp = cdp;
+
+
+	
+    crossPlotSettingsDlg.AddFile(attribute, file, favorite, headerMap);
+
+	// Act
+
+
+	// Assert
+}

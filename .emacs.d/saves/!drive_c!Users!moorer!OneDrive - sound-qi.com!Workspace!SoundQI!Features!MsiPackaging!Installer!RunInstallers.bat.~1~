@@ -1,0 +1,50 @@
+REM Main Release build 
+echo off
+set arg1=%1
+xcopy /E /I /Y C:\TeamCity\buildAgent\work\fbef456932ac7c99\OSI\QI-Pro\x64\Release\QI-Pro.exe .
+xcopy /E /I /Y C:\TeamCity\buildAgent\work\fbef456932ac7c99\IMAC\ReleaseNotes.txt .
+makensis.exe QiPro.nsi
+mkdir Z:\Applications\QI-Pro\PreRelease\%arg1%
+xcopy /E /I /Y config.dat Z:\Applications\QI-Pro\PreRelease\%arg1%
+xcopy /E /I /Y QI-Pro.exe Z:\Applications\QI-Pro\PreRelease\%arg1%
+xcopy /E /I /Y ReleaseNotes.txt Z:\Applications\QI-Pro\PreRelease\%arg1%
+xcopy /E /I /Y QIProSetup.exe Z:\Applications\QI-Pro\PreRelease\%arg1%
+
+REM Main Release build with SeisWare 10.3
+xcopy /E /I /Y C:\TeamCity\buildAgent\work\fbef456932ac7c99\OSI\QI-Pro\x64\SW-v10.3\QI-Pro.exe Seisware10.3
+xcopy /E /I /Y C:\TeamCity\buildAgent\work\fbef456932ac7c99\IMAC\ReleaseNotes.txt Seisware10.3
+makensis.exe Seisware10.3\QiProSeisware.nsi
+mkdir Z:\Applications\QI-Pro\PreRelease\%arg1%\Seisware10.3
+xcopy /E /I /Y config.dat Z:\Applications\QI-Pro\PreRelease\%arg1%\Seisware10.3
+xcopy /E /I /Y libzmq-mt-4_3_0.dll Z:\Applications\QI-Pro\PreRelease\%arg1%\Seisware10.3
+xcopy /E /I /Y QI-Pro.exe Z:\Applications\QI-Pro\PreRelease\%arg1%\Seisware10.3
+xcopy /E /I /Y ReleaseNotes.txt Z:\Applications\QI-Pro\PreRelease\%arg1%\Seisware10.3
+xcopy /E /I /Y QIProSetup.exe Z:\Applications\QI-Pro\PreRelease\%arg1%\Seisware10.3
+xcopy /E /I /Y seisware.dll Z:\Applications\QI-Pro\PreRelease\%arg1%\Seisware10.3
+xcopy /E /I /Y vcruntime140_1.dll Z:\Applications\QI-Pro\PreRelease\%arg1%\Seisware10.3
+
+REM Main Release build with SeisWare 10.4
+xcopy /E /I /Y C:\TeamCity\buildAgent\work\fbef456932ac7c99\OSI\QI-Pro\x64\SW-v10.4\QI-Pro.exe Seisware10.4
+xcopy /E /I /Y C:\TeamCity\buildAgent\work\fbef456932ac7c99\IMAC\ReleaseNotes.txt Seisware10.4
+makensis.exe Seisware10.4\QiProSeisware.nsi
+mkdir Z:\Applications\QI-Pro\PreRelease\%arg1%\Seisware10.4
+xcopy /E /I /Y config.dat Z:\Applications\QI-Pro\PreRelease\%arg1%\Seisware10.4
+xcopy /E /I /Y libzmq-mt-4_3_0.dll Z:\Applications\QI-Pro\PreRelease\%arg1%\Seisware10.4
+xcopy /E /I /Y QI-Pro.exe Z:\Applications\QI-Pro\PreRelease\%arg1%\Seisware10.4
+xcopy /E /I /Y ReleaseNotes.txt Z:\Applications\QI-Pro\PreRelease\%arg1%\Seisware10.4
+xcopy /E /I /Y QIProSetup.exe Z:\Applications\QI-Pro\PreRelease\%arg1%\Seisware10.4
+xcopy /E /I /Y seisware.dll Z:\Applications\QI-Pro\PreRelease\%arg1%\Seisware10.4
+xcopy /E /I /Y vcruntime140_1.dll Z:\Applications\QI-Pro\PreRelease\%arg1%\Seisware10.4
+
+REM Main Release build with SeisWare 10.5
+xcopy /E /I /Y C:\TeamCity\buildAgent\work\fbef456932ac7c99\OSI\QI-Pro\x64\SW-v10.5\QI-Pro.exe Seisware10.5
+xcopy /E /I /Y C:\TeamCity\buildAgent\work\fbef456932ac7c99\IMAC\ReleaseNotes.txt Seisware10.5
+makensis.exe Seisware10.5\QiProSeisware.nsi
+mkdir Z:\Applications\QI-Pro\PreRelease\%arg1%\Seisware10.5
+xcopy /E /I /Y config.dat Z:\Applications\QI-Pro\PreRelease\%arg1%\Seisware10.5
+xcopy /E /I /Y libzmq-mt-4_3_0.dll Z:\Applications\QI-Pro\PreRelease\%arg1%\Seisware10.5
+xcopy /E /I /Y QI-Pro.exe Z:\Applications\QI-Pro\PreRelease\%arg1%\Seisware10.5
+xcopy /E /I /Y ReleaseNotes.txt Z:\Applications\QI-Pro\PreRelease\%arg1%\Seisware10.5
+xcopy /E /I /Y QIProSetup.exe Z:\Applications\QI-Pro\PreRelease\%arg1%\Seisware10.5
+xcopy /E /I /Y seisware.dll Z:\Applications\QI-Pro\PreRelease\%arg1%\Seisware10.5
+xcopy /E /I /Y vcruntime140_1.dll Z:\Applications\QI-Pro\PreRelease\%arg1%\Seisware10.5

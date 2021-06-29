@@ -1,0 +1,1352 @@
+Pipeline: Feature Requests and Defects
+Priority: High
+Name: Unit test framework and Continuous build and deployment
+Description: Configure the framework for unit testing, add a few example unit tests so developers can write appropriate unit tests as needed. Also as part of this ticket configure Continuous build / deployment. A new build should run every night on the current source with the resulting executable available for the support and testing group.
+Software Component: Infrastructure
+Rank: 3 - Med
+Teams Video Link:
+
+TeamCity port: 8111
+Own port: 9090 
+
+-Run TeamCity under SYSTEM account (as opposed to User)
+
+TeamCity account:
+moorer
+
+-----
+
+msbuild commands: dev:
+C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI>msbuild OSI.sln /target:IMAC
+
+msbuild commands: test:
+C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI>msbuild OSI.sln /target:NativeUnitTests
+
+2021.01.14
+I. Researching and implementing solution:
+
+C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI>msbuild ..\IMAC\IMAC.vcxproj
+
+
+C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI>msbuild OSI.sln /target:IMAC
+
+'msbuild' is not recognized as an internal or external command,
+operable program or batch file.
+Process exited with code 1
+
+C:\Sound-QI_Source\SoundQI
+
+-----
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK1104	cannot open file 'libredir_std.lib'	NativeUnitTests	C:\cygwin64\tmp\qi_pro_rm_branch_builds_20201211n\RM_Branch\OSI\NativeUnitTests\LINK	1	
+
+1>LINK : fatal error LNK1104: cannot open file 'libredir_std.lib'
+
+-----
+
+C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\x64\Debug>dir /A /Q /R /T
+ Volume in drive C is Windows
+ Volume Serial Number is 066C-B013
+
+ Directory of C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\x64\Debug
+
+2021-01-14  04:22 PM    <DIR>          SOUNDQI\moorer         .
+2021-01-14  04:22 PM    <DIR>          SOUNDQI\moorer         ..
+2019-06-07  08:57 AM         1,488,628 SOUNDQI\moorer         cblas.lib
+2020-10-05  04:52 PM               125 SOUNDQI\moorer         config.dat
+2020-09-03  11:24 AM         6,527,116 SOUNDQI\moorer         gpbzmqd.lib
+2019-06-07  08:57 AM        32,988,698 SOUNDQI\moorer         gsl.lib
+2019-06-07  08:57 AM            15,360 SOUNDQI\moorer         gslhdrs.exe
+2018-06-21  11:12 PM            12,346 SOUNDQI\moorer         libcrvs.lib
+2018-06-21  11:12 PM            19,344 SOUNDQI\moorer         libnoact.lib
+2019-09-20  08:06 AM             1,208 SOUNDQI\moorer         libredir_std.lib
+2018-06-21  11:12 PM         1,478,912 SOUNDQI\moorer         libsb.lib
+2019-04-05  06:50 AM           466,432 SOUNDQI\moorer         libzmq-mt-4_3_0.dll
+2020-01-20  11:28 AM         1,903,104 SOUNDQI\moorer         libzmq-mt-gd-4_3_0.dll
+2018-06-21  11:12 PM         2,605,702 SOUNDQI\moorer         lmgr.lib
+2018-06-21  11:12 PM             1,510 SOUNDQI\moorer         lmgr_dongle_stub.lib
+2018-06-21  11:12 PM         2,605,054 SOUNDQI\moorer         lmgr_trl.lib
+2021-01-14  04:22 PM             1,293 SOUNDQI\moorer         NativeUnitTests.Build.CppClean.log
+2021-01-14  04:22 PM           165,971 SOUNDQI\moorer         NativeUnitTests.log
+2021-01-14  04:22 PM        22,160,903 SOUNDQI\moorer         NativeUnitTests.obj
+2021-01-14  04:22 PM    <DIR>          SOUNDQI\moorer         NativeUnitTests.tlog
+2021-01-14  04:22 PM                 0 SOUNDQI\moorer         NativeUnitTests.vcxproj.FileListAbsolute.txt
+2020-09-03  11:25 AM        97,256,016 SOUNDQI\moorer         protocold.lib
+2020-12-11  01:50 PM        18,136,576 SOUNDQI\moorer         QI-Pro.dll
+2020-12-11  01:17 PM        65,429,228 SOUNDQI\moorer         QI-Pro.lib
+2020-09-03  11:24 AM         9,593,136 SOUNDQI\moorer         seisware-apid.lib
+2020-02-25  09:47 AM         4,254,208 SOUNDQI\moorer         seisware.dll
+2019-05-01  09:54 AM           862,720 SOUNDQI\moorer         SeisWare.SDK.dll
+2020-10-07  10:11 AM        23,303,168 SOUNDQI\moorer         seiswared.dll
+2020-10-07  10:11 AM           938,750 SOUNDQI\moorer         seiswared.lib
+2021-01-14  04:22 PM           410,506 SOUNDQI\moorer         stdafx.obj
+2019-05-01  10:45 AM         3,671,056 SOUNDQI\moorer         SWSDKCore.dll
+2021-01-14  04:22 PM         1,436,672 SOUNDQI\moorer         vc141.idb
+2021-01-14  04:22 PM         6,975,488 SOUNDQI\moorer         vc141.pdb
+2020-04-09  08:42 AM            43,792 SOUNDQI\moorer         vcruntime140_1.dll
+              32 File(s)    322,891,646 bytes
+               3 Dir(s)  471,303,843,840 bytes free
+			   
+-----
+
+"VC++ Directories":"Library Directories":
+$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64
+
+Linker: General: "Additional Library Directories"
+$(ProjectDir)..\gsl_2_4_msvc2015_64_r1\msvc2015_64\lib\gsl;$(ProjectDir)\..\flexlm-x64\lib;$(ProjectDir)..\SeisWare SDK\10.5 BETA\cpp\src\SeisWare_VS2017\x64\DLLDebug;C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\Libraries;..\$(Configuration);%(AdditionalLibraryDirectories)
+
+--------------------------------------------------------------------------------
+
+C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI>msbuild OSI.sln /target:NativeUnitTests
+Microsoft (R) Build Engine version 15.9.21+g9802d43bc3 for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Building the projects in this solution one at a time. To enable parallel build, please add the "/m" switch.
+Build started 2021-01-14 5:00:41 PM.
+Project "C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\OSI.sln" on node 1 (NativeUnitTests target(s)).
+ValidateSolutionConfiguration:
+  Building solution configuration "Debug|x64".
+Project "C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\OSI.sln" (1) is building "C:\Sound-QI_Source\SoundQI-Branch\RM_Branc\OSI\NativeUnitTests\NativeUnitTests.vcxproj" (2) on node 1 (default targets).
+InitializeBuildStatus:
+  Touching "x64\Debug\NativeUnitTests.tlog\unsuccessfulbuild".
+ClCompile:
+  All outputs are up-to-date.
+Link:
+  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\bin\HostX86\x64\link.exe /ERRORREPORT:QUEUE /OUT:"C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\x64\Debug\NativeUnitTests.exe" /INCREMENTAL /NOLOGO /LIBPATH:"C:\Sound-QI_Source\SoundQI\gsl_2_4_msvc2015_64_r1\msvc2015_64\lib\gsl" /LIBPATH:"C:\Sound-QI_Source\SoundQI\flexlm-x64\lib" /LIBPATH:"C:\Sound-QI_Source\SoundQI\SeisWare SDK\10.5 BETA\cpp\src\SeisWare_VS2017\x64\DLLDebug" /LIBPATH:"C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\Libraries" /LIBPATH:..\Debug netapi32.lib Wbemuuid.lib dhcpcsvc.lib userenv.lib libredir_std.lib legacy_stdio_definitions.lib lm_new.obj libcrvs.lib libsb.lib lmgr.lib libnoact.lib lmgr_dongle_stub.lib cblas.lib gsl.lib seiswared.lib "QI-Pro.lib" /NODEFAULTLIB:LIBCMT.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /manifestinput: "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\Include\Manifest\dpiaware.manifest" /DEBUG:FASTLINK /PDB:"C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\x64\Debug\NativeUnitTests.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\x64\Debug\NativeUnitTests.lib" /MACHINE:X64 x64\Debug\NativeUnitTests.obj
+  x64\Debug\stdafx.obj
+LINK : fatal error LNK1104: cannot open file 'QI-Pro.lib' [C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\NativeUnitTests.v
+cxproj]
+Done Building Project "C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\NativeUnitTests.vcxproj" (default targets) -- FAILED.
+
+Done Building Project "C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\OSI.sln" (NativeUnitTests target(s)) -- FAILED.
+
+
+Build FAILED.
+
+"C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\OSI.sln" (NativeUnitTests target) (1) ->
+"C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\NativeUnitTests.vcxproj" (default target) (2) ->
+(Link target) ->
+  LINK : fatal error LNK1104: cannot open file 'QI-Pro.lib' [C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\NativeUnitTests
+.vcxproj]
+
+    0 Warning(s)
+    1 Error(s)
+
+    
+-----
+
+<AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;QI-Pro.lib;%(AdditionalDependencies)</AdditionalDependencies>
+
+2021.01.15
+I. Researching and implementing solution:
+
+catch2 debug assertion failed AfxGetResourceHandle afxwin1.inl
+
+-----
+
+C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\x64\Debug\NativeUnitTests.exe (process 49372) exited with code -1.
+To automatically close the console when debugging stops, enable Tools->Options->Debugging->Automatically close the console when debugging stops.
+
+CIMACView *pView;
+
+void CIMACView::OnInitialUpdate()
+{
+	CRect rcItem;
+	GetClientRect(&rcItem);
+	CSize sizetotal;
+	sizetotal.cx = rcItem.right;
+	sizetotal.cy = rcItem.bottom;
+	SetScrollSizes(MM_TEXT, sizetotal);
+	m_rc.SetRectEmpty();
+	m_bReady = FALSE;
+	m_scrollSize = sizetotal;
+
+	m_cursor = 0;
+	m_legendBox.SetRectEmpty();
+	m_bCtrlDown = FALSE;
+
+	pApp = (CIMACApp*)AfxGetApp();
+	if (pApp->IsServerMode()) {
+		CIMACDoc* pDoc = GetDocument();
+		pDoc->SetPetrelTimeMode(TRUE);
+	}
+	pApp->SetMainViewPtr(this);
+}
+
+void CIMACView::OnDraw(CDC* pDCin)
+{
+#define DXY 20
+#define NLABELS 3
+#define SIDE 150
+#define LEGEND 100
+#define TOP (DXY*(NLABELS+1))
+#define BOTTOM 20
+
+	clock_t start = clock();
+	//	TRACE("IMACView::onDraw() enter\n");
+
+	CIMACDoc* pDoc = GetDocument();
+	pDoc->SetMainViewPtr(this);
+    // ...
+}    
+
+--------------------------------------------------------------------------------
+
+16:47:19
+    XplotParms.cpp
+16:47:19
+    Generating Code...
+16:47:20
+  Done Building Project "C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\IMAC.vcxproj" (Rebuild target(s)) -- FAILED.
+16:47:20
+  Done Building Project "C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\OSI\OSI.sln" (IMAC:Rebuild target(s)) -- FAILED.
+16:47:20
+  
+16:47:20
+  Build FAILED.
+16:47:20
+  
+16:47:20
+  "C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\OSI\OSI.sln" (IMAC:Rebuild target) (1) ->
+16:47:20
+  "C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\IMAC.vcxproj" (Rebuild target) (2) ->
+16:47:20
+  (ClCompile target) ->
+16:47:20
+    c:\teamcity\buildagent\work\cee953a17e540081\rm_branch\imac\seiswareapi.h(4): fatal error C1083: Cannot open include file: 'seisware/Connection.h': No such file or directory [C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\IMAC.vcxproj]
+16:47:20
+    c:\teamcity\buildagent\work\cee953a17e540081\rm_branch\imac\seiswareapi.h(4): fatal error C1083: Cannot open include file: 'seisware/Connection.h': No such file or directory [C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\IMAC.vcxproj]
+16:47:20
+    c:\teamcity\buildagent\work\cee953a17e540081\rm_branch\imac\seiswareapi.h(4): fatal error C1083: Cannot open include file: 'seisware/Connection.h': No such file or directory [C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\IMAC.vcxproj]
+
+-----
+
+16:53:51
+    The system cannot find the path specified.
+16:53:51
+            0 file(s) copied.
+16:53:51
+  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\IDE\VC\VCTargets\Microsoft.CppCommon.targets(138,5): error MSB3073: The command "copy "C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\OSI\QI-Pro\x64\lib-build\QI-Pro.lib" C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\OSI\NativeUnitTests\Libraries\ [C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\IMAC.vcxproj]
+16:53:51
+  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\IDE\VC\VCTargets\Microsoft.CppCommon.targets(138,5): error MSB3073: :VCEnd" exited with code 1. [C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\IMAC.vcxproj]
+
+cf:
+
+C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI>copy "C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\QI-Pro\x64\lib-build\QI-Pro.lib" NativeUnitTests\Libraries\
+The system cannot find the file specified.
+
+C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI>
+
+-----
+
+17:17:05
+  SeiswareDisabledTab.obj : warning LNK4221: This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library [C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\IMAC.vcxproj]
+17:17:06
+    IMAC.vcxproj -> C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\OSI\QI-Pro\x64\lib-build\QI-Pro.lib
+17:17:06
+  BscMake:
+17:17:06
+    C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\bin\HostX86\x86\bscmake.exe /nologo /o"C:\Temp\QI-Pro\x64\lib-build\\QI-Pro.bsc" "C:\Temp\QI-Pro\x64\lib-build\AppendCurveDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\AppendTopsDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\AppendWellDataDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\CppUtil.sbr" "C:\Temp\QI-Pro\x64\lib-build\EditWellData2Arg.sbr" "C:\Temp\QI-Pro\x64\lib-build\Ellipse.sbr" "C:\Temp\QI-Pro\x64\lib-build\FlexLicense.sbr" "C:\Temp\QI-Pro\x64\lib-build\CryptString.sbr" "C:\Temp\QI-Pro\x64\lib-build\CursorReportDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\EditListCtrl.sbr" "C:\Temp\QI-Pro\x64\lib-build\EditWellData.sbr" "C:\Temp\QI-Pro\x64\lib-build\Horizon.sbr" "C:\Temp\QI-Pro\x64\lib-build\License.sbr" "C:\Temp\QI-Pro\x64\lib-build\logfile.sbr" "C:\Temp\QI-Pro\x64\lib-build\ModelessInfoDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\NetworkClientSocket.sbr" "C:\Temp\QI-Pro\x64\lib-build\NetworkServerDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\NetworkSocket.sbr" "C:\Temp\QI-Pro\x64\lib-build\NoPasswordDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\OSI_type.sbr" "C:\Temp\QI-Pro\x64\lib-build\ProgressDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\ScrollHelper.sbr" "C:\Temp\QI-Pro\x64\lib-build\SegyIndex.sbr" "C:\Temp\QI-Pro\x64\lib-build\TimeSlice.sbr" "C:\Temp\QI-Pro\x64\lib-build\UPDialog.sbr" "C:\Temp\QI-Pro\x64\lib-build\Well.sbr" "C:\Temp\QI-Pro\x64\lib-build\WellCoordBulkLoadDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\WellDatabaseDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\AADialogParms.sbr" "C:\Temp\QI-Pro\x64\lib-build\AAEllipse.sbr" "C:\Temp\QI-Pro\x64\lib-build\AAFrame.sbr" "C:\Temp\QI-Pro\x64\lib-build\AAParmCntrl.sbr" "C:\Temp\QI-Pro\x64\lib-build\AAParmPane.sbr" "C:\Temp\QI-Pro\x64\lib-build\AAView.sbr" "C:\Temp\QI-Pro\x64\lib-build\AddParmDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\AttributeAdvisorSelectDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\AttributeAdvisorView.sbr" "C:\Temp\QI-Pro\x64\lib-build\BaseDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\BinaryTab.sbr" "C:\Temp\QI-Pro\x64\lib-build\ChildFrm.sbr" "C:\Temp\QI-Pro\x64\lib-build\ClassNameDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\CmdLineArguments.sbr" "C:\Temp\QI-Pro\x64\lib-build\ColorBarFrame.sbr" "C:\Temp\QI-Pro\x64\lib-build\ColorBarView.sbr" "C:\Temp\QI-Pro\x64\lib-build\ColorListBox.sbr" "C:\Temp\QI-Pro\x64\lib-build\ColorMapCntrl.sbr" "C:\Temp\QI-Pro\x64\lib-build\CrossPlotFrame.sbr" "C:\Temp\QI-Pro\x64\lib-build\CrossPlotView.sbr" "C:\Temp\QI-Pro\x64\lib-build\CUtil.sbr" "C:\Temp\QI-Pro\x64\lib-build\CSIFrame.sbr" "C:\Temp\QI-Pro\x64\lib-build\CSIView.sbr" "C:\Temp\QI-Pro\x64\lib-build\CSIViewParmDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\CurveLoadDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\CurveScaleDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\CutoffEditorDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\cutoffLineDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\CutoffParms.sbr" "C:\Temp\QI-Pro\x64\lib-build\DeviationDataDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\DumpFilenamesDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\DynamicSlider.sbr" "C:\Temp\QI-Pro\x64\lib-build\EbcdicTab.sbr" "C:\Temp\QI-Pro\x64\lib-build\EditHorizonTitleDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\FaciesHistoDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\FilelistPane.sbr" "C:\Temp\QI-Pro\x64\lib-build\GetColorDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\GetHorizonNameDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\HeaderMapEditorDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\HeaderPlot.sbr" "C:\Temp\QI-Pro\x64\lib-build\HeaderViewListCtrl.sbr" "C:\Temp\QI-Pro\x64\lib-build\HeadwaveDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\HeadwaveSocket.sbr" "C:\Temp\QI-Pro\x64\lib-build\HrzFileDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\HrzParmDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\HrzPropertyDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\IMAC.sbr" "C:\Temp\QI-Pro\x64\lib-build\IMACDoc.sbr" "C:\Temp\QI-Pro\x64\lib-build\IMACTemplate.sbr" "C:\Temp\QI-Pro\x64\lib-build\IMACView.sbr" "C:\Temp\QI-Pro\x64\lib-build\MainFrm.sbr" "C:\Temp\QI-Pro\x64\lib-build\MapSelectDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\MessageBoxDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\NewColorbarDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\NewEquation.sbr" "C:\Temp\QI-Pro\x64\lib-build\SeiswareDisabledTab.sbr" "C:\Temp\QI-Pro\x64\lib-build\SeiswareExportFunctions.sbr" "C:\Temp\QI-Pro\x64\lib-build\SeiswareExportVirtualVolumesTab.sbr" "C:\Temp\QI-Pro\x64\lib-build\SeiswareImportFunctions.sbr" "C:\Temp\QI-Pro\x64\lib-build\SeiswareExportTab.sbr" "C:\Temp\QI-Pro\x64\lib-build\SeiswareSurveyTab.sbr" "C:\Temp\QI-Pro\x64\lib-build\SeiswareWellDirectionalSurveyTab.sbr" "C:\Temp\QI-Pro\x64\lib-build\SeiswareWellLogCurvesTab.sbr" "C:\Temp\QI-Pro\x64\lib-build\SeiswareWellTopsTab.sbr" "C:\Temp\QI-Pro\x64\lib-build\SeiswareWellVelocityCurvesTab.sbr" "C:\Temp\QI-Pro\x64\lib-build\VVKeypadDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\NewPathDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\NewUserLineDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\NewVolTypeDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\NewZoneDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\AA_QIPro.sbr" "C:\Temp\QI-Pro\x64\lib-build\OutputProgress.sbr" "C:\Temp\QI-Pro\x64\lib-build\InputAttributesDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\ParmEditorDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\ParmPane.sbr" "C:\Temp\QI-Pro\x64\lib-build\ParmSheetDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\ParmToolData.sbr" "C:\Temp\QI-Pro\x64\lib-build\ParmToolDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\PlotParmData.sbr" "C:\Temp\QI-Pro\x64\lib-build\ClassifiedVolumeDisplaySettingsDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\ScanDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\Segy.sbr" "C:\Temp\QI-Pro\x64\lib-build\SegyHeaderMap.sbr" "C:\Temp\QI-Pro\x64\lib-build\SegyOutDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\SegyUtil.sbr" "C:\Temp\QI-Pro\x64\lib-build\SeisParms.sbr" "C:\Temp\QI-Pro\x64\lib-build\SeiswareAPI.sbr" "C:\Temp\QI-Pro\x64\lib-build\SeiswareHorizonsTab.sbr" "C:\Temp\QI-Pro\x64\lib-build\SeiswarePluginDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\SeiswareProjectTab.sbr" "C:\Temp\QI-Pro\x64\lib-build\SeiswareSegyTab.sbr" "C:\Temp\QI-Pro\x64\lib-build\SeiswareWellsTab.sbr" "C:\Temp\QI-Pro\x64\lib-build\SelectVolTypeDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\StaticImage.sbr" "C:\Temp\QI-Pro\x64\lib-build\StdAfx.sbr" "C:\Temp\QI-Pro\x64\lib-build\SubstituteVariablesDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\TestEquationDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\TraceTab.sbr" "C:\Temp\QI-Pro\x64\lib-build\ViewEbcdic.sbr" "C:\Temp\QI-Pro\x64\lib-build\ViewZone.sbr" "C:\Temp\QI-Pro\x64\lib-build\VirtualVolumeV2Dlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\VolType.sbr" "C:\Temp\QI-Pro\x64\lib-build\VolumeTypeDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\VVAttribute.sbr" "C:\Temp\QI-Pro\x64\lib-build\VVEquation.sbr" "C:\Temp\QI-Pro\x64\lib-build\CrossPlotSettingsDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\WiggleOverlayDlg.sbr" "C:\Temp\QI-Pro\x64\lib-build\XplotEditor.sbr" "C:\Temp\QI-Pro\x64\lib-build\XplotParmCntrl.sbr" "C:\Temp\QI-Pro\x64\lib-build\XplotParmPane.sbr" "C:\Temp\QI-Pro\x64\lib-build\XplotParms.sbr"
+17:17:13
+  PostBuildEvent:
+17:17:13
+    copy "C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\OSI\QI-Pro\x64\lib-build\QI-Pro.lib" C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\..\OSI\NativeUnitTests\Libraries\
+17:17:13
+    :VCEnd
+17:17:13
+    The system cannot find the path specified.
+17:17:13
+            0 file(s) copied.
+17:17:13
+  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\IDE\VC\VCTargets\Microsoft.CppCommon.targets(138,5): error MSB3073: The command "copy "C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\OSI\QI-Pro\x64\lib-build\QI-Pro.lib" C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\..\OSI\NativeUnitTests\Libraries\ [C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\IMAC.vcxproj]
+  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\IDE\VC\VCTargets\Microsoft.CppCommon.targets(138,5): error MSB3073: :VCEnd" exited with code 1. [C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\IMAC.vcxproj]
+17:17:13
+  Done Building Project "C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\IMAC.vcxproj" (Rebuild target(s)) -- FAILED.
+17:17:13
+  Done Building Project "C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\OSI\OSI.sln" (IMAC:Rebuild target(s)) -- FAILED.
+
+-----
+
+1>IMAC.vcxproj -> C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\QI-Pro\x64\lib-build\QI-Pro.lib
+1>        1 file(s) copied.
+
+------
+
+19:11:39
+  "C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\OSI\OSI.sln" (IMAC:Rebuild target) (1) ->
+19:11:39
+  "C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\IMAC.vcxproj" (Rebuild target) (2) ->
+19:11:39
+  (PostBuildEvent target) ->
+19:11:39
+    C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\IDE\VC\VCTargets\Microsoft.CppCommon.targets(138,5): error MSB3073: The command "copy "C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\OSI\QI-Pro\x64\lib-build\QI-Pro.lib" C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\..\OSI\NativeUnitTests\Libraries\QI-Pro.lib [C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\IMAC.vcxproj]
+19:11:39
+  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\IDE\VC\VCTargets\Microsoft.CppCommon.targets(138,5): error MSB3073: :VCEnd" exited with code 1. [C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\IMAC.vcxproj]
+19:11:39
+  
+19:11:39
+      16 Warning(s)
+19:11:39
+      1 Error(s)
+
+-----      
+      
+copy $(OutDir)$(TargetName)$(TargetExt) $(ProjectDir)..\OSI\NativeUnitTests\Libraries\$(TargetName)$(TargetExt)
+
+-----
+
+  "C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\OSI\OSI.sln" (IMAC:Rebuild target) (1) ->
+19:19:57
+  "C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\IMAC.vcxproj" (Rebuild target) (2) ->
+19:19:57
+  (PostBuildEvent target) ->
+19:19:57
+    C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\IDE\VC\VCTargets\Microsoft.CppCommon.targets(138,5): error MSB3073: The command "copy C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\OSI\QI-Pro\x64\lib-build\QI-Pro.lib C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\OSI\NativeUnitTests\Libraries\QI-Pro.lib [C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\IMAC.vcxproj]
+19:19:57
+  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\IDE\VC\VCTargets\Microsoft.CppCommon.targets(138,5): error MSB3073: :VCEnd" exited with code 1. [C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\IMAC.vcxproj]
+19:19:57
+  
+19:19:57
+      16 Warning(s)
+19:19:57
+      1 Error(s)
+
+----
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	MSB3073	The command "mkdir -p C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\Libraries; copy C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\QI-Pro\x64\lib-build\QI-Pro.lib C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\Libraries\QI-Pro.lib
+:VCEnd" exited with code 1.	IMAC	C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\IDE\VC\VCTargets\Microsoft.CppCommon.targets	138	
+
+
+-----
+
+  "C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\OSI\OSI.sln" (IMAC:Rebuild target) (1) ->
+19:31:18
+  "C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\IMAC.vcxproj" (Rebuild target) (2) ->
+19:31:18
+  (PostBuildEvent target) ->
+19:31:18
+    C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\IDE\VC\VCTargets\Microsoft.CppCommon.targets(138,5): error MSB3073: The command "if not exist C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\OSI\NativeUnitTests\Libraries mkdir C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\OSI\NativeUnitTests\Libraries; copy C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\OSI\QI-Pro\x64\lib-build\QI-Pro.lib C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\OSI\NativeUnitTests\Libraries\QI-Pro.lib [C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\IMAC.vcxproj]
+19:31:18
+  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\IDE\VC\VCTargets\Microsoft.CppCommon.targets(138,5): error MSB3073: :VCEnd" exited with code 1. [C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\IMAC.vcxproj]
+19:31:18
+
+-----
+
+Using this command:
+
+xcopy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)NativeUnitTests\Libraries /S /Y
+
+-----
+
+19:45:56
+    xcopy C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\OSI\QI-Pro\x64\lib-build\QI-Pro.lib C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\OSI\NativeUnitTests\Libraries /S /Y
+19:45:56
+    :VCEnd
+19:45:56
+    C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\OSI\QI-Pro\x64\lib-build\QI-Pro.lib
+19:45:57
+    Access denied
+19:45:57
+  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\IDE\VC\VCTargets\Microsoft.CppCommon.targets(138,5): error MSB3073: The command "xcopy C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\OSI\QI-Pro\x64\lib-build\QI-Pro.lib C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\OSI\NativeUnitTests\Libraries /S /Y [C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\IMAC.vcxproj]
+19:45:57
+  C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\IDE\VC\VCTargets\Microsoft.CppCommon.targets(138,5): error MSB3073: :VCEnd" exited with code 4. [C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\IMAC.vcxproj]
+19:45:57
+  Done Building Project "C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\IMAC.vcxproj" (Rebuild target(s)) -- FAILED.
+19:45:57
+  Done Building Project "C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\OSI\OSI.sln" (IMAC:Rebuild target(s)) -- FAILED.
+19:45:57
+  
+19:45:57
+  Build FAILED.
+
+-----
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(XplotParmPane.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(XplotParmPane.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(XplotParms.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(XplotParms.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(VolumeTypeDlg.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(VolumeTypeDlg.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(IMACDoc.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(IMACDoc.obj)	1	
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2005	"public: virtual void __cdecl CDocument::SetModifiedFlag(int)" (?SetModifiedFlag@CDocument@@UEAAXH@Z) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"public: static void __cdecl CObject::operator delete(void *)" (??3CObject@@SAXPEAX@Z) already defined in QI-Pro.lib(VolumeTypeDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxmem.obj)	1	
+Error	LNK2005	"public: __cdecl CBitmap::CBitmap(void)" (??0CBitmap@@QEAA@XZ) already defined in QI-Pro.lib(CrossPlotView.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: __cdecl CBrush::CBrush(void)" (??0CBrush@@QEAA@XZ) already defined in QI-Pro.lib(MapSelectDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: __cdecl CGdiObject::CGdiObject(void)" (??0CGdiObject@@QEAA@XZ) already defined in QI-Pro.lib(MapSelectDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: virtual __cdecl CBitmap::~CBitmap(void)" (??1CBitmap@@UEAA@XZ) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: virtual __cdecl CBrush::~CBrush(void)" (??1CBrush@@UEAA@XZ) already defined in QI-Pro.lib(EditListCtrl.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: virtual __cdecl CFont::~CFont(void)" (??1CFont@@UEAA@XZ) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: virtual __cdecl CGdiObject::~CGdiObject(void)" (??1CGdiObject@@UEAA@XZ) already defined in QI-Pro.lib(VolumeTypeDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: virtual __cdecl CMenu::~CMenu(void)" (??1CMenu@@UEAA@XZ) already defined in QI-Pro.lib(MapSelectDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: virtual __cdecl CPen::~CPen(void)" (??1CPen@@UEAA@XZ) already defined in QI-Pro.lib(MapSelectDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: virtual __cdecl CRgn::~CRgn(void)" (??1CRgn@@UEAA@XZ) already defined in QI-Pro.lib(CutoffParms.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: __cdecl CGdiObject::operator void *(void)const " (??BCGdiObject@@QEBAPEAXXZ) already defined in QI-Pro.lib(IMACView.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"class CWnd * __cdecl AfxGetMainWnd(void)" (?AfxGetMainWnd@@YAPEAVCWnd@@XZ) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: int __cdecl CDC::BitBlt(int,int,int,int,class CDC *,int,int,unsigned long)" (?BitBlt@CDC@@QEAAHHHHHPEAV1@HHK@Z) already defined in QI-Pro.lib(IMACView.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: int __cdecl CBrush::CreateSolidBrush(unsigned long)" (?CreateSolidBrush@CBrush@@QEAAHK@Z) already defined in QI-Pro.lib(IMACView.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: void __cdecl CDC::FillRect(struct tagRECT const *,class CBrush *)" (?FillRect@CDC@@QEAAXPEBUtagRECT@@PEAVCBrush@@@Z) already defined in QI-Pro.lib(IMACView.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: void __cdecl CDC::FrameRect(struct tagRECT const *,class CBrush *)" (?FrameRect@CDC@@QEAAXPEBUtagRECT@@PEAVCBrush@@@Z) already defined in QI-Pro.lib(IMACView.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: class CSize __cdecl CDC::GetTextExtent(class ATL::CStringT<char,class StrTraitMFC<char,class ATL::ChTraitsCRT<char> > > const &)const " (?GetTextExtent@CDC@@QEBA?AVCSize@@AEBV?$CStringT@DV?$StrTraitMFC@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z) already defined in QI-Pro.lib(IMACView.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: void * __cdecl CDC::SelectObject(void *)" (?SelectObject@CDC@@QEAAPEAXPEAX@Z) already defined in QI-Pro.lib(IMACView.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: struct __POSITION * __cdecl CListCtrl::GetFirstSelectedItemPosition(void)const " (?GetFirstSelectedItemPosition@CListCtrl@@QEBAPEAU__POSITION@@XZ) already defined in QI-Pro.lib(CrossPlotSettingsDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(winctrl2.obj)	1	
+Error	LNK2005	"public: int __cdecl CListCtrl::GetNextItem(int,int)const " (?GetNextItem@CListCtrl@@QEBAHHH@Z) already defined in QI-Pro.lib(VirtualVolumeV2Dlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(winctrl2.obj)	1	
+Error	LNK2005	"public: int __cdecl CListCtrl::GetNextSelectedItem(struct __POSITION * &)const " (?GetNextSelectedItem@CListCtrl@@QEBAHAEAPEAU__POSITION@@@Z) already defined in QI-Pro.lib(CrossPlotSettingsDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(winctrl2.obj)	1	
+Error	LNK2005	"public: __cdecl CFileException::CFileException(int,long,char const *)" (??0CFileException@@QEAA@HJPEBD@Z) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: virtual __cdecl CException::~CException(void)" (??1CException@@UEAA@XZ) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: virtual __cdecl CFileException::~CFileException(void)" (??1CFileException@@UEAA@XZ) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: virtual __cdecl CObject::~CObject(void)" (??1CObject@@UEAA@XZ) already defined in QI-Pro.lib(VolumeTypeDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: class CArchive & __cdecl CArchive::operator>>(unsigned char &)" (??5CArchive@@QEAAAEAV0@AEAE@Z) already defined in QI-Pro.lib(SegyIndex.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: class CArchive & __cdecl CArchive::operator>>(long &)" (??5CArchive@@QEAAAEAV0@AEAJ@Z) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: class CArchive & __cdecl CArchive::operator>>(unsigned long &)" (??5CArchive@@QEAAAEAV0@AEAK@Z) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: class CArchive & __cdecl CArchive::operator>>(float &)" (??5CArchive@@QEAAAEAV0@AEAM@Z) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: class CArchive & __cdecl CArchive::operator>>(double &)" (??5CArchive@@QEAAAEAV0@AEAN@Z) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: class CArchive & __cdecl CArchive::operator>>(unsigned __int64 &)" (??5CArchive@@QEAAAEAV0@AEA_K@Z) already defined in QI-Pro.lib(Well.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: class CArchive & __cdecl CArchive::operator<<(unsigned char)" (??6CArchive@@QEAAAEAV0@E@Z) already defined in QI-Pro.lib(SegyIndex.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: class CArchive & __cdecl CArchive::operator<<(long)" (??6CArchive@@QEAAAEAV0@J@Z) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: class CArchive & __cdecl CArchive::operator<<(unsigned long)" (??6CArchive@@QEAAAEAV0@K@Z) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: class CArchive & __cdecl CArchive::operator<<(float)" (??6CArchive@@QEAAAEAV0@M@Z) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: class CArchive & __cdecl CArchive::operator<<(double)" (??6CArchive@@QEAAAEAV0@N@Z) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: class CArchive & __cdecl CArchive::operator<<(unsigned __int64)" (??6CArchive@@QEAAAEAV0@_K@Z) already defined in QI-Pro.lib(Well.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: void __cdecl CStringArray::RemoveAll(void)" (?RemoveAll@CStringArray@@QEAAXXZ) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: virtual void __cdecl CObject::Serialize(class CArchive &)" (?Serialize@CObject@@UEAAXAEAVCArchive@@@Z) already defined in QI-Pro.lib(VolumeTypeDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: __cdecl CButton::CButton(void)" (??0CButton@@QEAA@XZ) already defined in QI-Pro.lib(VVKeypadDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"public: __cdecl CComboBox::CComboBox(void)" (??0CComboBox@@QEAA@XZ) already defined in QI-Pro.lib(VVKeypadDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"public: __cdecl CEdit::CEdit(void)" (??0CEdit@@QEAA@XZ) already defined in QI-Pro.lib(VVKeypadDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"public: __cdecl CWaitCursor::~CWaitCursor(void)" (??1CWaitCursor@@QEAA@XZ) already defined in QI-Pro.lib(IMACTemplate.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"public: virtual void __cdecl CWnd::BeginModalState(void)" (?BeginModalState@CWnd@@UEAAXXZ) already defined in QI-Pro.lib(VolumeTypeDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"public: int __cdecl CEdit::CharFromPos(class CPoint)const " (?CharFromPos@CEdit@@QEBAHVCPoint@@@Z) already defined in QI-Pro.lib(VVKeypadDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"public: virtual int __cdecl CDialog::Create(unsigned int,class CWnd *)" (?Create@CDialog@@UEAAHIPEAVCWnd@@@Z) already defined in QI-Pro.lib(VolumeTypeDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"protected: virtual void __cdecl CWnd::DoDataExchange(class CDataExchange *)" (?DoDataExchange@CWnd@@MEAAXPEAVCDataExchange@@@Z) already defined in QI-Pro.lib(XplotParmPane.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"public: virtual void __cdecl CWnd::EndModalState(void)" (?EndModalState@CWnd@@UEAAXXZ) already defined in QI-Pro.lib(VolumeTypeDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"public: class CWnd * __cdecl CWnd::GetOwner(void)const " (?GetOwner@CWnd@@QEBAPEAV1@XZ) already defined in QI-Pro.lib(MainFrm.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"public: virtual int __cdecl CDocument::IsModified(void)" (?IsModified@CDocument@@UEAAHXZ) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"protected: void __cdecl CWnd::OnChar(unsigned int,unsigned int,unsigned int)" (?OnChar@CWnd@@IEAAXIII@Z) already defined in QI-Pro.lib(MapSelectDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"protected: int __cdecl CWnd::OnEraseBkgnd(class CDC *)" (?OnEraseBkgnd@CWnd@@IEAAHPEAVCDC@@@Z) already defined in QI-Pro.lib(EditListCtrl.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"protected: void __cdecl CWnd::OnKeyDown(unsigned int,unsigned int,unsigned int)" (?OnKeyDown@CWnd@@IEAAXIII@Z) already defined in QI-Pro.lib(EditListCtrl.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"protected: void __cdecl CWnd::OnKillFocus(class CWnd *)" (?OnKillFocus@CWnd@@IEAAXPEAV1@@Z) already defined in QI-Pro.lib(EditListCtrl.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"protected: void __cdecl CWnd::OnMouseLeave(void)" (?OnMouseLeave@CWnd@@IEAAXXZ) already defined in QI-Pro.lib(ColorMapCntrl.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"protected: void __cdecl CWnd::OnMouseMove(unsigned int,class CPoint)" (?OnMouseMove@CWnd@@IEAAXIVCPoint@@@Z) already defined in QI-Pro.lib(ColorMapCntrl.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"protected: void __cdecl CWnd::OnSize(unsigned int,int,int)" (?OnSize@CWnd@@IEAAXIHH@Z) already defined in QI-Pro.lib(InputAttributesDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"protected: void __cdecl CWnd::OnSizing(unsigned int,struct tagRECT *)" (?OnSizing@CWnd@@IEAAXIPEAUtagRECT@@@Z) already defined in QI-Pro.lib(InputAttributesDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"protected: void __cdecl CWnd::OnWindowPosChanged(struct tagWINDOWPOS *)" (?OnWindowPosChanged@CWnd@@IEAAXPEAUtagWINDOWPOS@@@Z) already defined in QI-Pro.lib(EditListCtrl.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+
+-----
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	D8016	'/ZI' and '/GL' command-line options are incompatible	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\cl	1	
+
+-----
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(XplotParmPane.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(XplotParmPane.obj)	1	
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Warning	LNK4098	defaultlib 'nafxcw.lib' conflicts with use of other libs; use /NODEFAULTLIB:library	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\LINK	1	
+
+2021.01.18
+I. Researching and implementing solution:
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Warning	LNK4221	This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\SeiswareWellsTab.obj	1	
+
+-----
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2005	"public: class CArchive & __cdecl CArchive::operator<<(unsigned long)" (??6CArchive@@QEAAAEAV0@K@Z) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(VolumeTypeDlg.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(VolumeTypeDlg.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(XplotParmPane.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(XplotParmPane.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(IMACDoc.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(IMACDoc.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(XplotParmCntrl.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(XplotParmCntrl.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(VVEquation.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(VVEquation.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(DynamicSlider.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(DynamicSlider.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(MainFrm.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(MainFrm.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(IMAC.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(IMAC.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(CutoffParms.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(CutoffParms.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(XplotParms.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(XplotParms.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(MapSelectDlg.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(MapSelectDlg.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(ViewZone.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(ViewZone.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(IMACView.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(IMACView.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(NewPathDlg.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(NewPathDlg.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(ParmToolDlg.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(ParmToolDlg.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(SegyOutDlg.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(SegyOutDlg.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(NewZoneDlg.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(NewZoneDlg.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(CrossPlotView.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(CrossPlotView.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(FilelistPane.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(FilelistPane.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(ParmPane.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(ParmPane.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(InputAttributesDlg.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(InputAttributesDlg.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(CrossPlotSettingsDlg.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(CrossPlotSettingsDlg.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(cutoffLineDlg.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(cutoffLineDlg.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(XplotEditor.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(XplotEditor.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(BaseDlg.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(BaseDlg.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(HrzParmDlg.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(HrzParmDlg.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(VirtualVolumeV2Dlg.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(VirtualVolumeV2Dlg.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(ParmSheetDlg.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(ParmSheetDlg.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(NetworkServerDlg.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(NetworkServerDlg.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(IMACTemplate.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(IMACTemplate.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(WiggleOverlayDlg.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(WiggleOverlayDlg.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(HeadwaveDlg.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(HeadwaveDlg.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(ChildFrm.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(ChildFrm.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(CSIView.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(CSIView.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(ColorBarView.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(ColorBarView.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(ColorBarFrame.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(ColorBarFrame.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(CrossPlotFrame.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(CrossPlotFrame.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(AAFrame.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(AAFrame.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(AAView.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(AAView.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(FaciesHistoDlg.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(FaciesHistoDlg.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(ClassifiedVolumeDisplaySettingsDlg.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(ClassifiedVolumeDisplaySettingsDlg.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(StaticImage.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(StaticImage.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(ColorMapCntrl.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(ColorMapCntrl.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(WellDatabaseDlg.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(WellDatabaseDlg.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(GetColorDlg.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(GetColorDlg.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(SubstituteVariablesDlg.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(SubstituteVariablesDlg.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(VVKeypadDlg.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(VVKeypadDlg.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(NetworkSocket.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(NetworkSocket.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(ClassNameDlg.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(ClassNameDlg.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(AAParmPane.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(AAParmPane.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(AAParmCntrl.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(AAParmCntrl.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(AttributeAdvisorSelectDlg.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(AttributeAdvisorSelectDlg.obj)	1	
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '0' doesn't match value '2' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(AA_QIPro.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(AA_QIPro.obj)	1	
+Error	LNK2005	"public: static void __cdecl CObject::operator delete(void *)" (??3CObject@@SAXPEAX@Z) already defined in QI-Pro.lib(VolumeTypeDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxmem.obj)	1	
+Error	LNK2005	"public: __cdecl CBitmap::CBitmap(void)" (??0CBitmap@@QEAA@XZ) already defined in QI-Pro.lib(CrossPlotView.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: __cdecl CBrush::CBrush(void)" (??0CBrush@@QEAA@XZ) already defined in QI-Pro.lib(MapSelectDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: __cdecl CGdiObject::CGdiObject(void)" (??0CGdiObject@@QEAA@XZ) already defined in QI-Pro.lib(MapSelectDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: virtual __cdecl CBitmap::~CBitmap(void)" (??1CBitmap@@UEAA@XZ) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: virtual __cdecl CBrush::~CBrush(void)" (??1CBrush@@UEAA@XZ) already defined in QI-Pro.lib(EditListCtrl.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: virtual __cdecl CFont::~CFont(void)" (??1CFont@@UEAA@XZ) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: virtual __cdecl CGdiObject::~CGdiObject(void)" (??1CGdiObject@@UEAA@XZ) already defined in QI-Pro.lib(VolumeTypeDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: virtual __cdecl CMenu::~CMenu(void)" (??1CMenu@@UEAA@XZ) already defined in QI-Pro.lib(MapSelectDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: virtual __cdecl CPen::~CPen(void)" (??1CPen@@UEAA@XZ) already defined in QI-Pro.lib(MapSelectDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: virtual __cdecl CRgn::~CRgn(void)" (??1CRgn@@UEAA@XZ) already defined in QI-Pro.lib(CutoffParms.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: __cdecl CGdiObject::operator void *(void)const " (??BCGdiObject@@QEBAPEAXXZ) already defined in QI-Pro.lib(IMACView.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"class CWnd * __cdecl AfxGetMainWnd(void)" (?AfxGetMainWnd@@YAPEAVCWnd@@XZ) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: int __cdecl CDC::BitBlt(int,int,int,int,class CDC *,int,int,unsigned long)" (?BitBlt@CDC@@QEAAHHHHHPEAV1@HHK@Z) already defined in QI-Pro.lib(IMACView.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: int __cdecl CBrush::CreateSolidBrush(unsigned long)" (?CreateSolidBrush@CBrush@@QEAAHK@Z) already defined in QI-Pro.lib(IMACView.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: void __cdecl CDC::FillRect(struct tagRECT const *,class CBrush *)" (?FillRect@CDC@@QEAAXPEBUtagRECT@@PEAVCBrush@@@Z) already defined in QI-Pro.lib(IMACView.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: void __cdecl CDC::FrameRect(struct tagRECT const *,class CBrush *)" (?FrameRect@CDC@@QEAAXPEBUtagRECT@@PEAVCBrush@@@Z) already defined in QI-Pro.lib(IMACView.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: class CSize __cdecl CDC::GetTextExtent(class ATL::CStringT<char,class StrTraitMFC<char,class ATL::ChTraitsCRT<char> > > const &)const " (?GetTextExtent@CDC@@QEBA?AVCSize@@AEBV?$CStringT@DV?$StrTraitMFC@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z) already defined in QI-Pro.lib(IMACView.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: void * __cdecl CDC::SelectObject(void *)" (?SelectObject@CDC@@QEAAPEAXPEAX@Z) already defined in QI-Pro.lib(IMACView.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl2.obj)	1	
+Error	LNK2005	"public: struct __POSITION * __cdecl CListCtrl::GetFirstSelectedItemPosition(void)const " (?GetFirstSelectedItemPosition@CListCtrl@@QEBAPEAU__POSITION@@XZ) already defined in QI-Pro.lib(CrossPlotSettingsDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(winctrl2.obj)	1	
+Error	LNK2005	"public: int __cdecl CListCtrl::GetNextItem(int,int)const " (?GetNextItem@CListCtrl@@QEBAHHH@Z) already defined in QI-Pro.lib(VirtualVolumeV2Dlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(winctrl2.obj)	1	
+Error	LNK2005	"public: int __cdecl CListCtrl::GetNextSelectedItem(struct __POSITION * &)const " (?GetNextSelectedItem@CListCtrl@@QEBAHAEAPEAU__POSITION@@@Z) already defined in QI-Pro.lib(CrossPlotSettingsDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(winctrl2.obj)	1	
+Error	LNK2005	"public: __cdecl CFileException::CFileException(int,long,char const *)" (??0CFileException@@QEAA@HJPEBD@Z) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: virtual __cdecl CException::~CException(void)" (??1CException@@UEAA@XZ) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: virtual __cdecl CFileException::~CFileException(void)" (??1CFileException@@UEAA@XZ) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: virtual __cdecl CObject::~CObject(void)" (??1CObject@@UEAA@XZ) already defined in QI-Pro.lib(VolumeTypeDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: class CArchive & __cdecl CArchive::operator>>(unsigned char &)" (??5CArchive@@QEAAAEAV0@AEAE@Z) already defined in QI-Pro.lib(SegyIndex.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: class CArchive & __cdecl CArchive::operator>>(long &)" (??5CArchive@@QEAAAEAV0@AEAJ@Z) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: class CArchive & __cdecl CArchive::operator>>(unsigned long &)" (??5CArchive@@QEAAAEAV0@AEAK@Z) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: class CArchive & __cdecl CArchive::operator>>(float &)" (??5CArchive@@QEAAAEAV0@AEAM@Z) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: class CArchive & __cdecl CArchive::operator>>(double &)" (??5CArchive@@QEAAAEAV0@AEAN@Z) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: class CArchive & __cdecl CArchive::operator>>(unsigned __int64 &)" (??5CArchive@@QEAAAEAV0@AEA_K@Z) already defined in QI-Pro.lib(Well.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: class CArchive & __cdecl CArchive::operator<<(unsigned char)" (??6CArchive@@QEAAAEAV0@E@Z) already defined in QI-Pro.lib(SegyIndex.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: class CArchive & __cdecl CArchive::operator<<(long)" (??6CArchive@@QEAAAEAV0@J@Z) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: class CArchive & __cdecl CArchive::operator<<(float)" (??6CArchive@@QEAAAEAV0@M@Z) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: class CArchive & __cdecl CArchive::operator<<(double)" (??6CArchive@@QEAAAEAV0@N@Z) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: class CArchive & __cdecl CArchive::operator<<(unsigned __int64)" (??6CArchive@@QEAAAEAV0@_K@Z) already defined in QI-Pro.lib(Well.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: void __cdecl CStringArray::RemoveAll(void)" (?RemoveAll@CStringArray@@QEAAXXZ) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: virtual void __cdecl CObject::Serialize(class CArchive &)" (?Serialize@CObject@@UEAAXAEAVCArchive@@@Z) already defined in QI-Pro.lib(VolumeTypeDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl1.obj)	1	
+Error	LNK2005	"public: __cdecl CButton::CButton(void)" (??0CButton@@QEAA@XZ) already defined in QI-Pro.lib(VVKeypadDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"public: __cdecl CComboBox::CComboBox(void)" (??0CComboBox@@QEAA@XZ) already defined in QI-Pro.lib(VVKeypadDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"public: __cdecl CEdit::CEdit(void)" (??0CEdit@@QEAA@XZ) already defined in QI-Pro.lib(VVKeypadDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"public: __cdecl CWaitCursor::~CWaitCursor(void)" (??1CWaitCursor@@QEAA@XZ) already defined in QI-Pro.lib(IMACTemplate.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"public: virtual void __cdecl CWnd::BeginModalState(void)" (?BeginModalState@CWnd@@UEAAXXZ) already defined in QI-Pro.lib(VolumeTypeDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"public: int __cdecl CEdit::CharFromPos(class CPoint)const " (?CharFromPos@CEdit@@QEBAHVCPoint@@@Z) already defined in QI-Pro.lib(VVKeypadDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"public: virtual int __cdecl CDialog::Create(unsigned int,class CWnd *)" (?Create@CDialog@@UEAAHIPEAVCWnd@@@Z) already defined in QI-Pro.lib(VolumeTypeDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"protected: virtual void __cdecl CWnd::DoDataExchange(class CDataExchange *)" (?DoDataExchange@CWnd@@MEAAXPEAVCDataExchange@@@Z) already defined in QI-Pro.lib(XplotParmPane.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"public: virtual void __cdecl CWnd::EndModalState(void)" (?EndModalState@CWnd@@UEAAXXZ) already defined in QI-Pro.lib(VolumeTypeDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"public: class CWnd * __cdecl CWnd::GetOwner(void)const " (?GetOwner@CWnd@@QEBAPEAV1@XZ) already defined in QI-Pro.lib(MainFrm.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"public: virtual int __cdecl CDocument::IsModified(void)" (?IsModified@CDocument@@UEAAHXZ) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"protected: void __cdecl CWnd::OnChar(unsigned int,unsigned int,unsigned int)" (?OnChar@CWnd@@IEAAXIII@Z) already defined in QI-Pro.lib(MapSelectDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"protected: int __cdecl CWnd::OnEraseBkgnd(class CDC *)" (?OnEraseBkgnd@CWnd@@IEAAHPEAVCDC@@@Z) already defined in QI-Pro.lib(EditListCtrl.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"protected: void __cdecl CWnd::OnKeyDown(unsigned int,unsigned int,unsigned int)" (?OnKeyDown@CWnd@@IEAAXIII@Z) already defined in QI-Pro.lib(EditListCtrl.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"protected: void __cdecl CWnd::OnKillFocus(class CWnd *)" (?OnKillFocus@CWnd@@IEAAXPEAV1@@Z) already defined in QI-Pro.lib(EditListCtrl.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"protected: void __cdecl CWnd::OnMouseLeave(void)" (?OnMouseLeave@CWnd@@IEAAXXZ) already defined in QI-Pro.lib(ColorMapCntrl.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"protected: void __cdecl CWnd::OnMouseMove(unsigned int,class CPoint)" (?OnMouseMove@CWnd@@IEAAXIVCPoint@@@Z) already defined in QI-Pro.lib(ColorMapCntrl.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"protected: void __cdecl CWnd::OnSize(unsigned int,int,int)" (?OnSize@CWnd@@IEAAXIHH@Z) already defined in QI-Pro.lib(InputAttributesDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"protected: void __cdecl CWnd::OnSizing(unsigned int,struct tagRECT *)" (?OnSizing@CWnd@@IEAAXIPEAUtagRECT@@@Z) already defined in QI-Pro.lib(InputAttributesDlg.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"protected: void __cdecl CWnd::OnWindowPosChanged(struct tagWINDOWPOS *)" (?OnWindowPosChanged@CWnd@@IEAAXPEAUtagWINDOWPOS@@@Z) already defined in QI-Pro.lib(EditListCtrl.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Error	LNK2005	"public: virtual void __cdecl CDocument::SetModifiedFlag(int)" (?SetModifiedFlag@CDocument@@UEAAXH@Z) already defined in QI-Pro.lib(IMACDoc.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxinl3.obj)	1	
+Warning	LNK4098	defaultlib 'nafxcw.lib' conflicts with use of other libs; use /NODEFAULTLIB:library	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\LINK	1	
+Error	LNK1169	one or more multiply defined symbols found	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\x64\lib-build\NativeUnitTests.exe	1	
+
+-----
+
+netapi32.lib;Wbemuuid.lib;dhcpcsvc.lib;userenv.lib;libredir_std.lib;legacy_stdio_definitions.lib;lm_new.obj;libcrvs.lib;libsb.lib;lmgr.lib;libnoact.lib;lmgr_dongle_stub.lib;cblas.lib;gsl.lib;seiswared.lib;QI-Pro.lib;
+
+C++ -> Preprocessor:
+NO_WARN_MBCS_MFC_DEPRECATION;
+
+_RELEASE_STATIC;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;SQI_CONFIG="$(ConfigurationName)";%(PreprocessorDefinitions)
+
+-----
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2001	unresolved external symbol __report_rangecheckfailure	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcw.lib(filelist.obj)	1	
+Error	LNK2001	unresolved external symbol __report_rangecheckfailure	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcw.lib(filetxt.obj)	1	
+Error	LNK2001	unresolved external symbol __report_rangecheckfailure	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcw.lib(afxpopupmenu.obj)	1	
+Error	LNK2001	unresolved external symbol __report_rangecheckfailure	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcw.lib(afxoutlookbar.obj)	1	
+...
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2001	unresolved external symbol __report_rangecheckfailure	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(DumpFilenamesDlg.obj)	1	
+Error	LNK2001	unresolved external symbol __report_rangecheckfailure	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(License.obj)	1	
+...
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2001	unresolved external symbol memcpy	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\libsb.lib(a172.obj)	1	
+Error	LNK2001	unresolved external symbol memcpy	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\libsb.lib(a159.obj)	1	
+...
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2001	unresolved external symbol "void __cdecl operator delete(void *,unsigned __int64)" (??3@YAXPEAX_K@Z)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\stdafx.obj	1	
+Error	LNK2001	unresolved external symbol "void __cdecl operator delete(void *,unsigned __int64)" (??3@YAXPEAX_K@Z)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(IMACDoc.obj)	1	
+Error	LNK2001	unresolved external symbol "void __cdecl operator delete(void *,unsigned __int64)" (??3@YAXPEAX_K@Z)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(UPDialog.obj)	1	
+Error	LNK2001	unresolved external symbol atexit	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\libcpmt.lib(cout.obj)	1	
+Error	LNK2001	unresolved external symbol atexit	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\libcpmt.lib(cerr.obj)	1	
+Error	LNK2001	unresolved external symbol atexit	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\libcpmt.lib(clog.obj)	1	
+...
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2001	unresolved external symbol _Init_thread_header	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(StdAfx.obj)	1	
+Error	LNK2019	unresolved external symbol _Init_thread_abort referenced in function __catch$??0AutoReg@Catch@@QEAA@PEAUITestInvoker@1@AEBUSourceLineInfo@1@AEBVStringRef@1@AEBUNameAndTags@1@@Z$0	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\NativeUnitTests.obj	1	
+Error	LNK2001	unresolved external symbol _Init_thread_abort	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(UPDialog.obj)	1	
+...
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2019	unresolved external symbol __stdio_common_vfprintf_p referenced in function _vfprintf_p_l	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\legacy_stdio_definitions.lib(legacy_stdio_definitions.obj)	1	
+
+
+7962 errors
+
+-----
+
+
+
+C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\gsl_2_4_msvc2015_64_r1\msvc2015_64\lib\gsl
+
+-----
+
+-> Need to copy release build libs to ~/NativeUnitTests/Libraries folder?
+
+-----
+
+Using DLL instead of Statically Linked Lib .lib:
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Warning	LNK4049	locally defined symbol _invalid_parameter_noinfo imported	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\XplotParms.obj	1	
+Warning	LNK4098	defaultlib 'mfc140.lib' conflicts with use of other libs; use /NODEFAULTLIB:library	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\LINK	1	
+Warning	LNK4098	defaultlib 'mfcs140.lib' conflicts with use of other libs; use /NODEFAULTLIB:library	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\LINK	1	
+Warning	LNK4049	locally defined symbol _invalid_parameter_noinfo imported	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\XplotParmPane.obj	1	
+
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2019	unresolved external symbol __imp_round referenced in function "public: class CPoint __cdecl CEllipse::GetOrigin(void)" (?GetOrigin@CEllipse@@QEAA?AVCPoint@@XZ)	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\Ellipse.obj	1	
+Error	LNK2001	unresolved external symbol __imp_round	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\IMACDoc.obj	1	
+Error	LNK2019	unresolved external symbol __imp_rewind referenced in function "public: int __cdecl CHorizon::LoadCSV(class ATL::CStringT<char,class StrTraitMFC_DLL<char,class ATL::ChTraitsCRT<char> > >)" (?LoadCSV@CHorizon@@QEAAHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z)	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\Horizon.obj	1	
+Error	LNK2001	unresolved external symbol __imp_rewind	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\Well.obj	1	
+Error	LNK2001	unresolved external symbol __imp_rewind	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\CrossPlotView.obj	1	
+Error	LNK2019	unresolved external symbol __imp_strftime referenced in function "public: class ATL::CStringT<char,class StrTraitMFC_DLL<char,class ATL::ChTraitsCRT<char> > > __cdecl ATL::CTime::Format(char const *)const " (?Format@CTime@ATL@@QEBA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@2@PEBD@Z)	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\License.obj	1	
+Error	LNK2001	unresolved external symbol __imp_strftime	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\logfile.obj	1	
+Error	LNK2001	unresolved external symbol __imp_strftime	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\IMACDoc.obj	1	
+Error	LNK2019	unresolved external symbol __imp__mkdir referenced in function "public: int __cdecl CLicense::CheckLicense(unsigned char)" (?CheckLicense@CLicense@@QEAAHE@Z)	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\License.obj	1	
+Error	LNK2001	unresolved external symbol __imp__mkdir	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\IMACDoc.obj	1	
+Error	LNK2019	unresolved external symbol __imp__mbsnbcpy referenced in function _tcsncpy	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\UPDialog.obj	1	
+Error	LNK2019	unresolved external symbol __imp_atan2f referenced in function "float __cdecl atan2(float,float)" (?atan2@@YAMMM@Z)	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\ColorBarView.obj	1	
+Error	LNK2001	unresolved external symbol __imp_atan2f	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\IMACView.obj	1	
+Error	LNK2019	unresolved external symbol __imp_sqrtf referenced in function "float __cdecl sqrt(float)" (?sqrt@@YAMM@Z)	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\ColorBarView.obj	1	
+Error	LNK2019	unresolved external symbol __imp_powf referenced in function "float __cdecl pow(float,float)" (?pow@@YAMMM@Z)	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\CrossPlotView.obj	1	
+Error	LNK2001	unresolved external symbol __imp_powf	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\IMACDoc.obj	1	
+Error	LNK2001	unresolved external symbol __imp_powf	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\VVEquation.obj	1	
+Error	LNK2019	unresolved external symbol __imp_roundf referenced in function "float __cdecl round(float)" (?round@@YAMM@Z)	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\IMACDoc.obj	1	
+Error	LNK2001	unresolved external symbol __imp_roundf	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\IMACView.obj	1	
+Error	LNK2019	unresolved external symbol __imp_cosf referenced in function "float __cdecl cos(float)" (?cos@@YAMM@Z)	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\IMACView.obj	1	
+Error	LNK2001	unresolved external symbol __imp_cosf	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\VVEquation.obj	1	
+Error	LNK2019	unresolved external symbol __imp_sinf referenced in function "float __cdecl sin(float)" (?sin@@YAMM@Z)	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\IMACView.obj	1	
+Error	LNK2001	unresolved external symbol __imp_sinf	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\VVEquation.obj	1	
+Error	LNK2019	unresolved external symbol __imp_log10f referenced in function "float __cdecl log10(float)" (?log10@@YAMM@Z)	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\VVEquation.obj	1	
+Error	LNK2019	unresolved external symbol __imp_logf referenced in function "float __cdecl log(float)" (?log@@YAMM@Z)	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\VVEquation.obj	1	
+Error	LNK2019	unresolved external symbol __imp_tanf referenced in function "float __cdecl tan(float)" (?tan@@YAMM@Z)	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\VVEquation.obj	1	
+Error	LNK1120	14 unresolved externals	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\QI-Pro\x64\lib-build\QI-Pro.dll	1	
+
+-----
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2005	_invalid_parameter_noinfo already defined in libucrt.lib(invalid_parameter.obj)	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\ucrtd.lib(ucrtbased.dll)	1	
+
+-> Builds:
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Warning	LNK4098	defaultlib 'mfcs140.lib' conflicts with use of other libs; use /NODEFAULTLIB:library	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\LINK	1	
+Warning	LNK4098	defaultlib 'mfc140.lib' conflicts with use of other libs; use /NODEFAULTLIB:library	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\LINK	1	
+
+-> Solution: Removed libucrt.lib from AdditionalDependencies because many functions are already defined in C:\Program Files (x86)\Microsoft SDKs\Windows Kits\10\ExtensionSDKs\Microsoft.UniversalCRT.Debug\10.0.10240.0\Redist\Debug\arm64\ucrtbased.dll
+
+--------------------------------------------------------------------------------
+
+Setting IMAC to DLL:
+
+1>------ Build started: Project: IMAC, Configuration: lib-build x64 ------
+1>StdAfx.cpp
+1>AppendCurveDlg.cpp
+1>AppendTopsDlg.cpp
+1>AppendWellDataDlg.cpp
+1>CppUtil.cpp
+1>EditWellData2Arg.cpp
+1>Ellipse.cpp
+1>FlexLicense.cpp
+1>CryptString.cpp
+1>CursorReportDlg.cpp
+1>EditListCtrl.cpp
+1>EditWellData.cpp
+1>Horizon.cpp
+1>License.cpp
+1>logfile.cpp
+1>ModelessInfoDlg.cpp
+1>NetworkClientSocket.cpp
+1>NetworkServerDlg.cpp
+1>NetworkSocket.cpp
+1>NoPasswordDlg.cpp
+1>OSI_type.cpp
+1>Generating Code...
+1>Compiling...
+1>ProgressDlg.cpp
+1>ScrollHelper.cpp
+1>SegyIndex.cpp
+1>TimeSlice.cpp
+1>UPDialog.cpp
+1>Well.cpp
+1>WellCoordBulkLoadDlg.cpp
+1>WellDatabaseDlg.cpp
+1>AADialogParms.cpp
+1>AAEllipse.cpp
+1>AAFrame.cpp
+1>AAParmCntrl.cpp
+1>AAParmPane.cpp
+1>AAView.cpp
+1>AddParmDlg.cpp
+1>AttributeAdvisorSelectDlg.cpp
+1>AttributeAdvisorView.cpp
+1>BaseDlg.cpp
+1>BinaryTab.cpp
+1>ChildFrm.cpp
+1>Generating Code...
+1>Compiling...
+1>ClassNameDlg.cpp
+1>CmdLineArguments.cpp
+1>ColorBarFrame.cpp
+1>ColorBarView.cpp
+1>ColorListBox.cpp
+1>ColorMapCntrl.cpp
+1>CrossPlotFrame.cpp
+1>CrossPlotView.cpp
+1>CSIFrame.cpp
+1>CSIView.cpp
+1>CSIViewParmDlg.cpp
+1>CurveLoadDlg.cpp
+1>CurveScaleDlg.cpp
+1>CutoffEditorDlg.cpp
+1>cutoffLineDlg.cpp
+1>CutoffParms.cpp
+1>DeviationDataDlg.cpp
+1>DumpFilenamesDlg.cpp
+1>DynamicSlider.cpp
+1>EbcdicTab.cpp
+1>Generating Code...
+1>Compiling...
+1>EditHorizonTitleDlg.cpp
+1>FaciesHistoDlg.cpp
+1>FilelistPane.cpp
+1>GetColorDlg.cpp
+1>GetHorizonNameDlg.cpp
+1>HeaderMapEditorDlg.cpp
+1>HeaderPlot.cpp
+1>HeaderViewListCtrl.cpp
+1>HeadwaveDlg.cpp
+1>HeadwaveSocket.cpp
+1>HrzFileDlg.cpp
+1>HrzParmDlg.cpp
+1>HrzPropertyDlg.cpp
+1>IMAC.cpp
+1>IMACDoc.cpp
+1>IMACTemplate.cpp
+1>IMACView.cpp
+1>MainFrm.cpp
+1>MapSelectDlg.cpp
+1>MessageBoxDlg.cpp
+1>Generating Code...
+1>Compiling...
+1>NewColorbarDlg.cpp
+1>NewEquation.cpp
+1>SeiswareDisabledTab.cpp
+1>SeiswareExportFunctions.cpp
+1>SeiswareExportVirtualVolumesTab.cpp
+1>SeiswareImportFunctions.cpp
+1>SeiswareExportTab.cpp
+1>SeiswareSurveyTab.cpp
+1>SeiswareWellDirectionalSurveyTab.cpp
+1>SeiswareWellLogCurvesTab.cpp
+1>SeiswareWellTopsTab.cpp
+1>SeiswareWellVelocityCurvesTab.cpp
+1>VVKeypadDlg.cpp
+1>NewPathDlg.cpp
+1>NewUserLineDlg.cpp
+1>NewVolTypeDlg.cpp
+1>NewZoneDlg.cpp
+1>OutputProgress.cpp
+1>InputAttributesDlg.cpp
+1>ParmEditorDlg.cpp
+1>Generating Code...
+1>Compiling...
+1>ParmPane.cpp
+1>ParmSheetDlg.cpp
+1>ParmToolData.cpp
+1>ParmToolDlg.cpp
+1>PlotParmData.cpp
+1>ClassifiedVolumeDisplaySettingsDlg.cpp
+1>ScanDlg.cpp
+1>Segy.cpp
+1>SegyHeaderMap.cpp
+1>SegyOutDlg.cpp
+1>SegyUtil.cpp
+1>SeisParms.cpp
+1>SeiswareAPI.cpp
+1>SeiswareHorizonsTab.cpp
+1>SeiswarePluginDlg.cpp
+1>SeiswareProjectTab.cpp
+1>SeiswareSegyTab.cpp
+1>SeiswareWellsTab.cpp
+1>SelectVolTypeDlg.cpp
+1>StaticImage.cpp
+1>Generating Code...
+1>Compiling...
+1>SubstituteVariablesDlg.cpp
+1>TestEquationDlg.cpp
+1>TraceTab.cpp
+1>ViewEbcdic.cpp
+1>ViewZone.cpp
+1>VirtualVolumeV2Dlg.cpp
+1>VolType.cpp
+1>VolumeTypeDlg.cpp
+1>VVAttribute.cpp
+1>VVEquation.cpp
+1>CrossPlotSettingsDlg.cpp
+1>WiggleOverlayDlg.cpp
+1>XplotEditor.cpp
+1>XplotParmCntrl.cpp
+1>XplotParmPane.cpp
+1>XplotParms.cpp
+1>Generating Code...
+1>CUtil.c
+1>AA_QIPro.cpp
+1>LINK : warning LNK4098: defaultlib 'mfc140.lib' conflicts with use of other libs; use /NODEFAULTLIB:library
+1>LINK : warning LNK4098: defaultlib 'mfcs140.lib' conflicts with use of other libs; use /NODEFAULTLIB:library
+1>IMAC.vcxproj -> C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\QI-Pro\x64\lib-build\QI-Pro.dll
+1>C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\QI-Pro\x64\lib-build\config.dat
+1>C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\QI-Pro\x64\lib-build\libzmq-mt-4_3_0.dll
+1>C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\QI-Pro\x64\lib-build\libzmq-mt-gd-4_3_0.dll
+1>C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\QI-Pro\x64\lib-build\QI-Pro.dll
+1>C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\QI-Pro\x64\lib-build\QI-Pro.lib
+1>C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\QI-Pro\x64\lib-build\QI-Pro.pdb
+1>C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\QI-Pro\x64\lib-build\seisware.dll
+1>C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\QI-Pro\x64\lib-build\SeisWare.SDK.dll
+1>C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\QI-Pro\x64\lib-build\seiswared.dll
+1>C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\QI-Pro\x64\lib-build\SWSDKCore.dll
+1>C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\QI-Pro\x64\lib-build\vcruntime140_1.dll
+1>11 File(s) copied
+1>Done building project "IMAC.vcxproj".
+========== Build: 1 succeeded, 0 failed, 0 up-to-date, 0 skipped ==========
+
+--------------------------------------------------------------------------------
+
+C:\Users\moorer\OneDrive - sound-qi.com\GResources\Courses\Pluralsight\CppUnitTestingUsingCatch2\02\demos\T9Predict\T9Predict\T9Predict.vcxproj
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK1181	cannot open input file 'QI-Pro.dll'	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\LINK	1	
+
+-> Solution: Removed all QI-Pro.dll from IMAC.vcxproj
+
+-----
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(IMACDoc.obj)	1	
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(VVEquation.obj)	1	
+
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	C1189	#error:  Building MFC application with /MD[d] (CRT dll version) requires MFC shared dll version. Please #define _AFXDLL or do not use /MD[d]	NativeUnitTests	c:\program files (x86)\microsoft visual studio\2017\buildtools\vc\tools\msvc\14.16.27023\atlmfc\include\afx.h	24	
+Error	C1189	#error:  Building MFC application with /MD[d] (CRT dll version) requires MFC shared dll version. Please #define _AFXDLL or do not use /MD[d]	NativeUnitTests	c:\program files (x86)\microsoft visual studio\2017\buildtools\vc\tools\msvc\14.16.27023\atlmfc\include\afx.h	24	
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK1104	cannot open file 'C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\QI-Pro\x64\lib-build\QI-Pro.lib'	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\LINK	1	
+Warning	LNK4098	defaultlib 'mfc140.lib' conflicts with use of other libs; use /NODEFAULTLIB:library	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\LINK	1	
+Warning	LNK4098	defaultlib 'mfcs140.lib' conflicts with use of other libs; use /NODEFAULTLIB:library	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\LINK	1	
+
+netapi32.lib;Wbemuuid.lib;dhcpcsvc.lib;userenv.lib;libredir_std.lib;legacy_stdio_definitions.lib;lm_new.obj;libcrvs.lib;libsb.lib;lmgr.lib;libnoact.lib;lmgr_dongle_stub.lib;cblas.lib;gsl.lib;
+
+
+
+TODO: Add optimization for release build:
+
+      <Optimization>MaxSpeed</Optimization>
+
+      
+RM_Branch\OSI\x64\lib-build\NativeUnitTests.exe
+
+The build is removed from the queue to be prepared for the start
+Collecting changes in 1 VCS root
+  VCS Root details
+    "tfs: http://sqi009:8080/tfs/DefaultCollection/ $/SoundQI-Branch" {instance id=1, parent internal id=1, parent id=SoundQIBranch_TfsHttpSqi0098080tfsDefaultCollectionSoundQIBranch, description: "tfs: http://sqi009:8080/tfs/DefaultCollection/ $/SoundQI-Branch"}
+Failed to collect changes, error: Failed to get current version of TFS root: TF30063: You are not authorized to access http://sqi009:8080/tfs/DefaultCollection/., VCS root: "tfs: http://sqi009:8080/tfs/DefaultCollection/ $/SoundQI-Branch" {instance id=1, parent internal id=1, parent id=SoundQIBranch_TfsHttpSqi0098080tfsDefaultCollectionSoundQIBranch, description: "tfs: http://sqi009:8080/tfs/DefaultCollection/ $/SoundQI-Branch"}
+Failed to collect changes, error: Failed to get current version of TFS root: TF30063: You are not authorized to access http://sqi009:8080/tfs/DefaultCollection/., VCS root: "tfs: http://sqi009:8080/tfs/DefaultCollection/ $/SoundQI-Branch" {instance id=1, parent internal id=1, parent id=SoundQIBranch_TfsHttpSqi0098080tfsDefaultCollectionSoundQIBranch, description: "tfs: http://sqi009:8080/tfs/DefaultCollection/ $/SoundQI-Branch"}
+Build finished
+
+-----
+
+Failed for the root '"tfs: http://sqi009:8080/tfs/DefaultCollection/ $/SoundQI-Branch" {instance id=1, parent internal id=1, parent id=SoundQIBranch_TfsHttpSqi0098080tfsDefaultCollectionSoundQIBranch, description: "tfs: http://sqi009:8080/tfs/DefaultCollection/ $/SoundQI-Branch"}: Failed to get current version of TFS root: TF30063: You are not authorized to access http://sqi009:8080/tfs/DefaultCollection/.'
+
+--------------------------------------------------------------------------------
+
+-Using XML reporter (-r xml):
+
+<?xml version="1.0" encoding="UTF-8"?>
+<Catch name="NativeUnitTests.exe">
+  <Group name="NativeUnitTests.exe">
+    <TestCase name="Should set CIMACView object for CIMACApp" filename="c:\sound-qi_source\soundqi-branch\rm_branch\osi\nativeunittests\nativeunittests.cpp" line="56">
+      <OverallResult success="true"/>
+    </TestCase>
+    <OverallResults successes="1" failures="0" expectedFailures="0"/>
+  </Group>
+  <OverallResults successes="1" failures="0" expectedFailures="0"/>
+</Catch>
+
+C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\x64\lib-build\NativeUnitTests.exe (process 46304) exited with code 0.
+To automatically close the console when debugging stops, enable Tools->Options->Debugging->Automatically close the console when debugging stops.
+Press any key to close this window . . .
+
+-r teamcity
+
+2021.01.19
+I. Researching and implementing solution:
+
+moorer@SQI012 MINGW64 /c/Sound-QI_Source/SoundQI-Branch/RM_Branch/OSI/NativeUnitTests/catch2/internal
+$ ls -1 *.cpp
+catch_assertion_handler.cpp
+catch_clara.cpp
+catch_combined_tu.cpp
+catch_commandline.cpp
+catch_console_colour.cpp
+catch_context.cpp
+catch_debug_console.cpp
+catch_debugger.cpp
+catch_enforce.cpp
+catch_enum_values_registry.cpp
+catch_exception_translator_registry.cpp
+catch_fatal_condition_handler.cpp
+catch_list.cpp
+catch_main.cpp
+catch_output_redirect.cpp
+catch_random_number_generator.cpp
+catch_reporter_registry.cpp
+catch_result_type.cpp
+catch_run_context.cpp
+catch_section.cpp
+catch_singletons.cpp
+catch_source_line_info.cpp
+catch_stream.cpp
+catch_string_manip.cpp
+catch_stringref.cpp
+catch_tag_alias_registry.cpp
+catch_test_case_registry_impl.cpp
+catch_test_case_tracker.cpp
+catch_test_registry.cpp
+catch_test_spec_parser.cpp
+catch_textflow.cpp
+catch_wildcard_pattern.cpp
+catch_xmlwriter.cpp
+
+moorer@SQI012 MINGW64 /c/Sound-QI_Source/SoundQI-Branch/RM_Branch/OSI/NativeUnitTests/catch2/reporters
+$ ls -1 *.cpp
+catch_reporter_automake.cpp
+catch_reporter_combined_tu.cpp
+catch_reporter_compact.cpp
+catch_reporter_console.cpp
+catch_reporter_cumulative_base.cpp
+catch_reporter_junit.cpp
+catch_reporter_listening.cpp
+catch_reporter_sonarqube.cpp
+catch_reporter_streaming_base.cpp
+catch_reporter_tap.cpp
+catch_reporter_teamcity.cpp
+catch_reporter_xml.cpp
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2001	unresolved external symbol "public: __cdecl Catch::ReusableStringStream::ReusableStringStream(void)" (??0ReusableStringStream@Catch@@QEAA@XZ)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\catch_test_case_info.obj	1	
+
+???
+
+--------------------------------------------------------------------------------
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Warning	LNK4221	This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\SeiswareWellsTab.obj	1	
+Warning	LNK4221	This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\SeiswareSegyTab.obj	1	
+Warning	LNK4221	This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\SeiswareProjectTab.obj	1	
+Warning	LNK4221	This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\SeiswarePluginDlg.obj	1	
+Warning	LNK4221	This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\SeiswareHorizonsTab.obj	1	
+Warning	LNK4221	This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\SeiswareAPI.obj	1	
+Warning	LNK4221	This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\SeiswareWellVelocityCurvesTab.obj	1	
+Warning	LNK4221	This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\SeiswareWellTopsTab.obj	1	
+Warning	LNK4221	This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\SeiswareWellLogCurvesTab.obj	1	
+Warning	LNK4221	This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\SeiswareWellDirectionalSurveyTab.obj	1	
+Warning	LNK4221	This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\SeiswareSurveyTab.obj	1	
+Warning	LNK4221	This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\SeiswareExportTab.obj	1	
+Warning	LNK4221	This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\SeiswareImportFunctions.obj	1	
+Warning	LNK4221	This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\SeiswareExportVirtualVolumesTab.obj	1	
+Warning	LNK4221	This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\SeiswareExportFunctions.obj	1	
+Warning	LNK4221	This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\SeiswareDisabledTab.obj	1	
+
+???
+
+-----
+
+Build Step #1:
+msbuild RM_Branch\OSI\OSI.sln /target:IMAC:Rebuild /p:Configuration=lib-build
+
+Build Step #2:
+msbuild RM_Branch\OSI\OSI.sln /target:NativeUnitTests:Rebuild /p:Configuration=lib-build
+For /f "tokens=2-4 delims=/ " %%a in ('date /t') do (set mydate=%%c-%%a-%%b)
+For /f "tokens=1-2 delims=/:" %%a in ('time /t') do (set mytime=%%a%%b)
+RM_Branch\OSI\x64\lib-build\NativeUnitTests.exe -r xml > RM_Branch\OSI\NativeUnitTests\Reports\unittests-%mydate%_%mytime%.xml
+
+See https://teamcity-support.jetbrains.com/hc/en-us/community/posts/360002215960-Can-t-start-TeamCity-and-Build-agent-
+https://stackoverflow.com/questions/14399100/teamcity-warning-no-enabled-compatible-agents-for-this-build-configurationn
+
+
+
+
+
+2021.01.20
+I. Researching and implementing solution:
+
+msbuild RM_Branch\OSI\OSI.sln /target:NativeUnitTests:Rebuild /p:Configuration=lib-build
+For /f "tokens=2-4 delims=/ " %%a in ('date /t') do (set mydate=%%c-%%a-%%b)
+For /f "tokens=1-2 delims=/:" %%a in ('time /t') do (set mytime=%%a%%b)
+RM_Branch\OSI\x64\lib-build\NativeUnitTests.exe -r xml > RM_Branch\OSI\NativeUnitTests\Reports\unittests-%mydate%_%mytime%.xml
+
+-----
+
+set mydate=""
+For /f "tokens=2-4 delims=/ " %%a in ('date /t') do (set mydate=%%c-%%a-%%b)
+For /f "tokens=1-2 delims=/:" %%a in ('time /t') do (set mytime=%%a%%b)
+RM_Branch\OSI\x64\lib-build\NativeUnitTests.exe -r xml > RM_Branch\OSI\NativeUnitTests\Reports\unittests-%mydate%_%mytime%.xml
+
+-----
+  Time Elapsed 00:00:38.08
+14:30:28
+  The system cannot find the path specified.
+14:30:28
+  Process exited with code 1
+14:30:28
+  Process exited with code 1 (Step: UnitTest (Command Line))
+14:30:28
+  Step UnitTest (Command Line) failed
+
+  
+RM_Branch\OSI\x64\lib-build\NativeUnitTests.exe -r xml > RM_Branch\OSI\NativeUnitTests\Reports\unittests.xml
+
+2021.01.26
+I. Researching and implementing solution:
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error (active)	E0035	#error directive: Building MFC application with /MD[d] (CRT dll version) requires MFC shared dll version. Please #define _AFXDLL or do not use /MD[d]	NativeUnitTests	C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\atlmfc\include\afx.h	24	
+
+
+
+
+2021.02.05
+I. Researching and implementing solution:
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	C2248	'CIMACDoc::CIMACDoc': cannot access protected member declared in class 'CIMACDoc'	NativeUnitTests	c:\sound-qi_source\soundqi-branch\rm_branch\osi\nativeunittests\imacdocderived.cpp	6	
+
+See https://stackoverflow.com/questions/477829/cannot-call-base-class-protected-functions?rq=1
+
+class B : B2
+{
+public:
+  virtual f1(B*)=0;
+protected:
+  virtual f2(B*) { codehere(); }
+}
+class D : public B
+{
+public:
+  virtual f1(B*b) { return f2(b); }
+protected:
+  virtual f2(B*b) { return b->f2(this); }
+
+    
+
+2021.04.16
+I. Researching and implementing solution:                        
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2019	unresolved external symbol "__declspec(dllimport) public: static struct SeisWare::ServerInfo __cdecl SeisWare::Connection::CreateServer(void)" (__imp_?CreateServer@Connection@SeisWare@@SA?AUServerInfo@2@XZ) referenced in function "public: int __cdecl CSeiswareAPI::Connect(class SeisWare::Connection *,class ATL::CStringT<char,class StrTraitMFC_DLL<char,class ATL::ChTraitsCRT<char> > > *)" (?Connect@CSeiswareAPI@@QEAAHPEAVConnection@SeisWare@@PEAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(SeiswareAPI.obj)	1	
+
+2021.04.19
+I. Researching and implementing solution:
+...
+1>AA_QIPro.cpp
+1>SeiswareWellsTab.obj : warning LNK4221: This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library
+1>SeiswareSegyTab.obj : warning LNK4221: This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library
+1>SeiswareProjectTab.obj : warning LNK4221: This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library
+1>SeiswarePluginDlg.obj : warning LNK4221: This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library
+1>SeiswareHorizonsTab.obj : warning LNK4221: This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library
+1>SeiswareAPI.obj : warning LNK4221: This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library
+1>SeiswareWellVelocityCurvesTab.obj : warning LNK4221: This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library
+1>SeiswareWellTopsTab.obj : warning LNK4221: This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library
+1>SeiswareWellLogCurvesTab.obj : warning LNK4221: This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library
+1>SeiswareWellDirectionalSurveyTab.obj : warning LNK4221: This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library
+1>SeiswareSurveyTab.obj : warning LNK4221: This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library
+1>SeiswareExportTab.obj : warning LNK4221: This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library
+1>SeiswareImportFunctions.obj : warning LNK4221: This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library
+1>SeiswareExportVirtualVolumesTab.obj : warning LNK4221: This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library
+1>SeiswareExportFunctions.obj : warning LNK4221: This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library
+1>SeiswareDisabledTab.obj : warning LNK4221: This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library
+1>IMAC.vcxproj -> C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\QI-Pro\x64\Debug-lib-build\QI-Pro.lib
+1>C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\QI-Pro\x64\Debug-lib-build\QI-Pro.lib
+1>1 File(s) copied    
+...    
+2>Generating code
+2>All 6830 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+2>Finished generating code    
+
+--------------------------------------------------------------------------------
+
+'NativeUnitTests.exe' (Win32): Loaded 'C:\Windows\System32\vcruntime140_1.dll'. Symbols loaded.
+'NativeUnitTests.exe' (Win32): Loaded 'C:\Windows\System32\uxtheme.dll'. Symbols loaded.
+The thread 0x656c has exited with code 0 (0x0).
+Exception thrown at 0x00007FFDD19D4B59 in NativeUnitTests.exe: Microsoft C++ exception: CFileException at memory location 0x0000006440BAF238.
+Exception thrown at 0x00007FFDD19D4B59 in NativeUnitTests.exe: Microsoft C++ exception: CFileException at memory location 0x0000006440BACE70.    
+
+--------------------------------------------------------------------------------
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2038	mismatch detected for '_ITERATOR_DEBUG_LEVEL': value '2' doesn`t match value '0' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(Horizon.obj)	1	
+
+--------------------------------------------------------------------------------
+
+1>------ Build started: Project: NativeUnitTests, Configuration: Debug-lib-build x64 ------
+1>NativeUnitTests.cpp
+1>c:\sound-qi_source\soundqi-branch\rm_branch\osi\nativeunittests\nativeunittests.cpp(17): warning C4005: 'DEBUG': macro redefinition
+1>c:\program files (x86)\microsoft visual studio\2017\community\vc\tools\msvc\14.16.27023\atlmfc\include\atldef.h(150): note: see previous definition of 'DEBUG'
+1>LINK : /LTCG specified but no code generation required; remove /LTCG from the link command line to improve linker performance
+1>NativeUnitTests.vcxproj -> C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\x64\Debug-lib-build\NativeUnitTests.exe
+1>Done building project "NativeUnitTests.vcxproj".
+========== Build: 1 succeeded, 0 failed, 1 up-to-date, 0 skipped ==========
+
+--------------------------------------------------------------------------------
+
+Brenda & Kevin, please note that I have exported from both the Horn River demo and Blackfoot demo.  
+
+When I try to load a test file in SEGYMAT it gives me these errors, where I am not sure if it is due to an error in SEGYMAT or in the SEG-Y file test_export.sgy which I exported from the Blackfoot project (see K:\Roger\test_export_blackfoot.sgy):
+
+octave:3> [Data,SegyTraceHeaders,SegyHeader]=ReadSegy('c:/Tools/segymat-1.6/test_export_blackfoot.sgy');
+SegyMAT  : ReadSegy: reading from c:/Tools/segymat-1.6/test_export_blackfoot.sgy
+error: SegyHeader(257): out of bound 8
+error: called from
+    ReadSegy at line 308 column 11
+
+
+Here is what I see when I try importing the file I exported from the Horn River demo project (see ):
+
+octave:4> imagesc([SegyTraceHeaders.cdp],[SegyHeader.time],Data)
+warning: image: non-linear X, Y data is ignored.  IMG will be shown with linear mapping
+warning: called from
+    image>__img__ at line 174 column 9
+    image at line 125 column 10
+    imagesc at line 101 column 12
+octave:5>
+
+Here are the lines of code I exercised—I didn’t notice any major issues, but how else can I verify a SEG-Y file?
+
+A) First Test: C:\QI-Pro Demo\Horn River Demo\Projects\test_export.sgy
+
+1) 
+
+m_outputSampleFormat = pSegy->m_outputSampleFormat;
+
+2)
+
+	if (m_startTime < maxStartTime || m_endTime > minEndTime) {
+		if (m_startTime < maxStartTime) m_startTime = maxStartTime;
+		if (m_endTime > minEndTime) m_endTime = minEndTime;
+		CString message;
+		message.Format("Specified time window out of range. Resetting to fall within allowed limits:\n Start = %d\nEnd = %d",
+			m_startTime, m_endTime);
+		AfxMessageBox(message);
+	}
+
+3)
+
+	// Set start and end times to the maximum
+	int maxStartTime, minEndTime;
+	pDoc->GetMaxStartMinEndTime(maxStartTime, minEndTime);
+
+Where:	
+		maxStartTime	0	int
+		minEndTime	1100	int
+
+4)
+
+		pSegyOut->SetSampleCount(outputSampleCount);
+		
+Where:
+		outputSampleCount	551	int
+
+5) 
+
+				if (pTaskparm->strOutFile.IsEmpty() && !exportedAttribute && i != pDoc->GetSegyToUse() && 
+					(!pDoc->IsAttributeInUse(attribute) && !pDoc->IsAttributeInVirtualVolumeInUse(attribute))) continue;
+				pSegy = pDoc->GetSegyInPtr(i);
+				
+6)
+			// remove the code for unclassified
+			if (strip) {
+				for (int j = 0; j < m_nSamps; j++) {
+					if (pData[(i*m_nSamps) + j] == UNCLASSIFIED) {
+						pData[(i*m_nSamps) + j] = 0;
+					}
+				}
+			}
+			
+
+-----
+
+B) Second test: C:\QI-Pro Demo\2020 12 16 Blackfoot Demo\QI-Pro Blackfoot Demo\Projects\test_export.sgy
+
+1)
+
+pVirtualSegy->SetSampleCount(outputSampleCount);
+
+2)
+
+					for (int i = 0; i < pSegyOut->GetTraceCount() && !pCUPDUPData->ShouldTerminate(); i++) {
+						BYTE* pHdr = pSegy->GetHeader(i);
+						pSegyOutHeaderMap->lagTime.SetValue(pHdr, -pTaskparm->startTime);
+						pSegyOut->SetHeader(pHdr, i);
+					}
+					
+3)
+
+				CHeaderMap* headerMap = pSegy->GetHeaderMap();
+				int attributeIndex = pDoc->GetAttributeIndex(pExportAttributeNames->GetAt(i));
+				
+4) 
+
+				headerMap->lagTime.SetSize(eVAR_2BYTE);
+				
+				
+5) 			
+
+					pSegy->WriteLine(pTaskparm->xlineMin, pTaskparm->xlineMax, outputSampleCount, firstSample, FALSE);
+					
+Is this what you were looking for?
+
+From: Kevin Lee <kevin@sound-qi.com> 
+Sent: April 19, 2021 3:42 PM
+To: Brenda Maloff <brenda@sound-qi.com>; Roger Moore <roger@sound-qi.com>
+Subject: exporting bugs
+
+I think it’s mostly working. I’m running a few more tests.
+
+Please give export a workout and see if it’s working properly.
+
+Try the classified, VVs and attributes and all combos there of.  Also exercise the time window .
+
+
+http://sqi009:8080/tfs/DefaultCollection/SoundQI/_versionControl/changeset/1266
+    
+--------------------------------------------------------------------------------
+
+octave:5> addpath /cygdrive/c/Tools/segymat/GUI -begin
+octave:6> addpath /cygdrive/c/Tools/segymat -begin
+octave:5> [Data,SegyTraceHeaders,SegyHeader]=ReadSegy('/cygdrive/c/Tools/segymat-1.6/test_export.sgy');
+octave:5> wiggle(Data,[],SegyHeader.time,[SegyTraceHeaders.cdp],'VA')
+warning: strmatch is obsolete; use strncmp or strcmp instead
+error: strmatch: A must be a string or cell array of strings
+error: called from
+    strmatch at line 86 column 5
+    wiggle at line 170 column 9
+-> Updated based on https://stackoverflow.com/questions/15774932/matlab-strmatch-vs-strcmp
+error: __plt2vm__: matrix dimensions must match
+error: called from
+    __plt__>__plt2vm__ at line 417 column 5
+    __plt__>__plt2__ at line 249 column 14
+    __plt__ at line 112 column 18
+    plot at line 229 column 10
+    wiggle at line 206 column 17
+octave:5> imagesc([SegyTraceHeaders.cdp],[SegyHeader.time],Data)
+warning: image: non-linear X, Y data is ignored.  IMG will be shown with linear mapping
+warning: called from
+    image>__img__ at line 173 column 9
+    image at line 128 column 10
+    imagesc at line 105 column 12
+
+>> warning: opengl_texture::create: the opengl library in use doesn`t support images with either dimension larger tha
+n 8192. Not rendering.
+
+    

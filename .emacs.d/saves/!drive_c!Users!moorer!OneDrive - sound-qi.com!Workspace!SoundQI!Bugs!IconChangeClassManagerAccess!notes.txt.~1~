@@ -1,0 +1,380 @@
+Description:
+When moving the mouse over to the legend on the RHS, it normally changes to add a question mark so that when the user right-clicks it will bring up the colour wheel.  The problem is taht if the "Classified Seismic Volume" is larger than the monitor, and the horizontal scroll bar is necessary, then the calculation necessary to change the cursor fails so that the question mark does not appear.  See ClassifiedSeismisVolume1.png vs ClassifiedSeismisVolume2.png.
+
+From HubSpot:
+Right click "Class Colors" in the seismic window to bring up "Class Manager". Doesn't work if there is a horizontal scroll bar.
+
+2020.12.07
+I. Researching and implementing solution:
+
+
+void CIMACView::OnMouseMove(UINT nFlags, CPoint point)
+{
+	//	TRACE("onMouseMove(nFlags=%d, point=(%d,%d))\n", nFlags, point.x, point.y);
+	if (m_mx == point.x && m_my == point.y && m_mflags == nFlags) return; // no change since last call
+	m_mx = point.x;
+	m_my = point.y;
+	m_mflags = nFlags;
+
+	if (!m_bReady) {
+		// we have to wait for the display to be drawn before this code will work.
+		return;
+	}
+
+	CIMACDoc* pDoc = GetDocument();
+
+	// get the leftmost trace # and the increment. Drawing is always left to right.
+	int firstTr, incrementTr;
+	GetPlotDirection(firstTr, incrementTr);
+
+	if (m_selectState == eBeginSelecting1) {
+		CPoint pntScrollPosition = GetScrollPosition();
+		CRect select = pDoc->GetHighliteRegionTemp();
+		select.right = point.x + pntScrollPosition.x;
+		select.bottom = point.y + pntScrollPosition.y;
+		pDoc->SetHighliteRegionTemp(select);
+		CRect normSelect = select;
+		normSelect.NormalizeRect();
+		CSize size = normSelect.Size();
+		if (size.cx > 2 || size.cy > 2) {
+			UnselectRegion1();
+			pDoc->SetHighliteRegion1(select);
+			m_selectState = eSelecting1;
+		}
+		Invalidate();
+	}
+	else if (m_selectState == eSelecting1) {
+		CPoint pntScrollPosition = GetScrollPosition();
+		CRect select = pDoc->GetHighliteRegion1();
+		select.right = point.x + pntScrollPosition.x;
+		select.bottom = point.y + pntScrollPosition.y;
+		pDoc->SetHighliteRegion1(select);
+		Invalidate();
+	}
+	if (m_selectState == eBeginSelecting2) {
+		CPoint pntScrollPosition = GetScrollPosition();
+		CRect select = pDoc->GetHighliteRegionTemp();
+		select.right = point.x + pntScrollPosition.x;
+		select.bottom = point.y + pntScrollPosition.y;
+		pDoc->SetHighliteRegionTemp(select);
+		CRect normSelect = select;
+		normSelect.NormalizeRect();
+		CSize size = normSelect.Size();
+		if (size.cx > 2 || size.cy > 2) {
+			UnselectRegion2();
+			pDoc->SetHighliteRegion2(select);
+			m_selectState = eSelecting2;
+		}
+		Invalidate();
+	}
+	else if (m_selectState == eSelecting2) {
+		CPoint pntScrollPosition = GetScrollPosition();
+		CRect select = pDoc->GetHighliteRegion2();
+		select.right = point.x + pntScrollPosition.x;
+		select.bottom = point.y + pntScrollPosition.y;
+		pDoc->SetHighliteRegion2(select);
+		Invalidate();
+	}
+
+	// The cursor report window has been closed, clean up
+	if (pDoc->GetCursorPositionMode() &&
+		pCursorReport != NULL && m_deleteCursorDlgFlag)
+	{
+		delete pCursorReport;
+		pCursorReport = NULL;
+		pDoc->SetCursorPositionMode(FALSE);
+		m_deleteCursorDlgFlag = FALSE;
+		m_cursorWindowSize.SetSize(0, 0);
+	}
+
+	// The cursor report window has been turned off, clean up
+	if (!pDoc->GetCursorPositionMode() && pCursorReport != NULL)
+	{
+		pCursorReport->DestroyWindow();
+		delete pCursorReport;
+		pCursorReport = NULL;
+		m_deleteCursorDlgFlag = FALSE;
+		m_cursorWindowSize.SetSize(0, 0);
+	}
+
+	// Get some inital data
+	CSegy* pSegy = pDoc->GetSegyOutPtr();
+	int si = pSegy->GetSampleInterval();
+	int ntrace = pSegy->GetTraceCount();
+	int startTime = m_startTime;
+	int endTime = m_endTime;
+	m_sampCount = Time2Index((endTime - startTime), si) + 1;
+
+	CPoint pntScrollPosition = GetScrollPosition();
+	int px = point.x + pntScrollPosition.x;
+	int py = point.y + pntScrollPosition.y;
+	int screentrace = (px - SIDE) / m_hScale;
+	int isamp = (int)((py - TOP) / m_vScale);
+	int time = 0;
+
+	int itrn = ComputeTraceNumber(screentrace);
+
+	// Mouse Tracking. Save inline and xline
+	if (itrn >= 0 && itrn < m_nTrace && isamp >= 0 && isamp < m_sampCount) {
+		time = Index2Time(isamp, si) + startTime;
+		int inLine = pSegy->GetInline(itrn);
+		int xLine = pSegy->GetCrossline(itrn);
+		pDoc->SetTrackTrace(inLine, xLine);
+		Invalidate();
+	}
+	else {
+		pDoc->SetTrackTrace(-1, -1);
+		Invalidate();
+	}
+
+	//	If necessary report the cursor position
+	if (pDoc->GetCursorPositionMode()) {
+		if (pCursorReport == NULL) {
+			pCursorReport = new CCursorReportDlg();
+			pCursorReport->Initialize();
+			pCursorReport->SetDeleteFlagAddress(&m_deleteCursorDlgFlag);
+		}
+
+		if (itrn >= 0 && itrn < m_nTrace && isamp >= 0 && isamp < m_sampCount) {
+
+			float* pData = pSegy->GetTraceDataPtr(itrn, time);
+			int k = (int)pData[0];
+			int reportCount = 0;
+			CString strName;
+			CString strTime;
+
+			if (pDoc->GetWellDepthMode()) {
+				strName.Format("Depth = ");
+			}
+			else {
+				strName.Format("Time = ");
+			}
+			if (pDoc->IsPetrelTimeMode()) {
+				int displayTime = -(time - (int) pDoc->CalculatePetrelOffset(pDoc->GetPetrelDatum()));
+				if (pDoc->GetFlatteningDisplayToggle() && pDoc->GetFlattenHorizonCheck())  strTime.Format("%d (%d)", displayTime, displayTime - (pDoc->GetFlatteningDatum()));
+				else strTime.Format("%d", displayTime);
+			}
+			else {
+				if (pDoc->GetFlatteningDisplayToggle() && pDoc->GetFlattenHorizonCheck())  strTime.Format("%d (%d)", time, time - pDoc->GetFlatteningDatum());
+				else strTime.Format("%d", time);
+			}
+			if (pDoc->GetWellDepthMode()) {
+				if (pDoc->GetProjectUnits() == eMETRIC_UNITS) strTime += " Meters";
+				else if (pDoc->GetProjectUnits() == eIMPERIAL_UNITS) strTime += " Feet";
+			}
+			strTime += "\n";
+			arrNames.SetAtGrow(reportCount, strName);
+			arrTimes.SetAtGrow(reportCount, strTime);
+			reportCount++;
+			strName.Format("Inline = ");
+			strTime.Format("%d\n", pSegy->GetInline(itrn));
+			arrNames.SetAtGrow(reportCount, strName);
+			arrTimes.SetAtGrow(reportCount, strTime);
+			reportCount++;
+			strName.Format("Crossline = ");
+			strTime.Format("%d\n", pSegy->GetCrossline(itrn));
+			arrNames.SetAtGrow(reportCount, strName);
+			arrTimes.SetAtGrow(reportCount, strTime);
+			reportCount++;
+			strName.Format("Class = ");
+			int classValue = k;
+			while (classValue >= SELECTION_BIAS) {
+				classValue -= SELECTION_BIAS;
+			}
+			if (classValue == UNCLASSIFIED) classValue = 0;
+			strTime.Format("%d\n", classValue);
+			arrNames.SetAtGrow(reportCount, strName);
+			arrTimes.SetAtGrow(reportCount, strTime);
+			reportCount++;
+			// Get the attribute values
+			for (int i = 0; i < pDoc->GetFileCount(); i++) {
+				CString attribute = pDoc->GetAttr(i);
+				if (!pDoc->IsAttributeInUse(attribute)) continue;
+				strName.Format("%s = ", attribute);
+				CSegy* pSegyTmp = pDoc->GetSegyInPtr(i);
+				pData = pSegyTmp->GetTraceDataPtr(itrn, time);
+				float value = pData[0];
+				strTime.Format("%.2f\n", value);
+				arrNames.SetAtGrow(reportCount, strName);
+				arrTimes.SetAtGrow(reportCount, strTime);
+				reportCount++;
+			}
+			// Get Virtual Volume values
+			for (int i = 0; i < pDoc->GetVVAttributeCount(); i++) {
+				CVVAttribute& vvAttr = pDoc->GetVVAttributeRef(i);
+				for (int j = 0; j < vvAttr.GetVVCount(); j++) {
+					CString vvName = vvAttr.GetVVName(j);
+					if (!pDoc->IsAttributeInUse(vvName)) continue;
+					strName.Format("%s = ", vvName);
+					CSegy& virtualSegy = vvAttr.GetSegyRef(j);
+					pData = virtualSegy.GetTraceDataPtr(itrn, time);
+					float value = pData[0];
+					strTime.Format("%.2f\n", value);
+					arrNames.SetAtGrow(reportCount, strName);
+					arrTimes.SetAtGrow(reportCount, strTime);
+					reportCount++;
+				}
+			}
+
+			// if mouse is pointing at an embedded well, then report it's amplitude
+			for (int iWell = 0; iWell < m_wellCount; iWell++) {
+				WellList* pWellList = pDoc->GetWellListPtr();
+				int wellTrace = m_listWellTraces[iWell];
+				if (wellTrace == itrn) {
+					int wellIndex = m_listWellIndex[iWell];
+					CWell* pWell = pWellList->GetAt(pWellList->FindIndex(wellIndex));
+					int colorIndex = pWell->GetColorDepthLogIndex();
+					if (colorIndex >= 0) {
+						float* pColorLog = pWell->GetCurvePtr(colorIndex);
+						BOOL  bDepthMode = pDoc->GetWellDepthMode();
+						float* pDepTime = pWell->GetDepthTimePtr(bDepthMode);
+						if (pDepTime == NULL) break;
+						int wellSampCount = pWell->GetCurvesNRecs();
+						int dataIndex = 0;
+						while (dataIndex < wellSampCount && pDepTime[dataIndex] < time) {
+							dataIndex++;
+						}
+						if (dataIndex >= wellSampCount) break;
+						float sampValue = pColorLog[dataIndex];
+						strName.Format("%s = ", pWell->wellName);
+						strTime.Format("%.1f\n", sampValue);
+						arrNames.SetAtGrow(reportCount, strName);
+						arrTimes.SetAtGrow(reportCount, strTime);
+						reportCount++;
+
+						// report Depth
+						int ixDepth = pWell->GetDepthLogIndex();
+						if (ixDepth == -1) break;
+						float* pDepth = pWell->GetCurvePtr(ixDepth);
+						strName.Format("Log Depth = ");
+						strTime.Format("%.1f\n", pDepth[dataIndex]);
+						arrNames.SetAtGrow(reportCount, strName);
+						arrTimes.SetAtGrow(reportCount, strTime);
+						reportCount++;
+					}
+					break;
+				}
+			}
+			pCursorReport->ReportFromData(arrNames, arrTimes, reportCount, m_cursorWindowSize);
+		}
+	}
+
+	// check if cursor is within the legend box, if so switch cursor
+	else if (IsPtInLegend(point)) {
+		m_cursor = IDC_HELP;
+	} else {
+		m_cursor = 0;
+	}
+}
+
+-------------------------------------------------------------------------------
+
+-Key part of code is here:
+
+	// check if cursor is within the legend box, if so switch cursor
+	else if (IsPtInLegend(point)) {
+		m_cursor = IDC_HELP;
+	} else {
+		m_cursor = 0;
+	}
+
+Which calls:
+
+BOOL CIMACView::IsPtInLegend(CPoint point)
+{
+	return (!m_legendBox.IsRectNull() && m_legendBox.PtInRect(point));
+}
+
+Which calls:
+
+inline BOOL CRect::PtInRect(_In_ POINT point) const throw()
+{
+	return ::PtInRect(this, point);
+}
+
+Which calls:
+
+WINUSERAPI
+BOOL
+WINAPI
+PtInRect(
+    _In_ CONST RECT *lprc,
+    _In_ POINT pt);
+	
+Where:
+
+point
+{x=2520 y=683}
+    tagPOINT: {x=2520 y=683}
+
+
+CPoint pntScrollPosition = GetScrollPosition();
+
+pntScrollPosition
+{x=48 y=0}
+    tagPOINT: {x=48 y=0}
+
+Or if the scrollbar is all the way left:
+
+pntScrollPosition
+{x=0 y=0}
+    tagPOINT: {x=0 y=0}
+	
+-------------------------------------------------------------------------------
+
+pointWithScroll
+{x=722 y=722}
+    tagPOINT: {x=722 y=722}
+point
+{x=876 y=722}
+    tagPOINT: {x=876 y=722}
+pntScrollPosition
+{x=0 y=0}
+    tagPOINT: {x=0 y=0}
+
+-----
+
+pointWithScroll = {x=2454 y=365}
+
+2020.12.08
+I. Researching and implementing solution:
+
+void CIMACView::OnRButtonUp(UINT nFlags, CPoint point)
+{
+	CIMACDoc* pDoc = GetDocument();
+
+	if (IsPtInLegend(point)) {
+		AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_EDIT_COLORBAR);
+		return;
+	}
+	EditDisplaySettings();
+}
+
+CPoint pointWithScroll;
+
+	CPoint pntScrollPosition = GetScrollPosition();
+	int px = point.x + pntScrollPosition.x;
+	int py = point.y + pntScrollPosition.y;
+	
+	// Resolve issue with colour wheel select when scrollbar not all the way left
+	pointWithScroll.x = px;
+	pointWithScroll.y = py;
+	
+-> Solution: Update to:
+
+void CIMACView::OnRButtonUp(UINT nFlags, CPoint point)
+{
+	CIMACDoc* pDoc = GetDocument();
+	CPoint pointWithScroll;
+	CPoint pntScrollPosition = GetScrollPosition();
+	pointWithScroll.x = point.x + pntScrollPosition.x;
+	pointWithScroll.y = point.y + pntScrollPosition.y;
+	
+
+	if (IsPtInLegend(pointWithScroll)) {
+		AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_EDIT_COLORBAR);
+		return;
+	}
+	EditDisplaySettings();
+}
+

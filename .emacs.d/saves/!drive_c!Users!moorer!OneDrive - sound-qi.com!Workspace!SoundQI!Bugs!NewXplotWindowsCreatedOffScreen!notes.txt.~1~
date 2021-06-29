@@ -1,0 +1,76 @@
+
+
+
+From: Kevin Lee <kevin@sound-qi.com> 
+Sent: March 19, 2021 9:13 AM
+To: Roger Moore <roger@sound-qi.com>; Brenda Maloff <brenda@sound-qi.com>
+Subject: FW: QI-Pro list
+
+Here’s where I am on Carl’s list.  I’ll continue with working this list.
+Right now I’ve got a fix for the rename attributes in virtual volumes.
+
+Level 1
+I can duplicate 1 and 2 but not 3
+
+Level 2
+Cannot duplicate 1 and 2
+Brenda’s working or already fixed 3
+Cannot duplicate 4 and 5
+6 is a good bug. Happens to me too
+
+Level3
+What do you want #1 to do? (question for Carl)
+I can duplicate 2,3,4
+
+
+From: Carl Reine <carl@sound-qi.com> 
+Sent: Thursday, March 18, 2021 2:33 PM
+To: Kevin Lee <kevin@sound-qi.com>
+Subject: QI-Pro list
+
+Hi Kevin,
+
+Here is the list I've been keeping while working in QI-Pro the last week or so.  Most of these came from 4.4.5.122, but some are also when I switched yesterday to 4.4.5.139.  I've tried to organize them, and I'd be happy to help figure out how repeatable some of them are.  All of them were observed in the project:  W:\1_Active\Peyto\PYSD-3LOM\Projects\QI Pro\Projects\PYSD_Classify.prj
+
+Level 1
+•	Crash when renamed a volume that is used in virtual volumes.  Could the volume just update in VV automatically?
+•	Crash when undoing crossplot element edits.  It involved reversing about 10 point moves, a cutoff being deleted, and a line move.  I'm not sure that undo should recover a deleted cutoff.
+•	Crash when used File > Close Project
+
+Level 2
+•	Loading a horizon causes wiggle overlay to disappear and wiggle settings to reset
+•	Classes turn off (everything goes grey) when a volume is renamed or wiggle is turned on
+•	Virtual volumes create NaNs (e.g. divide by zero -> volumes have zeroes outside of inversion window) that then leads to point density failing to calculate for that variable.  NaNs are acceptable, but shouldn't impact other processes.
+•	There are 2 locations for changing the class colours (main window / seismic window), but when chosen from the main window, some edit features don't work (e.g. rename).
+•	Map window keeps moving behind main window.  Reappears in front when QI-Pro selected again on task bar.
+•	New crossplot windows created with top of window off screen... have to make generous use of tile windows button.
+
+Level 3
+•	Resizing table columns to full range (double clicking on boundary) ignores the header row (e.g. zone filter dialogue)
+•	Attribute names come from .sgy file names but are truncated at the first '.', even if there are multiple '.', not just before the extension
+•	Horizon name missing (or at best, far away) when dead traces present at the end of the line.  Could it be posted wherever the horizon ends rather than off the seismic line?
+•	Horizons show on top of wiggles on peaks, but below wiggles on troughs
+
+
+Let me know what additional information I can provide.  If they aren't all worthy of getting fixed right away, I can put the lesser ones in Hubspot.
+
+Thanks.
+
+Carl Reine, Ph.D., P.Geoph.
+Chief Geophysicist
+
+Sound QI Solutions Ltd.
+2130, 125 9 Ave. SE
+Calgary, AB  T2G 0P6
+Canada
+ 
+T 403-305-0443
+E carl@sound-qi.com
+www.sound-qi.com
+
+Get the latest news from Sound-QI
+
+2021.03.18
+I. Researching and implementing solution: 
+
+

@@ -1,0 +1,4279 @@
+// CrossPlot1View.cpp : implementation file
+//
+
+#include "stdafx.h"
+#include "imac.h"
+#include "IMACDoc.h"
+#include "IMACView.h"
+#include "CrossPlotView.h"
+#include "XplotParms.h"
+#include "CrossPlotFrame.h"
+#include "MessageBoxDlg.h"
+#include "..\common\Utilities.h"
+#include <math.h>
+#include <signal.h>
+#include <gdiplus.h>
+#include <iostream>
+#include <ostream>
+using namespace Gdiplus;
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+// CCrossPlotView
+
+IMPLEMENT_DYNCREATE(CCrossPlotView, CView)
+
+CCrossPlotView::CCrossPlotView()
+{
+	m_viewInstance = -1;
+	m_boldBrush.lbStyle = BS_SOLID;
+	m_boldBrush.lbColor = RGB(0,0,0);
+	m_boldPen.CreatePen(PS_SOLID|PS_GEOMETRIC|PS_ENDCAP_SQUARE, 6, &m_boldBrush);
+	m_redPen.CreatePen (PS_SOLID, 1, RED);
+	m_grayPen.CreatePen(PS_SOLID, 1, RGB(0,0,0));
+	m_lightGrayPen.CreatePen(PS_SOLID, 1, RGB(175,175,175));
+	m_redBrush.CreateSolidBrush(RED);
+
+	m_highlightBrush1 = NULL;
+	m_highlightBrush2 = NULL;
+	m_highlightPen1 = NULL;
+	m_highlightPen2 = NULL;
+
+	m_isFirstHighlightColor = TRUE;
+	m_currentHighlightColor1 = NULL;
+	m_currentHighlightColor2 = NULL;
+
+	m_pNormBrush = NULL;
+	for (int i=0; i<MAXCLASS+DENSITYBARSIZE; i++) {
+		if (pTracePen.GetCount() > 0 && pTracePen[i] != NULL) {
+			pTracePen[i] = NULL;
+		}
+		if (pTraceBrush.GetCount() > 0 && pTraceBrush[i] != NULL) {
+			pTraceBrush[i] = NULL;
+		}
+	}
+	m_pFont90 = NULL;
+	m_pFont270 = NULL;
+	m_bDisplayMessage = TRUE;
+
+    // allocate some memory for thread data.
+    SYSTEM_INFO sysInfo;
+    GetSystemInfo(&sysInfo);
+    m_numberOfThreads = sysInfo.dwNumberOfProcessors;
+    if (m_numberOfThreads <= 0) m_numberOfThreads = 1;
+
+    // debug...
+    // m_numberOfThreads = 1;
+
+    handles = new HANDLE[m_numberOfThreads];
+    pThreads = new CWinThread*[m_numberOfThreads];
+    scatterParm = new DRAW_SCATTER_PARM[m_numberOfThreads];
+    threadDC = new CDC[m_numberOfThreads];
+    threadBM = new CBitmap[m_numberOfThreads];
+    m_threadBits = new DWORD*[m_numberOfThreads];
+}
+
+CCrossPlotView::~CCrossPlotView()
+{
+	for (int i = 0; i < pTraceBrush.GetCount(); i++) {
+		if (pTraceBrush[i] != NULL) {
+			if (pTracePen[i]) delete pTracePen[i];
+		}
+
+		if (pTraceBrush[i] != NULL) {
+			if (pTraceBrush[i]) delete pTraceBrush[i];
+		}
+	}
+	if (m_pFont90) {
+		m_pFont90->DeleteObject();
+		delete m_pFont90;
+	}
+	if (m_pFont270) {
+		m_pFont270->DeleteObject();
+		delete m_pFont270;
+	}
+
+	if (m_memBits) delete m_memBits;
+	if (m_foregroundBits) delete m_foregroundBits;
+	if (m_backgroundBits) delete m_backgroundBits;
+    if (m_cutoffBits) delete m_cutoffBits;
+    if (handles) delete handles;
+    if (pThreads) delete pThreads;
+    if (scatterParm) delete scatterParm;
+    //if (threadDC) delete threadDC;
+    //if (threadBM) delete threadBM;
+    if (m_threadBits) delete m_threadBits;
+
+	GetDocument()->SetCrossPlotViewPtr(m_viewInstance, NULL);
+	GetDocument()->SetUpdateXplotPaneFlag(m_viewInstance, TRUE);
+
+	if (m_highlightBrush1) delete m_highlightBrush1;
+	if (m_highlightBrush2) delete m_highlightBrush2;
+	if (m_highlightPen1) delete m_highlightPen1;
+	if (m_highlightPen2) delete m_highlightPen2;
+}
+
+void CCrossPlotView::FreePensAndBrushes()
+{
+	for (int i = 0; i < pTracePen.GetCount() && i < pTraceBrush.GetCount(); i++) {
+		if (pTracePen[i] != NULL) delete pTracePen[i];
+		if (pTraceBrush[i] != NULL) delete pTraceBrush[i];
+	}
+	pTracePen.RemoveAll();
+	pTraceBrush.RemoveAll();
+}
+
+BEGIN_MESSAGE_MAP(CCrossPlotView, CView)
+	ON_WM_LBUTTONDOWN()
+	ON_WM_LBUTTONUP()
+	ON_WM_MOUSEMOVE()
+	ON_WM_ERASEBKGND()
+	ON_WM_RBUTTONUP()
+	ON_WM_CHAR()
+	ON_WM_KEYDOWN()
+	ON_WM_KEYUP()
+	ON_WM_RBUTTONDOWN()
+	ON_WM_SETCURSOR()
+	ON_COMMAND(ID_XPLOT_PARAMETERS, &CCrossPlotView::OnEditXplotParms)
+	ON_COMMAND(ID_XPLOT_SCATTER, &CCrossPlotView::OnXplotScatter)
+	ON_COMMAND(ID_XPLOT_POINT_INC, &CCrossPlotView::OnXplotPointInc)
+	ON_COMMAND(ID_XPLOT_POINT_DEC, &CCrossPlotView::OnXplotPointDec)
+	ON_COMMAND(ID_XPLOT_BMP, &CCrossPlotView::OnXplotBmp)
+	ON_COMMAND(ID_XPLOT_DENSITY, &CCrossPlotView::OnXplotDensityMode)
+	ON_COMMAND(ID_XPLOT_GROUP, &CCrossPlotView::OnXplotGroup)
+	ON_COMMAND(ID_XPLOT_BACK, &CCrossPlotView::OnXplotBack)
+	ON_COMMAND(ID_XPLOT_EXPORT, &CCrossPlotView::OnXplotExport)
+	ON_COMMAND(ID_XPLOT_IMPORT, &CCrossPlotView::OnXplotImport)
+	ON_COMMAND(ID_XPLOT_CLOSE, &CCrossPlotView::OnXplotExit)
+	ON_COMMAND(ID_XPLOT_ADD, &CCrossPlotView::OnXplotAdd)
+
+	ON_UPDATE_COMMAND_UI(ID_XPLOT_BMP, &CCrossPlotView::OnUpdateXplotBmp)
+	ON_UPDATE_COMMAND_UI(ID_XPLOT_DENSITY, &CCrossPlotView::OnUpdateDensityMode)
+	ON_UPDATE_COMMAND_UI(ID_XPLOT_SCATTER, &CCrossPlotView::OnUpdateXplotScatter)
+	ON_UPDATE_COMMAND_UI(ID_XPLOT_GROUP, &CCrossPlotView::OnUpdateXplotGroup)
+
+    ON_WM_LBUTTONDBLCLK()
+	ON_WM_MOUSELEAVE()
+	ON_WM_SETFOCUS()
+END_MESSAGE_MAP()
+
+void CCrossPlotView::OnInitialUpdate()
+{
+	m_first=TRUE;
+	x1=x2=y1=y2=-1;
+	rx1=rx2=ry1=ry2=-1;
+	rlx1=rlx2=rly1=rly2=-1;
+	m_lbuttondown=FALSE;
+	m_rbuttondown=FALSE;
+	m_lxonly=FALSE;
+	m_lyonly=FALSE;
+	m_graph=FALSE;
+	m_lslope1=FALSE;
+	m_lslope2=FALSE;
+	m_lintercept=FALSE;
+	m_slope=0;
+	m_viewInstance=-1;
+	m_initialUpdate=TRUE;
+	m_mx=m_my=0;
+	m_bCtrlDown=FALSE;
+	m_activeLine=0;
+	m_rcClient.SetRectEmpty();
+	m_bMessageDisplayed=FALSE;
+	m_showBin=FALSE;
+	m_startTime=-1;
+	m_endTime=-1;
+	m_colorBarMin=-1;
+	m_colorBarMax=-1;
+	m_bMessageDisplayed=FALSE;
+	m_bEscapeDown = FALSE;
+	m_bDigitizePoly = FALSE;
+	m_bDigitizeEllipse = FALSE;
+    m_bRedrawAfterDigitize = FALSE;
+	m_cutoffType = eLINE;
+	m_cursor = 0;
+	m_bEditPolyVertex = FALSE;
+	m_bEditEllipseAxis = FALSE;
+	m_nPreviousScatterValue = 1;
+	m_bScatterBtn = FALSE;
+	m_bPicBtn = FALSE;
+	m_bGroupBtn = FALSE;
+	m_bDensityBtn = FALSE;
+	m_saveEndpoint = 0;
+	m_densityModeUpdateFlag = FALSE;
+
+	m_nextUndoEventID = 0;
+	m_tracePoint = 0;
+	m_code = 0;
+	m_suppress = FALSE;
+
+	m_firstClickSave = CPoint(0,0);
+	m_firstDigitizedPoint = FALSE;
+	m_mouseEnter = FALSE;
+		
+	m_memBits = NULL;
+	m_foregroundBits = NULL;
+	m_backgroundBits = NULL;
+    m_cutoffBits = NULL;
+	m_bmSize = 0;
+
+    m_threadBackgroundBits = NULL;
+    for (int i = 0; i < m_numberOfThreads; i++) {
+        m_threadBits[i] = NULL;
+    }
+    m_threadBitmapSize = 0;
+
+	PI = (float) atan(1.0) * 4;
+
+	pApp = (CIMACApp*)AfxGetApp();
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// CCrossPlotView drawing
+
+void CCrossPlotView::OnDraw(CDC* pDCin)
+{
+	__try {
+		DoOnDraw(pDCin);
+	}
+	__except (SEH_Filter(GetExceptionCode()))
+	{
+		char msg[512];
+		char sCode[20];
+		if (!m_suppress) {
+			if (m_code == STATUS_ACCESS_VIOLATION) {
+				strcpy(sCode, "ACCESS_VIOLATION");
+			} else {
+				sprintf(sCode, "exception %0X", m_code);
+			}
+			sprintf(msg, "Caught %s in CrossPlotView::OnDraw() tracePoint=%d\nSuppress messages like this?", sCode, m_tracePoint);
+			if (AfxMessageBox(msg, MB_YESNO) == IDYES) m_suppress = TRUE;
+		}
+	}
+}
+
+int CCrossPlotView::SEH_Filter(DWORD code) 
+{
+	m_code = code;
+	return EXCEPTION_EXECUTE_HANDLER;
+}
+
+void CCrossPlotView::DoOnDraw(CDC* pDCin) 
+{
+	//TRACE("CCrossPlotView::DoOnDraw()\n");
+	
+	// if the parameter pane has been adjusted in size by the user then reset it to it's default position
+	CCrossPlotBaseFrame *pBaseFrame = (CCrossPlotBaseFrame *)GetParentFrame();
+	if (pBaseFrame->IsContainerSizeFlag()) {
+		pBaseFrame->SetContainerSize(XPLOT_PANE_SIZE);
+	}
+	
+	m_tracePoint = 1;
+
+//	TRACE("Enter CCrossPlotView::OnDraw %d activeline=%d\n", m_viewInstance, m_activeLine);
+	clock_t start = clock();
+
+	if (m_viewInstance == 0) {
+//		TRACE("CCrossPlotView:: instance %d Previous call to OnDraw %5.3f seconds ago\n", m_viewInstance, (double) (start-prevStart) / CLOCKS_PER_SEC);
+		prevStart = start;
+	} else {
+//		TRACE("CCrossPlotView:: instance %d\n", m_viewInstance);
+	}
+
+	if (m_viewInstance<0) {
+		AfxMessageBox("Severe error... Instance unknown.", MB_OK|MB_ICONSTOP);
+		return;
+	}
+
+	CIMACDoc* pDoc = GetDocument();
+	if (pDoc->GetMinimizedFlag(m_viewInstance + 2)){
+		pDoc->ClearMinimizedFlag(m_viewInstance + 2);
+		GetParentFrame()->RecalcLayout();
+		return;
+	}
+	//pDoc->CheckForRecalcLayout();
+	CXplotParms *pXpParms;
+	pXpParms = pDoc->GetXplotParms(m_viewInstance);
+	CCutoffParms *pCutoff;
+
+	// flag this instance.  Necessary to update coords when moving windows. see CMainFrame::OnMove()
+	pDoc->SetCrossPlotViewPtr(m_viewInstance, this);
+
+    // check if the parm pane needs to be updated.
+    if (pToolBar->m_cmbElementType.GetElementChangedFlag() == TRUE) {
+        pToolBar->m_cmbElementType.SetElementChangedFlag(FALSE);
+        pDoc->SetUpdateXplotPaneFlagsAll(TRUE);
+        pDoc->UpdateViews();
+        return;
+    }
+
+	// update window title
+	CString title;
+	title.Format("Crossplot %d - %s", m_viewInstance + 1, pXpParms->m_title);
+	pBaseFrame->SetWindowTextA(title);
+
+	CSegy *pSegyX;
+	CSegy *pSegyY;
+	CSegy *pSegyAttr;
+	CSegy *pSegyOut;
+	CRect rcClient;
+	CRect rcWinFrame;
+	CRect rcImage;
+	CString sText, sTex2;
+	int dxy = 20;
+	float a;
+	int tmpx, tmpy;
+
+	if (m_initialUpdate) {
+		DWORD theMagicBit = 0x1 << (m_viewInstance+2);
+		pDoc->m_bNewColorFlag |= theMagicBit;		// turn on the update bit
+		SetToolbarButtonState();
+
+		// set window size according to the last saved size.  This fixes the bug of opening on a machine with
+		// different system font size or frame size.
+		GetClientRect( &rcClient );
+		CPoint winDiff;
+		winDiff.x = pXpParms->rcWinClient.Width() - rcClient.Width();
+		winDiff.y = pXpParms->rcWinClient.Height() - rcClient.Height();
+
+		if (!pXpParms->rcWinClient.IsRectEmpty() && (winDiff.x != 0 || winDiff.y != 0)) {
+			CRect winRect;
+			GetParentFrame()->GetWindowRect(winRect);
+			AfxGetMainWnd()->ScreenToClient(winRect);
+			// have to add an adjustment for the toolbar size
+			CPoint adjustment = CPoint(2, 2);
+			adjustment.y += pDoc->GetToolbarHeight();
+			winRect -= adjustment;
+			// now adjust for the new window size
+			winRect.right += winDiff.x;
+			winRect.bottom += winDiff.y;
+			// Set the new framesize, which should result in the resulting client being the same as the saved one.
+			// Note that this function will trigger the OnSizing method of the base frame, which calls this routine.
+			// If OnSizing changes the size, then we'll get stuck in an endless loop.
+			GetParentFrame()->SetWindowPos(0, winRect.left, winRect.top, winRect.Width(), winRect.Height(), 0);
+		}
+	}
+
+	pSegyX=pSegyY=pSegyAttr =NULL;
+	if (pXpParms->GetCSIXMode() || pXpParms->GetCSIYMode()){
+		// get the csi attribute.
+		SeisParmsList *pSeisParmsList = pDoc->GetSeisParmsListPtr();
+		CSeisParms *pSeisParms = pSeisParmsList->GetAt(pSeisParmsList->FindIndex(pDoc->GetViewIndex()));
+		CString strName = pSeisParms->GetAttrName();
+		CSegy *pCSISegy = pDoc->GetSegyPtrFromAttrName(strName);
+		if (pXpParms->GetCSIXMode()) pSegyX = pCSISegy;
+		if (pXpParms->GetCSIYMode()) pSegyY = pCSISegy;
+	}
+	for (int j=0; j<pDoc->GetFileCount(); j++) {
+		if (pSegyX == NULL && pXpParms->m_strXAttr == pDoc->GetAttr(j)) pSegyX = pDoc->GetSegyInPtr(j);
+		if (pSegyY == NULL && pXpParms->m_strYAttr == pDoc->GetAttr(j)) pSegyY = pDoc->GetSegyInPtr(j);
+
+		if (pXpParms->m_nScatterMode == eATTR) {
+			if (pXpParms->m_strColorAttr == pDoc->GetAttr(j)) pSegyAttr = pDoc->GetSegyInPtr(j);
+		}
+	}
+
+	// if the attributes for the axis has not been found, then check for virtual volumes
+	if (!pSegyX || !pSegyY) {
+		for (int j = 0; j < pDoc->GetVirtualVolumeCount(); j++){			
+			if (pSegyX == NULL && pXpParms->m_strXAttr == pDoc->GetVirtualVolumeAttributeName(j)) pSegyX = pDoc->GetVirtualVolumeSegyPtr(j);
+			if (pSegyY == NULL && pXpParms->m_strYAttr == pDoc->GetVirtualVolumeAttributeName(j)) pSegyY = pDoc->GetVirtualVolumeSegyPtr(j);
+			if (pSegyX && pSegyY) break;
+		}
+	}
+
+	// if the third attribute is enabled and has not been found, then check for virtual volume
+	if (pXpParms->m_nScatterMode == eATTR && pSegyAttr == NULL) {
+		for (int j = 0; j < pDoc->GetVirtualVolumeCount(); j++) {			
+			if (pXpParms->m_strColorAttr == pDoc->GetVirtualVolumeAttributeName(j)) {
+				pSegyAttr = pDoc->GetVirtualVolumeSegyPtr(j);
+				break;
+			}
+		}
+	}
+
+	if (!pSegyX || !pSegyY) {
+		// nothing to do, this cross plot was probably deleted, close the window and return.
+		GetParentFrame()->PostMessage(WM_CLOSE);
+		return;
+	}
+
+	if (pXpParms->m_nScatterMode == eATTR && !pSegyAttr) {
+		AfxMessageBox("Something went wrong. Cannot find third attribute for crossplot");
+		GetParentFrame()->PostMessage(WM_CLOSE);
+		return;
+	}
+
+	CString strXAttr = pXpParms->GetCSIXMode()? pDoc->GetCSIVolumeName(FALSE): pXpParms->m_strXAttr;
+	CString strYAttr = pXpParms->GetCSIYMode()? pDoc->GetCSIVolumeName(FALSE): pXpParms->m_strYAttr;
+	
+	// if the xplot was deleted then this window will be used for the subsequent one. So set it's size accordingly
+	if (pDoc->GetInitializeXplotViewFlag(m_viewInstance) && !pXpParms->rcWinFrame.IsRectEmpty()) {
+		CRect restoreRect = pXpParms->rcWinFrame;
+		// have to add an adjustment for the toolbar size
+		CPoint adjustment = CPoint(2, 2);
+		adjustment.y += pDoc->GetToolbarHeight();
+		restoreRect -= adjustment;
+		AfxGetMainWnd()->ScreenToClient(restoreRect);
+
+		// Update location of view to ensure it still on the screen
+		if (restoreRect.left < 0)
+		{
+			restoreRect.MoveToX(RIGHTBORDER);
+		}
+		if (restoreRect.top < 0)
+		{
+			restoreRect.MoveToY(BORDER);
+		}
+		GetParentFrame()->SetWindowPos(0, restoreRect.left, restoreRect.top, restoreRect.Width(), restoreRect.Height(), 0);
+		rx1 = rx2 = ry1 = ry2 = -1;
+		SetToolbarButtonState();
+	}
+
+	GetClientRect( &rcClient );
+	rcImage.SetRect(BORDER*2, BORDER, rcClient.Width() - RIGHTBORDER, rcClient.Height() - BORDER);
+
+	// first time initialize the coordinates
+	if ((x1 == -1 && x2 == -1 && y1 == -1 && y2 == -1) || pDoc->GetInitializeXplotViewFlag(m_viewInstance)) {
+		
+		pDoc->SetInitializeXplotViewFlag(m_viewInstance, FALSE);
+		x1 = pXpParms->x1;
+		y1 = pXpParms->y1;
+		x2 = pXpParms->x2;
+		y2 = pXpParms->y2;
+		if (x1 == -1 && x2 == -1 && y1 == -1 && y2 == -1) {
+			x1 = rcImage.left;
+			y1 = rcImage.top;
+			x2 = rcImage.right;
+			y2 = rcImage.bottom;
+		}
+	}
+
+	// Check the cutoff lines and initalize to default if necessary
+	int saveActiveLine = m_activeLine;
+	for (int i=0; i<pXpParms->GetCutoffCount(); i++) {
+		pCutoff = pXpParms->CutoffParmsGetAt(i);
+		if (pCutoff->lx1 == -1 &&
+			pCutoff->lx2 == -1 &&
+			pCutoff->ly1 == -1 &&
+			pCutoff->ly2 == -1) 
+		{
+			if (pCutoff->m_cutoffType == eLINE) {
+				int yinc = (y2-y1)/pXpParms->GetCutoffCount();
+				lx1 = x1;
+				lx2 = x2;
+				ly1 = y1 + (i+1) * yinc;
+				ly2 = y1 +  i * yinc;
+				m_activeLine = i;
+				ComputeSlopeAndIntercept();
+				pDoc->SetReadyToCompute();
+			} else if (pCutoff->m_cutoffType == ePOLY) {
+				// can only digitize one poly at at time.
+				if (!m_bDigitizePoly && !m_bDigitizeEllipse) {
+					m_bDigitizePoly = TRUE;
+					m_firstDigitizedPoint = TRUE;
+					pCutoff->lx1 = pCutoff->lx2 = pCutoff->ly1 = pCutoff->ly2 = 0;
+					m_pDigitizeCutoff = pCutoff;
+					m_pDigitizeCutoff->m_nPolyData = 0;
+					m_pDigitizeCutoff->m_cutoffType = eUNDEF; // disable while it's being digitized.
+
+                    if (!pDoc->IsSuppressPolygonMessage()) {
+                        CString txt;
+                        txt.Format("Digitize polygon %d. \n\n", i);
+                        txt += "To end digitizing:\n- Press <esc>\n- Double click\n";
+                        txt += "- Close polygon by clicking on first point";
+                        CMessageBoxDlg dlg;
+                        dlg.SetMessage(txt);
+                        dlg.DoModal();
+                        if (dlg.GetSuppressButtonState()) {
+                            pDoc->SuppressPolygonMessage(TRUE);
+                        }
+                    }
+				}
+			} else if (pCutoff->m_cutoffType == eELLIPSE) {
+				//ellipse
+				if (!m_bDigitizeEllipse && ! m_bDigitizePoly) {
+					m_bDigitizeEllipse = TRUE;
+					pCutoff->lx1 = pCutoff->lx2 = pCutoff->ly1 = pCutoff->ly2 = 0;
+					m_pDigitizeCutoff = pCutoff;
+					m_pDigitizeCutoff->m_cutoffType = eUNDEF; // disable while it's being digitized.
+															
+                    if (!pDoc->IsSuppressEllipseMessage()) {
+                        CString txt;
+                        txt.Format("Digitize ellipse %d.\n\n", i);
+                        txt += "Click is Ellipse Center.\n\n Drag to define major axis.";
+                        CMessageBoxDlg dlg;
+                        dlg.SetMessage(txt);
+                        dlg.DoModal();
+                        if (dlg.GetSuppressButtonState()) {
+                            pDoc->SuppressEllipseMessage(TRUE);
+                        }
+                    }
+				}
+			}
+            pDoc->UpdateViews();
+		}
+	}
+
+	m_activeLine=saveActiveLine;
+	if (m_activeLine >= pXpParms->GetCutoffCount()) m_activeLine = 0;
+	if (pXpParms->GetCutoffCount() > 0) {
+		pCutoff = pXpParms->CutoffParmsGetAt(m_activeLine);
+		lx1 = pCutoff->lx1;
+		ly1 = pCutoff->ly1;
+		lx2 = pCutoff->lx2;
+		ly2 = pCutoff->ly2;
+		rlx1 = pCutoff->rlx1;
+		rly1 = pCutoff->rly1;
+		rlx2 = pCutoff->rlx2;
+		rly2 = pCutoff->rly2;
+		m_intercept = pCutoff->m_fIntercept;
+		m_slope = pCutoff->m_fSlope;
+		m_cutoffType = pCutoff->m_cutoffType;
+	}
+
+	// If the axis has been moved then compute the slope and intercept on all lines.
+	if (pXpParms->m_bNewAxisFlag) {
+		RecomputeAllLines(pXpParms);
+		pXpParms->m_bNewAxisFlag = FALSE;
+	}
+
+	// compute the floating point scalars that are used when the window is resized.
+	if (rx1 == -1) {
+		rx1 = (float) ((float)(x1-rcImage.left)+0.5) / (float) rcImage.Width();
+		rx2 = (float) ((float)(x2-rcImage.left)+0.5) / (float) rcImage.Width();
+		ry1 = (float) ((float)(y1-rcImage.top)+0.5)  / (float) rcImage.Height();
+		ry2 = (float) ((float)(y2-rcImage.top)+0.5)  / (float) rcImage.Height();
+	}
+	if (rlx1 == -1) {
+		rlx1 = (float) ((float)(lx1-rcImage.left)+0.5) / (float) rcImage.Width();
+		rlx2 = (float) ((float)(lx2-rcImage.left)+0.5) / (float) rcImage.Width();
+		rly1 = (float) ((float)(ly1-rcImage.top)+0.5)  / (float) rcImage.Height();
+		rly2 = (float) ((float)(ly2-rcImage.top)+0.5)  / (float) rcImage.Height();
+	}
+	for (int i=0; i<pXpParms->GetCutoffCount(); i++) {
+		CCutoffParms *p = pXpParms->CutoffParmsGetAt(i);
+		if (p->rlx1 == -1 && p->m_cutoffType != eUNDEF) {
+			p->rlx1 = (float) ((float)(p->lx1-rcImage.left)+0.5) / (float) rcImage.Width();
+			p->rlx2 = (float) ((float)(p->lx2-rcImage.left)+0.5) / (float) rcImage.Width();
+			p->rly1 = (float) ((float)(p->ly1-rcImage.top)+0.5)  / (float) rcImage.Height();
+			p->rly2 = (float) ((float)(p->ly2-rcImage.top)+0.5)  / (float) rcImage.Height();
+			if (p->m_cutoffType == ePOLY) {
+				for (int j=0; j<p->m_nPolyData; j++) {
+					p->m_arrScalars[j].x = (float) ((float)(p->m_arrPolyData[j].x-rcImage.left)+0.5) / (float) rcImage.Width();
+					p->m_arrScalars[j].y = (float) ((float)(p->m_arrPolyData[j].y-rcImage.top) +0.5) / (float) rcImage.Height();
+				}
+			}
+			if (p->m_cutoffType == eELLIPSE) {
+				CPoint origin = p->m_ellipse.GetOrigin();
+				p->rlx1 = (float) ((float)(origin.x-rcImage.left)+0.5) / (float) rcImage.Width();
+				p->rly1 = (float) ((float)(origin.y-rcImage.top)+0.5)  / (float) rcImage.Height();
+				CPoint axis = p->m_ellipse.GetXAxisEndPoint();
+				p->rlx2 = (float) ((float)(axis.x-rcImage.left)+0.5) / (float) rcImage.Width();
+				p->rly2 = (float) ((float)(axis.y-rcImage.top)+0.5)  / (float) rcImage.Height();
+			}
+		}
+	}
+	// If the window was resized we have to adjust the coords
+	GetParentFrame()->GetWindowRect ( &rcWinFrame );
+
+	if ( rcWinFrame != pXpParms->rcWinFrame ) {
+		float rx = (float)(rcWinFrame.Width())  / (float)(pXpParms->rcWinFrame.Width());
+		float ry = (float)(rcWinFrame.Height()) / (float)(pXpParms->rcWinFrame.Height());
+
+		x1 = (int)(rx1 * (float)rcImage.Width()) + rcImage.left;
+		x2 = (int)(rx2 * (float)rcImage.Width()) + rcImage.left;
+		y1 = (int)(ry1 * (float)rcImage.Height()) + rcImage.top;
+		y2 = (int)(ry2 * (float)rcImage.Height()) + rcImage.top;
+
+		lx1 = (int)(rlx1 * (float)rcImage.Width()) + rcImage.left;
+		lx2 = (int)(rlx2 * (float)rcImage.Width()) + rcImage.left;
+		ly1 = (int)(rly1 * (float)rcImage.Height()) + rcImage.top;
+		ly2 = (int)(rly2 * (float)rcImage.Height()) + rcImage.top;
+
+		// adjust the inactive lines as well.
+		for (int i=0; i<pXpParms->GetCutoffCount(); i++) {
+			CCutoffParms *p = pXpParms->CutoffParmsGetAt(i);
+			ScaleCutoff(p, rcImage);
+		}
+		// adjust the cutoff objects in the undo stack.
+		for (DWORD i=0; i<UndoListGetCount(); i++) {
+			CUndoItem *pItem = UndoListGetAt(i);
+			ScaleCutoff (&pItem->m_cutoff, rcImage);
+		}
+	}
+
+	m_tracePoint = 2;
+
+	// Put the important variables into the document.
+	if (pXpParms->GetCutoffCount() > 0 && pCutoff->m_cutoffType == eLINE) {
+		pCutoff->lx1 = lx1;
+		pCutoff->ly1 = ly1;
+		pCutoff->lx2 = lx2;
+		pCutoff->ly2 = ly2;
+		pCutoff->rlx1 = rlx1;
+		pCutoff->rly1 = rly1;
+		pCutoff->rlx2 = rlx2;
+		pCutoff->rly2 = rly2;
+	}
+	pXpParms->x1 = x1;
+	pXpParms->y1 = y1;
+	pXpParms->x2 = x2;
+	pXpParms->y2 = y2;
+	//TRACE("saving rcWinFrame. view=%d topleft=(%d, %d)\n", m_viewInstance, rcWinFrame.top, rcWinFrame.left);
+	pXpParms->rcWinClient = rcClient;
+	pXpParms->rcWinFrame = rcWinFrame;
+	AfxGetMainWnd()->GetWindowRect(pXpParms->m_rcParentWin);
+
+	// Redraw the parameter pane 
+	if (pDoc->GetUpdateXplotPaneFlag(m_viewInstance)) {
+		UpdateParmPane();
+		pDoc->SetUpdateXplotPaneFlag(m_viewInstance, FALSE);
+	}
+
+	// ReClassify with new cutoff coordinates computed above.
+	if (m_initialUpdate) {
+		m_initialUpdate=FALSE;
+		pDoc->UpdateViews();
+		return;
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	// if the window size hasn't changed, and we're not displaying anything new then
+	// just use the previous bitmap. No need to redraw the same thing again.
+	//////////////////////////////////////////////////////////////////////////
+    BOOL readyToDisplay = pDoc->GetReadyToDisplay(m_viewInstance + 1);
+	if (rcClient == m_rcClient && !readyToDisplay && !pDoc->IsDragMode()) {
+//		TRACE("CCrossPlotView:: instance=%d BitBlt\n", m_viewInstance);
+
+		CDC		stretchDC;
+        CDC     cutoffsDC;
+		CBitmap stretchBM;
+        CBitmap cutoffsBM;
+		CBitmap *pStretchResultBM = NULL;
+        CBitmap *pCutoffResultBM = NULL;
+
+		int xshift = 0;
+		int yshift = 0;
+		if (m_lbuttondown) {
+			if (m_graph){
+				xshift = m_mx - m_mx_click;
+				yshift = m_my - m_my_click;
+			} else if (m_lxonly || m_lyonly) {
+				// make a temp DC and bit map for the stretched bitmap
+				stretchDC.CreateCompatibleDC(pDCin);
+				stretchBM.CreateCompatibleBitmap(pDCin, rcClient.right, rcClient.bottom);
+                pStretchResultBM = stretchDC.SelectObject(&stretchBM);
+
+				if (m_lxonly) {
+					StretchMemoryBitmap(&stretchDC, XSTRETCH, x1, m_saveEndpoint, m_mx);
+				} else if (m_lyonly) {
+					StretchMemoryBitmap(&stretchDC, YSTRETCH, y2, m_saveEndpoint, m_my);
+				}
+			}
+		}
+
+        // draw the cutoffs and digitize progress on a transparent bitmap to avoid the flashing.
+        cutoffsDC.CreateCompatibleDC(pDCin);
+        cutoffsBM.CreateCompatibleBitmap(pDCin, rcClient.right, rcClient.bottom);
+        pCutoffResultBM = cutoffsDC.SelectObject(&cutoffsBM);
+        cutoffsDC.FillRect(&rcClient, &CBrush(TRANSPARENT_COLOR_FLAG));
+        ShowDigitizeProgress(&cutoffsDC);
+        DrawAllCutoffs(&cutoffsDC);
+
+        MergeMemoryBitmaps(pDCin, xshift, yshift, &stretchBM, &cutoffsBM);
+
+        if (pStretchResultBM) {
+            stretchDC.SelectObject(pStretchResultBM);
+            stretchBM.DeleteObject();
+        }
+
+        if (pCutoffResultBM) {
+            cutoffsDC.SelectObject(pCutoffResultBM);
+            cutoffsBM.DeleteObject();
+        }
+
+		return;
+	}
+
+
+	//////////////////////////////////////////////////////////////////////
+	///////  Carry on here if the window needs to be updated /////////////
+	//////////////////////////////////////////////////////////////////////	
+
+	if (!m_rcClient.IsRectNull()) {
+		m_memDC.SelectObject(&m_memBM);
+		m_memBM.DeleteObject();
+		m_foregroundBM.DeleteObject();
+		m_backgroundBM.DeleteObject();
+		m_memDC.DeleteDC();
+	}
+	// save the window rectangle, we'll check it next OnDraw
+	m_rcClient = rcClient;
+
+	CDC		*pDC;
+	CBrush	hbrBkGnd;
+
+	m_memDC.CreateCompatibleDC(pDCin);
+	pDC = &m_memDC;
+	m_memBM.CreateCompatibleBitmap(pDCin, rcClient.right, rcClient.bottom);
+	m_foregroundBM.CreateCompatibleBitmap(pDCin, rcClient.right, rcClient.bottom);
+	m_backgroundBM.CreateCompatibleBitmap(pDCin, rcClient.right, rcClient.bottom);
+	hbrBkGnd.CreateSolidBrush(GetSysColor(COLOR_WINDOW));
+
+	// zero out the forground bitmap
+	m_memDC.SelectObject(&m_foregroundBM);
+	pDC->FillRect(&rcClient, &CBrush(TRANSPARENT_COLOR_FLAG));
+
+	// Select the background bitmap, fill with background color. The first few items are drawn on the background BM.
+	m_memDC.SelectObject(&m_backgroundBM);
+	pDC->FillRect(&rcClient, &hbrBkGnd);
+	
+	// Draw the Background Image.
+	if (!pXpParms->m_strImageFile.IsEmpty() && !pXpParms->m_bDisableImage) {
+		CImage image;
+		HRESULT result;
+		result = image.Load(pXpParms->m_strImageFile);
+		if (result == S_OK) {
+			int bmwidth = image.GetWidth();
+			int bmheight = image.GetHeight();
+			image.StretchBlt(pDC->m_hDC,rcImage.left,rcImage.top, rcImage.Width(), rcImage.Height(), 0, 0, bmwidth, bmheight, SRCCOPY);
+		} else {
+			CString msg;
+			msg.Format("Failed to load image file:\n%s", pXpParms->m_strImageFile);
+			AfxMessageBox(msg);
+			pDC->FillSolidRect(rcImage, pDC->GetBkColor());
+		}
+
+	} else {
+	
+		// No image has been defined so just clear the area.
+		pDC->FillSolidRect(rcImage, pDC->GetBkColor());
+	}
+
+	m_tracePoint = 3;
+			
+	try {
+		DWORD theMagicBit = 0x1 << (m_viewInstance+2);	// check the bitmask to see if color has changed.
+		if (pDoc->m_bNewColorFlag & theMagicBit) {
+			pDoc->m_bNewColorFlag ^= theMagicBit;		// xor the bit off
+		}
+
+		CArray<COLORREF> colorbarColors;
+		if (pXpParms->m_nScatterMode == eATTR) {
+			if (pXpParms->GetThirdAttrColorbarName() == "") {
+				pDoc->GenerateThirdAttributeColorbar();
+				COLORREF* thirdAttributeColorBar = pDoc->GetThirdAttributeColorBar();
+
+				if (m_viewInstance > 0) {
+					for (int i = 0; i < MAXCBSIZE; i++) {
+						int instanceIndex = m_viewInstance * MAXCBSIZE + i;
+						colorbarColors.Add(thirdAttributeColorBar[instanceIndex]);
+					}
+				}
+			}
+			else {
+				Utilities::GetColorBarColors(pDoc->GetProjectFullPath(), pXpParms->m_thirdAttrColorbarName, colorbarColors, MAXCBSIZE);
+				const int reverseSize = MAXCBSIZE > (int)colorbarColors.GetCount() ? MAXCBSIZE : (int)colorbarColors.GetCount();
+				Utilities::ReverseArray(colorbarColors, reverseSize);
+
+				if (colorbarColors.GetCount() < MAXCBSIZE) {
+					Utilities::InterpolateColors(colorbarColors, MAXCBSIZE);
+				}
+			}
+		}
+		else if (pXpParms->m_nScatterMode == eDENSITY) {
+			if (pXpParms->GetDenistyColorbarName() == "") {
+				pDoc->GenerateDensityColorBar();
+				COLORREF* densitybar = pDoc->GetDensityColorBar();
+
+				for (int i = 0; i < DENSITYBARSIZE; i++) {
+					colorbarColors.Add(densitybar[i]);
+				}
+			}
+			else {
+				Utilities::GetColorBarColors(pDoc->GetProjectFullPath(), pXpParms->m_denistyColorbarName, colorbarColors, DENSITYBARSIZE);
+				const int reverseSize = DENSITYBARSIZE > (int)colorbarColors.GetCount() ? DENSITYBARSIZE : (int)colorbarColors.GetCount();
+				Utilities::ReverseArray(colorbarColors, reverseSize);
+
+				if (colorbarColors.GetCount() < DENSITYBARSIZE) {
+					Utilities::InterpolateColors(colorbarColors, DENSITYBARSIZE);
+				}
+			}
+		} else {
+			COLORREF* colorbar = pDoc->GetColorBar();
+			
+			for (int i = 0; i < pDoc->GetColorBarSize(); i++) {
+				colorbarColors.Add(colorbar[i]);
+			}
+		}
+
+		FreePensAndBrushes();
+		for (int i = 0; i < colorbarColors.GetCount(); i++) {
+			//TRACE("colorbar[i] = %u, R, G, B = %u, %u, %u\n", colorbar[i], GetRValue(colorbar[i]), GetGValue(colorbar[i]), GetBValue(colorbar[i]));
+			pTracePen.Add(new CPen(PS_SOLID, 1, colorbarColors[i]));
+			if (!pTracePen[i]) {
+				AfxMessageBox("Error allocating Trace Pen array");
+				return;
+			}
+			pTraceBrush.Add(new CBrush(colorbarColors[i]));
+			if (!pTraceBrush[i]) {
+				AfxMessageBox("Error allocating Trace Brush array");
+				return;
+			}
+		}
+
+		// allocate colors for highlight colors
+		if (m_isFirstHighlightColor) {
+			m_isFirstHighlightColor = FALSE;
+			m_currentHighlightColor1 = pDoc->GetSelectColor1();
+			m_currentHighlightColor2 = pDoc->GetSelectColor2();
+			m_highlightPen1 = new CPen(PS_SOLID, 1, m_currentHighlightColor1);
+			m_highlightPen2 = new CPen(PS_SOLID, 1, m_currentHighlightColor2);
+			m_highlightBrush1 = new CBrush(m_currentHighlightColor1);
+			m_highlightBrush2 = new CBrush(m_currentHighlightColor2);
+		}
+		else {
+			if (m_currentHighlightColor1 != pDoc->GetSelectColor1()) {
+				m_currentHighlightColor1 = pDoc->GetSelectColor1();
+				if (m_highlightPen1 != NULL) delete m_highlightPen1;
+				m_highlightPen1 = new CPen(PS_SOLID, 1, m_currentHighlightColor1);
+				if (m_highlightBrush1 != NULL) delete m_highlightBrush1;
+				m_highlightBrush1 = new CBrush(m_currentHighlightColor1);
+			}
+			if (m_currentHighlightColor2 != pDoc->GetSelectColor2()) {
+				m_currentHighlightColor2 = pDoc->GetSelectColor2();
+				if (m_highlightPen2 != NULL) delete m_highlightPen2;
+				m_highlightPen2 = new CPen(PS_SOLID, 1, m_currentHighlightColor2);
+				if (m_highlightBrush2 != NULL) delete m_highlightBrush2;
+				m_highlightBrush2 = new CBrush(m_currentHighlightColor2);
+			}
+		}
+	catch (const std::runtime_error& ex)
+	{
+		std::cerr << "Runtime error: " << re.what() << std::endl;
+	}
+	catch (const std::exception& ex)
+	{
+
+		std::cerr << "Error occurred: " << ex.what() << std::endl;
+	}
+	catch (...) {
+		AfxMessageBox("Error allocating memory");
+		return;
+	}
+	m_pNormPen = pDC->SelectObject(&m_redPen);
+	m_pNormBrush = pDC->SelectObject(&m_redBrush);
+
+	// The 90 degree font...
+	CFont *fontNorm = pDC->GetCurrentFont();
+	if (fontNorm) {
+		LOGFONT lf;
+		fontNorm->GetLogFont(&lf);
+		// Create a new font exactly like the original except rotated 90 degrees.
+		if (!m_pFont90) {
+			m_pFont90 = new CFont;
+			if (!m_pFont90) {
+				AfxMessageBox("Error allocating 90 degree font");
+				return;
+			}
+			
+			if (m_pFont90->CreateFont(
+				lf.lfHeight,           // nHeight
+				lf.lfWidth,            // nWidth
+				900,				   // nEscapement
+				lf.lfOrientation,      // nOrientation
+				lf.lfWeight,           // nWeight
+				lf.lfItalic,           // bItalic
+				lf.lfUnderline,        // bUnderline
+				lf.lfStrikeOut,        // cStrikeOut
+				lf.lfCharSet,          // nCharSet
+				lf.lfOutPrecision,     // nOutPrecision
+				lf.lfClipPrecision,    // nClipPrecision
+				lf.lfQuality,          // nQuality
+				lf.lfPitchAndFamily,	  // nPitchAndFamily
+				"font90") == 0) {        // lpszFacename
+					AfxMessageBox("Cannot create 90 degree font");
+					delete m_pFont90;
+					m_pFont90=NULL;
+			}
+		}
+		// Create the -90 degree font.
+		LOGFONT lf270;
+		fontNorm->GetLogFont(&lf270);
+		if (!m_pFont270) {
+			m_pFont270 = new CFont;
+			if (!m_pFont270) {
+				AfxMessageBox("Error allocating -90 degree font");
+				return;
+			}
+
+			if (m_pFont270->CreateFont(
+				lf270.lfHeight,           // nHeight
+				lf270.lfWidth,            // nWidth
+				-900,			  	      // nEscapement
+				-900,                     // nOrientation
+				lf270.lfWeight,           // nWeight
+				lf270.lfItalic,           // bItalic
+				lf270.lfUnderline,        // bUnderline
+				lf270.lfStrikeOut,        // cStrikeOut
+				lf270.lfCharSet,          // nCharSet
+				lf270.lfOutPrecision,     // nOutPrecision
+				lf270.lfClipPrecision,    // nClipPrecision
+				lf270.lfQuality,          // nQuality
+				lf270.lfPitchAndFamily,	  // nPitchAndFamily
+				"font270") == 0) {        // lpszFacename
+				AfxMessageBox("Cannot create -90 degree font");
+				delete m_pFont270;
+				m_pFont270 = NULL;
+			}
+		}
+	}
+
+	// Title...
+	CRect rcItem = rcClient;
+	pDC->SelectObject(fontNorm);
+	pDC->SetTextAlign(TA_LEFT | TA_TOP);
+	rcItem.bottom = dxy;
+	sText = pXpParms->m_title;
+	if (sText.IsEmpty()) {
+		sText.Format("Crossplot %d Editor", m_viewInstance + 1);
+	}
+	pDC->SetTextColor(RGB(0, 0, 0));
+	pDC->DrawText(sText, rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+	m_tracePoint = 4;
+
+	// get the lagtime, if the data does not start at time zero
+	BYTE *pHdr = pSegyX->GetHeader(0);
+
+	int si = pDoc->GetSI();			// note: si in MICRO seconds. 
+	if (si == 0) {
+		// this is a show stopper, we need si
+		if (m_bDisplayMessage) {
+			AfxMessageBox("The sample rate is 0. Please examine the input segy files and fix this problem.");
+		}
+		m_bDisplayMessage = FALSE;
+		return;
+	}
+	int startTime = pDoc->GetStartTime();
+	int endTime   = pDoc->GetEndTime();
+	int nsamps = Time2Index((endTime - startTime), si) + 1; 
+	if (nsamps > pSegyX->GetSampleCount()) nsamps = pSegyX->GetSampleCount();
+
+	m_tracePoint = 5;
+	
+	// To prevent a redraw when moving the axis, we'll draw the rest on the foreground bitmap.
+	m_memDC.SelectObject(&m_foregroundBM);
+
+	// The Scatter
+	if (pXpParms->m_nScatter) {		
+		pSegyOut = pDoc->GetSegyOutPtr();
+
+		// selective classes to display, from parameter pane in crossplot frame...
+		CCheckListBox* pClassListBox = m_pParmPane->GetClassListBoxPtr();
+		CCheckListBox* pZoneListBox = m_pParmPane->GetZoneListBoxPtr();
+
+		// take a copy of all the selected zones
+		CViewZoneArray* pDocZones = pDoc->GetViewZoneArrayPtr();
+		CViewZoneArray selectedZones;
+		for (int izone=0; izone < pDocZones->GetCount(); izone++) {
+			// take a copy of selected zones for range checking.		
+			if (pZoneListBox->GetCheck(izone) == TRUE) {
+				selectedZones.Add(pDocZones->GetAt(izone));
+			}
+		}
+
+		int zoneCount = (int) selectedZones.GetCount();		
+
+        // take a copy of the selected classes to display
+        for (int iclass=0; iclass<MAXCLASS; iclass++){
+            m_classListArray[iclass] = FALSE;
+            if (iclass < pClassListBox->GetCount() && pClassListBox->GetCheck(iclass) == TRUE) {
+                m_classListArray[iclass] = TRUE;
+            }
+        }
+
+		// Density mode //
+        int colorBarSize = 0;
+		if (pXpParms->m_nScatterMode == eDENSITY) {
+			m_tracePoint = 51;
+			//TRACE("Tracepoint %d\n", m_tracePoint);
+			
+			// Populate the density table
+			pXpParms->ComputeDensityTable(pDoc, m_viewInstance, startTime, endTime, selectedZones, m_classListArray);
+
+			m_tracePoint = 52;
+
+			m_binX = pXpParms->m_binXsize;
+			m_binY = pXpParms->m_binYsize;
+			m_startTime = startTime;
+			m_endTime = endTime;
+			m_colorBarMin = pXpParms->m_colorBarMin;
+			m_colorBarMax = pXpParms->m_colorBarMax;
+
+			// display the color bar
+			pDC->SelectObject(m_pNormPen);
+			CRect rcBar;
+			rcBar.left   = rcClient.right-(RIGHTBORDER/2)-(DEN_WIDTH/2);
+			rcBar.right  = rcBar.left + DEN_WIDTH;
+			rcBar.top    = 2*BORDER;
+			rcBar.bottom = rcClient.bottom-2*BORDER;
+			int inc = (rcBar.bottom-rcBar.top) / DENSITYBARSIZE;
+			rcBar.bottom = rcBar.top + (DENSITYBARSIZE*inc);
+
+			CRect rcPlot = rcBar;
+			rcPlot.bottom = rcPlot.top + inc;
+			//TRACE("CCrossPlotView::DoOnDraw()\n");
+
+			if (pXpParms->GetDenistyColorbarName() == "") {
+				m_densitybar = pDoc->GetDensityColorBar();
+				colorBarSize = DENSITYBARSIZE;
+				
+				for (int i = colorBarSize; i > 0; i--) {
+					pDC->FillRect(rcPlot, &CBrush(m_densitybar[i - 1]));
+					rcPlot.top += inc;
+					rcPlot.bottom += inc;
+				}
+			}
+			else {
+				colorBarSize = (int)pTraceBrush.GetCount();
+				
+				for (int i = colorBarSize - 1; i >= 0; i--) {
+					if (rcPlot.bottom <= rcBar.bottom) {
+						pDC->FillRect(rcPlot, pTraceBrush[i]);
+						//TRACE("densitybar[j] = %u, R, G, B = %u, %u, %u\n", m_densitybar[i-1], GetRValue(m_densitybar[i-1]), GetGValue(m_densitybar[i-1]), GetBValue(m_densitybar[i-1]));
+						rcPlot.top += inc;
+						rcPlot.bottom += inc;
+					}
+				}
+			}
+			pDC->MoveTo(rcBar.left,  rcBar.top);
+			pDC->LineTo(rcBar.right, rcBar.top);
+			pDC->LineTo(rcBar.right, rcBar.bottom);
+			pDC->LineTo(rcBar.left,  rcBar.bottom);
+			pDC->LineTo(rcBar.left,  rcBar.top);
+			CRect rcText = rcBar;
+
+			sText.Format("%d", pXpParms->m_colorBarMax);
+			rcText.bottom = rcText.top;
+			rcText.top -= dxy;
+			rcText.left -= dxy;
+			rcText.right += dxy;
+			pDC->DrawText(sText, rcText, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			rcText.top = rcBar.bottom;
+			rcText.bottom = rcBar.bottom+dxy;
+			sText.Format("%d", pXpParms->m_colorBarMin);
+			pDC->DrawText(sText, rcText, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			m_tracePoint = 53;
+		}
+
+		// Third Attribute mode //
+		else if (pXpParms->m_nScatterMode == eATTR) {
+			m_tracePoint = 60;
+			// display the third attribute color bar
+			colorBarSize = (int)pTraceBrush.GetCount();
+			if (colorBarSize > 0) {
+				pDC->SelectObject(m_pNormPen);
+				CRect rcBar;
+				rcBar.left = rcClient.right - RIGHTBORDER + DEN_WIDTH;
+				rcBar.right = rcBar.left + DEN_WIDTH;
+				rcBar.top = 2 * BORDER;
+				rcBar.bottom = rcClient.bottom - 2 * BORDER;
+				int inc = (rcBar.bottom - rcBar.top) / colorBarSize;
+				rcBar.bottom = rcBar.top + (colorBarSize * inc);
+
+				CRect rcPlot = rcBar;
+				rcPlot.bottom = rcPlot.top + inc;
+				if (pXpParms->GetThirdAttrColorbarName() == "") {
+					COLORREF* colorbar;
+					colorbar = pDoc->GetColorBarPtr(m_viewInstance);
+					colorBarSize = pDoc->GetColorBarSize(m_viewInstance);
+
+					for (int i = colorBarSize; i > 0; i--) {
+						pDC->FillRect(rcPlot, &CBrush(colorbar[i - 1]));
+						rcPlot.top += inc;
+						rcPlot.bottom += inc;
+					}
+				}
+				else {
+					for (int i = colorBarSize - 1; i >= 0; i--) {
+						if (rcPlot.bottom <= rcBar.bottom) {
+							pDC->FillRect(rcPlot, pTraceBrush[i]);
+							rcPlot.top += inc;
+							rcPlot.bottom += inc;
+						}
+					}
+				}
+				pDC->MoveTo(rcBar.left, rcBar.top);
+				pDC->LineTo(rcBar.right, rcBar.top);
+				pDC->LineTo(rcBar.right, rcBar.bottom);
+				pDC->LineTo(rcBar.left, rcBar.bottom);
+				pDC->LineTo(rcBar.left, rcBar.top);
+				CRect rcText = rcBar;
+
+				sText.Format("%6g", pXpParms->m_attrColorBarMax);
+				rcText.bottom = rcText.top;
+				rcText.top -= dxy;
+				rcText.left -= dxy;
+				rcText.right += dxy;
+				pDC->DrawText(sText, rcText, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+				rcText.top = rcBar.bottom;
+				rcText.bottom = rcBar.bottom + dxy;
+				sText.Format("%6g", pXpParms->m_attrColorBarMin);
+				pDC->DrawText(sText, rcText, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+				// draw the name of the 3rd attribute rotated along the right side the colorbar
+				// The GetOutputTextExtent() function returns the extents of the unrotated text. So we have to adjust for the vertical orientation.
+				CFont *pOldFont = pDC->SelectObject(m_pFont270);
+				CSize sizeText = pDC->GetOutputTextExtent(pXpParms->GetColorAttr());
+				rcText.left = rcBar.left;
+				rcText.bottom = rcBar.bottom;
+				rcText.right = rcBar.right + sizeText.cx + sizeText.cy + DEN_WIDTH;
+				rcText.top = rcBar.top + ((rcBar.bottom - rcBar.top) / 2) - (sizeText.cx / 2);
+				pDC->DrawText(pXpParms->GetColorAttr(), rcText, DT_RIGHT | DT_TOP | DT_SINGLELINE);
+
+				pDC->SelectObject(pOldFont);
+			}
+		}
+        //TRACE("colorBarSize %d\n", colorBarSize);
+
+		// first time draw the data points, second time draw the highlighted points, if there are any.
+        BOOL bFoundHighlight = FALSE;
+		for (int nDraw=0; nDraw<2; nDraw++) {
+
+			// no need to go through second iteration if nothing to highlight.
+			if (nDraw>0 && !bFoundHighlight) break;
+
+            int traceStart = 0;
+            int traceEnd = pSegyX->GetTraceCount();
+            int nchunk = traceEnd / m_numberOfThreads;
+
+            CRect rect;
+            rect.left = x1;
+            rect.right = x2; 
+            rect.top = y1;
+            rect.bottom = y2;
+
+            CRect clientRect;
+            GetClientRect(&clientRect);
+            CBitmap *pResultBM = NULL;
+
+            for (int i = 0; i < m_numberOfThreads; i++) {
+                threadDC[i].CreateCompatibleDC(pDC);
+                threadBM[i].CreateCompatibleBitmap(pDC, clientRect.right, clientRect.bottom);
+                pResultBM = threadDC[i].SelectObject(&threadBM[i]);
+                threadDC[i].FillRect(&clientRect, &CBrush(TRANSPARENT_COLOR_FLAG));
+                scatterParm[i].pDC = &threadDC[i];
+                scatterParm[i].viewInstance = m_viewInstance;
+                scatterParm[i].pSegyX = pSegyX;
+                scatterParm[i].pSegyY = pSegyY;
+                scatterParm[i].pSegyAttr = pSegyAttr;
+                scatterParm[i].startTrace = i * nchunk;
+                scatterParm[i].endTrace = ((i + 1)*nchunk) - 1;
+                scatterParm[i].pSelectedZones = &selectedZones;
+                scatterParm[i].pClassListArray = m_classListArray;
+                scatterParm[i].nDraw = nDraw;                
+                scatterParm[i].densityTable = pXpParms->GetDensityTable();
+                scatterParm[i].rect = rect;
+                scatterParm[i].pen = &pTracePen;
+                scatterParm[i].brush = &pTraceBrush;
+                scatterParm[i].bFoundHighlight = FALSE;
+				scatterParm[i].highlightPen1 = m_highlightPen1;
+				scatterParm[i].highlightPen2 = m_highlightPen2;
+				scatterParm[i].highlightBrush1 = m_highlightBrush1;
+				scatterParm[i].highlightBrush2 = m_highlightBrush2;
+            }
+            scatterParm[m_numberOfThreads - 1].endTrace = traceEnd-1;
+
+            // start the threads
+            for (int i = 0; i<m_numberOfThreads; i++) {
+                pThreads[i] = AfxBeginThread(DrawScatterThreadTask, &scatterParm[i], THREAD_PRIORITY_NORMAL, 1024, CREATE_SUSPENDED);
+                if (pThreads[i] == NULL) {
+                    AfxMessageBox("failed to start thread");
+                } else {
+                    handles[i] = pThreads[i]->m_hThread;
+                    // we need to start the threads this way due to a bug in WaitForMultipleObjects
+                    pThreads[i]->m_bAutoDelete = FALSE;
+                    pThreads[i]->ResumeThread();
+                }
+            }
+
+            DWORD istat = WaitForMultipleObjects(m_numberOfThreads, handles, TRUE, INFINITE);
+            if (istat != WAIT_OBJECT_0) {
+                AfxMessageBox("Error waiting for threads");
+            }
+
+            // check if any of the threads found highlight points.
+            for (int i = 0; i < m_numberOfThreads; i++) {
+                if (scatterParm[i].bFoundHighlight) {
+                    bFoundHighlight = TRUE;
+                }
+            }
+
+            MergeThreadBitmaps(pDC, threadBM, m_numberOfThreads);
+
+            //delete the thread objects
+            for (int i = 0; i<m_numberOfThreads; i++) {
+                delete(pThreads[i]);
+                threadDC[i].SelectObject(&pResultBM);
+                threadDC[i].DeleteDC();
+                threadBM[i].DeleteObject();
+            }
+           
+		}
+	}
+
+	m_tracePoint = 6;
+
+	// draw the reference bin at the mouse cursor.
+	if (pXpParms->m_nScatterMode==eDENSITY && m_showBin) {
+		pDC->SelectObject(&m_grayPen);
+		m_binX = pXpParms->m_binXsize;
+		m_binY = pXpParms->m_binYsize;
+		a=m_binX/(pXpParms->m_fXMax-pXpParms->m_fXMin);
+		tmpx=(int)(a*(float)(x2-x1));
+		a=m_binY/(pXpParms->m_fYMax-pXpParms->m_fYMin);
+		tmpy=(int)(a*(float)(y2-y1));
+		int ix=m_mx-(tmpx/2);
+		int iy=m_my-(tmpy/2);
+		pDC->MoveTo(ix, iy);
+		pDC->LineTo(ix+tmpx, iy);
+		pDC->LineTo(ix+tmpx, iy+tmpy);
+		pDC->LineTo(ix, iy+tmpy);
+		pDC->LineTo(ix, iy);
+	}
+
+	m_tracePoint = 7;
+
+	// get the object group ID if group mode is on
+	int groupID = -1;
+	if (pXpParms->m_bGroupMove && pXpParms->GetCutoffCount() > 0) {
+		groupID = pXpParms->CutoffParmsGetAt(m_activeLine)->m_nGroupID;
+	}
+
+	m_tracePoint = 8;
+
+	// draw all the cutoff objects 
+	DrawAllCutoffs(pDC);
+	DrawAxis(pDC);
+
+	m_tracePoint = 9;
+
+	ShowDigitizeProgress(pDC);
+
+	m_tracePoint = 12;
+
+	if (pDoc->IsDragMode()) {
+		GdiplusStartupInput gdiplusStartupInput;
+		ULONG_PTR gdiplusToken;
+		GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+		
+		Gdiplus::Graphics g(pDC->GetSafeHdc());
+		Gdiplus::Color dimColor(150, 128, 128, 128);
+		Gdiplus::Color liteColor(150, 255, 255, 255);
+
+		CRect r = rcClient;
+		Gdiplus::Rect rectangle(r.left, r.top, r.Width(), r.Height());
+		Gdiplus::SolidBrush solidBrush(dimColor);
+		g.FillRectangle(&solidBrush, rectangle);
+
+		Pen pen(Color(255, 0, 0, 0));
+		pen.SetWidth(2);
+		Gdiplus::SolidBrush liteBrush(liteColor);
+
+		r = yLabelHotSpot;
+		rectangle = Gdiplus::Rect(r.left, r.top, r.Width(), r.Height());
+		if (bLabelHotSpot == 1) g.FillRectangle(&liteBrush, rectangle);
+		pDC->SelectObject(m_pFont90);
+		pDC->DrawText(pXpParms->m_strYAttr, m_yLabelText, DT_LEFT | DT_BOTTOM | DT_SINGLELINE);
+		g.DrawRectangle(&pen, r.left, r.top, r.Width(), r.Height());
+
+		r = xLabelHotSpot;
+		rectangle = Gdiplus::Rect(r.left, r.top, r.Width(), r.Height());
+		if (bLabelHotSpot == 2) g.FillRectangle(&liteBrush, rectangle);
+		pDC->SelectObject(fontNorm);
+		pDC->DrawText(pXpParms->m_strXAttr, xLabelHotSpot, DT_CENTER | DT_TOP | DT_SINGLELINE);
+		g.DrawRectangle(&pen, r.left, r.top, r.Width(), r.Height());
+		GdiplusShutdown(gdiplusToken);
+
+	}
+
+	m_tracePoint = 13;
+
+	MergeMemoryBitmaps(pDCin, 0, 0);
+
+	pDoc->SetReadyToDisplay(m_viewInstance + 1, FALSE);
+
+    // After the last digitize point we need a full redraw This flag allows for that
+    if (m_bRedrawAfterDigitize) {
+        m_bRedrawAfterDigitize = FALSE;
+        pDoc->SetReadyToDisplay(m_viewInstance + 1, TRUE);
+    }
+
+
+#if TIMERS == 1
+	TRACE("CCrossPlotView::OnDraw %d computed in %5.3f seconds\n", m_viewInstance, (double) (clock()-start) / CLOCKS_PER_SEC);
+#endif
+	//TRACE("Leave CCrossPlotView::OnDraw %d\n", m_viewInstance);
+}
+
+UINT __cdecl CCrossPlotView::DrawScatterThreadTask(LPVOID pParm)
+{
+    DRAW_SCATTER_PARM *pData = (DRAW_SCATTER_PARM *)pParm;
+    CDC *pDC = pData->pDC;
+    int viewInstance = pData->viewInstance;
+    CSegy *pSegyX = pData->pSegyX;
+    CSegy *pSegyY = pData->pSegyY;
+    CSegy *pSegyAttr = pData->pSegyAttr;
+    int startTrace = pData->startTrace;
+    int endTrace = pData->endTrace;
+    CViewZoneArray *pSelectedZones = pData->pSelectedZones;
+    BOOL *pClassListArray = pData->pClassListArray;
+    int nDraw = pData->nDraw;
+    BOOL *bFoundHighlight = &pData->bFoundHighlight;
+    int *densityTable = pData->densityTable;
+    CRect rect = pData->rect;
+	CPen* hpen1 = pData->highlightPen1;
+	CPen* hpen2 = pData->highlightPen2;
+	CBrush* hbrush1 = pData->highlightBrush1;
+	CBrush* hbrush2 = pData->highlightBrush2;
+
+    CCrossPlotView::DrawScatter(pDC, viewInstance, pSegyX, pSegyY, pSegyAttr, startTrace, endTrace,
+        pSelectedZones, pClassListArray, nDraw, bFoundHighlight, densityTable, rect, *pData->pen, *pData->brush, hpen1, hbrush1, hpen2, hbrush2);
+    return 0;
+}
+
+void CCrossPlotView::DrawScatter(CDC *pDC, int viewInstance, CSegy *pSegyX, CSegy *pSegyY,
+    CSegy *pSegyAttr, int startTrace, int endTrace, CViewZoneArray *pSelectedZones, BOOL *pClassListArray, int nDraw, BOOL *bFoundHighlight,
+    int *densityTable, CRect rect, CArray<CPen*>& pTracePen, CArray<CBrush*>& pTraceBrush, CPen *highlightPen1, CBrush *highlightBrush1, CPen* highlightPen2, CBrush* highlightBrush2)
+{
+    float *pX, *pY, *pOut, *pAttr;
+    float a;
+    int tmpx, tmpy;
+    int x1, y1, x2, y2;
+
+    clock_t scatter_start = clock();
+    CIMACDoc *pDoc = CIMACApp::GetDocument();
+    CXplotParms *pXpParms = pDoc->GetXplotParms(viewInstance);
+    CSegy *pSegyOut = pDoc->GetSegyOutPtr();
+    CHorizon *pHorizon = pDoc->GetHorizonDataPtr();
+
+    // Take a copy of the zone array
+    CViewZoneArray zoneArray;
+    for (int izone = 0; izone < pSelectedZones->GetCount(); izone++) {
+        zoneArray.Add(pSelectedZones->GetAt(izone));
+    }
+
+	CPen* pHighlightColorPen;
+	CBrush* pHighlightColorBrush;
+    int highliteDotSize = pDoc->GetHighliteDotSize();
+    int dotSize = pXpParms->m_dotSize;
+    int zoneCount = (int)zoneArray.GetCount();
+    int si = pDoc->GetSI();
+    int startTime = pDoc->GetStartTime();
+    int endTime = pDoc->GetEndTime();
+    int nsamps = Time2Index((endTime - startTime), si) + 1;
+    if (nsamps > pSegyX->GetSampleCount()) nsamps = pSegyX->GetSampleCount();
+    x1 = rect.left;
+    x2 = rect.right;
+    y1 = rect.top;
+    y2 = rect.bottom;
+
+    for (int j = startTrace; j <= endTrace; j++) {
+        pX = pSegyX->GetTraceDataPtr(j, startTime);
+        pY = pSegyY->GetTraceDataPtr(j, startTime);
+        pOut = pSegyOut->GetTraceDataPtr(j, startTime);
+        if (pXpParms->m_nScatterMode == eATTR) {
+            pAttr = pSegyAttr->GetTraceDataPtr(j, startTime);
+        }
+        for (int izone = 0; izone < zoneCount; izone++) {
+            zoneArray.GetAt(izone).SetRange(pSegyOut->GetInline(j), pSegyOut->GetCrossline(j), pHorizon);
+        }
+        for (int k = 0; k < nsamps; k += pXpParms->m_nScatter) {  // samples are decimated according to user parameter
+            BOOL bHighlight = FALSE;	// flag for highlighted point
+            BOOL bClasspoint = FALSE; // flag for passed class filter
+            BOOL bZonepoint = FALSE;  // flag for passed zone filter
+            BOOL bDrawpoint;		// flag indicates if we should draw this data point.
+            // get the point and check if it's a highlighted point
+            int ixpen = (int)pOut[k];
+            if (ixpen >= SELECTION_BIAS) {
+                bHighlight = TRUE;
+                *bFoundHighlight = TRUE;
+                if (ixpen >= (2 * SELECTION_BIAS)) {
+                    ixpen -= (2 * SELECTION_BIAS);
+					pHighlightColorPen = highlightPen2;
+					pHighlightColorBrush = highlightBrush2;
+                } else if (ixpen >= SELECTION_BIAS) {
+                    //highliteColor = highliteColor1;
+                    ixpen -= SELECTION_BIAS;
+					pHighlightColorPen = highlightPen1;
+					pHighlightColorBrush = highlightBrush1;
+                }
+            }
+
+            ASSERT(ixpen >= 0);
+
+            // Check Class filter, if not selected bail out
+            if (ixpen == UNCLASSIFIED || (ixpen >= 0 && ixpen < MAXCLASS && pClassListArray[ixpen])) {
+                bClasspoint = TRUE;
+            }
+
+            // check Zone filter, if not in zone bail out
+            BOOL bZoneCheck = (zoneCount == 0);
+            for (int izone = 0; izone < zoneCount; izone++) {
+                bZoneCheck = zoneArray.GetAt(izone).CheckRange(k);
+                if (bZoneCheck) break;
+            }
+            if (bZoneCheck) {
+                bZonepoint = TRUE;
+            }
+
+            bDrawpoint = (bClasspoint && bZonepoint);
+            if (!bDrawpoint && !*bFoundHighlight) continue;
+
+            // Class mode
+            if (pXpParms->m_nScatterMode == eCLASS) {
+                if (ixpen >= pDoc->GetClassCount()) {
+                    ixpen = 0;
+                }
+            }
+
+            // Points Density mode
+			int index;
+            if (pXpParms->m_nScatterMode == eDENSITY) {
+                index = k + (j*nsamps);
+                if (densityTable[index] == -1) {
+                    bDrawpoint = FALSE;  // turn the point off
+                }
+                if (nDraw == 1 && bHighlight) {
+
+                } else {
+					float factor = (float)(DENSITYBARSIZE - 1) / (float)(pXpParms->m_colorBarMax - pXpParms->m_colorBarMin);
+					ixpen = (int)((float)(densityTable[index] - pXpParms->m_colorBarMin) * factor);
+					if (ixpen >= pTracePen.GetCount()) {
+						ixpen = (int)pTracePen.GetCount() - 1;
+					}
+                	
+					if (ixpen < 0) {
+						ixpen = 0;
+					}
+					//TRACE("DrawScatter: index = %d, ixpen = %d\r\n", index, ixpen);
+                }
+            }
+            // Third Attribute mode
+            if (pXpParms->m_nScatterMode == eATTR) {
+                ixpen = 0;
+                if (abs(pXpParms->m_attrColorBarMax - pXpParms->m_attrColorBarMin) > 0) {
+                    int colorBarSize = (int) pTracePen.GetCount();
+					//TRACE("DrawScatter: colorBarSize = %d\r\n", colorBarSize);
+                	
+                    ixpen = (int)((pAttr[k] - pXpParms->m_attrColorBarMin) /
+                        abs(pXpParms->m_attrColorBarMax - pXpParms->m_attrColorBarMin) *
+                        colorBarSize);
+                    if (ixpen < 0) ixpen = 0;
+                    if (ixpen >= colorBarSize) ixpen = colorBarSize - 1;
+                }
+            }
+
+            a = (pX[k] - pXpParms->m_fXMin) / (pXpParms->m_fXMax - pXpParms->m_fXMin);
+            tmpx = (int)(a*(float)(x2 - x1)) + x1;
+            a = (pY[k] - pXpParms->m_fYMin) / (pXpParms->m_fYMax - pXpParms->m_fYMin);
+            tmpy = y2 - (int)(a*(float)(y2 - y1));
+            if (nDraw == 0 && bDrawpoint) {
+            	if (ixpen >= 0 && ixpen < pTracePen.GetCount() && dotSize == 1) {
+					pDC->SelectObject(pTracePen[ixpen]);
+                    pDC->MoveTo(tmpx, tmpy);
+                    pDC->LineTo(tmpx + 1, tmpy);
+                } else if (ixpen >= 0 && ixpen < pTraceBrush.GetCount()) {
+                    pDC->SelectObject(pTraceBrush[ixpen]);
+                    CRect selPoint;
+                    selPoint.left = tmpx - dotSize / 2;
+                    selPoint.top = tmpy - dotSize / 2;
+                    selPoint.right = selPoint.left + dotSize;
+                    selPoint.bottom = selPoint.top + dotSize;
+                    pDC->Rectangle(selPoint);
+					//TRACE("DrawScatter: index = %d, ixpen = %d, selPoint = %d,%d,%d,%d\r\n", index, ixpen, selPoint.left, selPoint.top, selPoint.right, selPoint.bottom);
+                }
+            }
+            if (nDraw == 1 && bHighlight) {
+                if (pDoc->IsHighlightAll() || (!pDoc->IsHighlightAll() && bDrawpoint)) {
+					pDC->SelectObject(pHighlightColorPen);
+					pDC->SelectObject(pHighlightColorBrush);
+					
+                    if (highliteDotSize == 1) {
+                        pDC->MoveTo(tmpx, tmpy);
+                        pDC->LineTo(tmpx + 1, tmpy);
+                    } else {
+                        CRect selPoint;
+                        selPoint.left = tmpx - highliteDotSize / 2;
+                        selPoint.top = tmpy - highliteDotSize / 2;
+                        selPoint.right = selPoint.left + highliteDotSize;
+                        selPoint.bottom = selPoint.top + highliteDotSize;
+                        pDC->Rectangle(selPoint);
+                    }
+                }
+            }
+        }
+    }
+    zoneArray.RemoveAll();
+
+#if TIMERS == 1
+    TRACE("CrossPlotView::scatter drawn in %5.3f seconds\n", (double)(clock() - scatter_start) / CLOCKS_PER_SEC);
+#endif
+}
+
+// Overlay the forground bitmap where the transparent color is not set.
+void CCrossPlotView::MergeMemoryBitmaps(CDC *pDC, int xShift, int yShift, CBitmap *pBM, CBitmap *pCutoffBM)
+{
+	BITMAP bitMapData;
+	m_memBM.GetBitmap(&bitMapData);
+	int nWidth = bitMapData.bmWidth;
+	int nHeight = bitMapData.bmHeight;
+	int nCount = nWidth * nHeight;
+
+	// check if the bitmap has changed size, if so realloc the buffers
+	if (nCount > m_bmSize) {
+		m_bmSize = nCount;
+		if (m_memBits) delete m_memBits;
+		if (m_foregroundBits) delete m_foregroundBits;
+		if (m_backgroundBits) delete m_backgroundBits;
+        if (m_cutoffBits) delete m_cutoffBits;
+		m_memBits = new DWORD[nCount];
+		m_foregroundBits = new DWORD[nCount];
+		m_backgroundBits = new DWORD[nCount];
+        m_cutoffBits = new DWORD[nCount];
+    }
+
+	CBitmap *pForegroundBM;
+	if (pBM == NULL || pBM->m_hObject == NULL) {
+		pForegroundBM = &m_foregroundBM;
+	} else {
+		pForegroundBM = pBM;
+	}
+	
+	// Get the raw bits from the bitmaps
+	pForegroundBM->GetBitmapBits(nCount*4, m_foregroundBits);
+	m_backgroundBM.GetBitmapBits(nCount*4, m_backgroundBits);
+    if (pCutoffBM != NULL) {
+        pCutoffBM->GetBitmapBits(nCount * 4, m_cutoffBits);
+    }
+
+	// copy in the background
+	memcpy(m_memBits, m_backgroundBits, nCount * sizeof(DWORD));
+	//overlay the foreground and cutoffs where the bits are non-zero
+	for (int i = 0; i < nHeight; i++){
+		for (int j = 0; j < nWidth; j++){
+			int iy = i - yShift;
+			int ix = j - xShift;
+			if (iy < 0 || iy >= nHeight) continue;
+			if (ix < 0 || ix >= nWidth) continue;
+			int index = iy * nWidth + ix;
+            if (m_foregroundBits[index] != TRANSPARENT_COLOR_FLAG) {
+                m_memBits[i*nWidth + j] = m_foregroundBits[index];
+            }
+            if (pCutoffBM != NULL) {
+                int cutoffIndex = i * nWidth + j;
+                if (m_cutoffBits[cutoffIndex] != TRANSPARENT_COLOR_FLAG) {
+                    m_memBits[i*nWidth + j] = m_cutoffBits[cutoffIndex];
+                }
+            }
+
+		}
+	}
+
+	m_memBM.SetBitmapBits(nCount*4, m_memBits);
+	m_memDC.SelectObject(&m_memBM);
+	pDC->BitBlt(0, 0, nWidth, nHeight, &m_memDC, 0, 0, SRCCOPY);
+}
+
+void CCrossPlotView::MergeThreadBitmaps(CDC *pDC, CBitmap *threadBM, int nThreads)
+{
+    CBitmap *pCurrentBitmap = pDC->GetCurrentBitmap();
+
+    BITMAP bitMapData;
+    m_memBM.GetBitmap(&bitMapData);
+    int nWidth = bitMapData.bmWidth;
+    int nHeight = bitMapData.bmHeight;
+    int nCount = nWidth * nHeight;
+
+    // check if the bitmap has changed size, if so realloc the buffers
+    if (nCount > m_threadBitmapSize) {
+        m_threadBitmapSize = nCount;
+        if (m_threadBackgroundBits) delete m_threadBackgroundBits;
+        m_threadBackgroundBits = new DWORD[nCount];
+        for (int i = 0; i < nThreads; i++) {
+            if (m_threadBits[i]) delete m_threadBits[i];
+            m_threadBits[i] = new DWORD[nCount];
+        }
+    }
+
+    // Get the raw bits from the bitmaps
+    pCurrentBitmap->GetBitmapBits(nCount * 4, m_threadBackgroundBits);
+    for (int i = 0; i < nThreads; i++) {
+        threadBM[i].GetBitmapBits(nCount * 4, m_threadBits[i]);
+    }
+  
+    // merge the thead data to the background bitmap
+    for (int i = 0; i < nCount; i++) {
+        for (int j = 0; j < nThreads; j++) {
+            DWORD *pThreadBits = m_threadBits[j];
+            if (pThreadBits[i] != TRANSPARENT_COLOR_FLAG) {
+                m_threadBackgroundBits[i] = pThreadBits[i];
+            }
+        }
+    }
+
+    pCurrentBitmap->SetBitmapBits(nCount * 4, m_threadBackgroundBits);
+}
+
+void CCrossPlotView::StretchMemoryBitmap(CDC *pDC, BOOL mode, int anchor, int fromPoint, int toPoint)
+{
+	m_memDC.SelectObject(&m_foregroundBM);
+	BITMAP bitMapData;
+	m_foregroundBM.GetBitmap(&bitMapData);
+	int nWidth = bitMapData.bmWidth;
+	int nHeight = bitMapData.bmHeight;
+	int newWidth = nWidth;
+	int newHeight = nHeight;
+
+	// set how to handle overlapping bits after the stretch
+	SetStretchBltMode(pDC->GetSafeHdc(), COLORONCOLOR);
+
+	// only stretch the bitmap from the axis to the end of the bitmap, copy the portion less than the axis
+	if (mode == XSTRETCH) {
+		newWidth = (int) (nWidth * (float)(toPoint - anchor) / (float)(fromPoint - anchor));
+		pDC->StretchBlt(x1, 0, newWidth, newHeight, &m_memDC, x1, 0, nWidth, nHeight, SRCCOPY);
+		pDC->BitBlt(0, 0, x1, newHeight, &m_memDC, 0, 0, SRCCOPY);
+		if (newWidth < nWidth){
+			// The bitmap was compressed so fill in the dead space with the transparent color
+			CRect rect(newWidth + 1, 0, nWidth, nHeight);
+			pDC->FillRect(&rect, &CBrush(TRANSPARENT_COLOR_FLAG));
+		}
+	} else {
+		int newYsize = (int)(y2 * (float)(toPoint - anchor) / (float)(fromPoint - anchor));
+		int deltaY = y2 - newYsize;
+		pDC->StretchBlt(0, deltaY, newWidth, newYsize, &m_memDC, 0, 0, nWidth, y2, SRCCOPY);
+		pDC->BitBlt(0, y2, nWidth, nHeight-y2, &m_memDC, 0, y2, SRCCOPY);
+		if (deltaY > 0){
+			// The bitmap was compressed so fill in the dead space with the transparent color
+			CRect rect(0, 0, nWidth, deltaY);
+			pDC->FillRect(&rect, &CBrush(TRANSPARENT_COLOR_FLAG));
+		}
+	}
+
+}
+
+void CCrossPlotView::DrawAxis(CDC *pDC)
+{
+	CIMACDoc* pDoc = GetDocument();
+	CXplotParms *pXpParms;
+	pXpParms = pDoc->GetXplotParms(m_viewInstance);
+	pDC->SelectObject(&m_redBrush);
+	CString sText;
+	CRect rcItem;
+	int dxy = 20;
+	int itmp;
+	float ftmp;
+
+	float xmin, xmax, ymin, ymax;
+	xmin = pXpParms->m_fXMin;
+	xmax = pXpParms->m_fXMax;
+	ymin = pXpParms->m_fYMin;
+	ymax = pXpParms->m_fYMax;
+
+	float xLabelInterval, yLabelInterval, xTickInterval, yTickInterval;
+	xLabelInterval = pXpParms->m_xLabelInterval;
+	yLabelInterval = pXpParms->m_yLabelInterval;
+	xTickInterval = pXpParms->m_xTickInterval;
+	yTickInterval = pXpParms->m_yTickInterval;
+
+
+	// The x and y axis
+	m_pNormPen = pDC->SelectObject(&m_redPen);
+	m_pNormBrush = pDC->SelectObject(&m_redBrush);
+	pDC->MoveTo(x1, y1);
+	pDC->LineTo(x1, y2);
+	pDC->LineTo(x2, y2);
+	pDC->MoveTo(x1 - 5, y1);
+	pDC->LineTo(x1 + 5, y1);
+	pDC->MoveTo(x2, y2 - 5);
+	pDC->LineTo(x2, y2 + 5);
+
+	// the X axis labels and ticks...
+	pDC->SetTextAlign(TA_LEFT);
+	pDC->SetTextColor(RED);
+	pDC->SetBkColor(TRANSPARENT_COLOR_FLAG);
+    pDC->SelectObject(m_redPen);
+	rcItem.top = y2 + dxy;
+	rcItem.bottom = y2 + 3 * dxy;
+	rcItem.left = x1;
+	rcItem.right = x2;
+	pDC->DrawText(pXpParms->m_strXAttr, rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+	xLabelHotSpot = rcItem;
+	rcItem.top = y2;
+	rcItem.bottom = y2 + 2 * dxy;
+	rcItem.left = x1 - 2 * dxy;
+	rcItem.right = x1 + 2 * dxy;
+	sText.Format("%6g", xmin);
+	sText = sText.Trim();
+	pDC->DrawText(sText, rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+	rcItem.left = x2 - 2 * dxy;
+	rcItem.right = x2 + 2 * dxy;
+	sText.Format("%6g", xmax);
+	sText = sText.Trim();
+	pDC->DrawText(sText, rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+	// X label
+	if (xLabelInterval != 0) {
+		ftmp = ((int)(xmin / xLabelInterval) + 1) * xLabelInterval;
+		if (ftmp < xmin) ftmp += xLabelInterval;
+		for (; ftmp<xmax; ftmp += xLabelInterval) {
+			itmp = x1 + (int)((ftmp - xmin) / (xmax - xmin)*(x2 - x1));
+			sText.Format("%6g", ftmp);
+			sText = sText.Trim();
+			CSize textSize = pDC->GetTextExtent(sText);
+			rcItem.left = itmp - textSize.cx / 2;
+			rcItem.right = itmp + textSize.cx / 2;
+			pDC->DrawText(sText, rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			pDC->MoveTo(itmp, y2);
+			pDC->LineTo(itmp, y2 + 5);
+		}
+	}
+	// X tick
+	if (xTickInterval != 0) {
+		ftmp = ((int)(xmin / xTickInterval) + 1) * xTickInterval;
+		for (; ftmp<xmax; ftmp += xTickInterval) {
+			itmp = x1 + (int)((ftmp - xmin) / (xmax - xmin)*(x2 - x1));
+			pDC->MoveTo(itmp, y2 - 5);
+			pDC->LineTo(itmp, y2);
+		}
+	}
+
+	// the Y axis....
+	rcItem.top = y1 - dxy;
+	rcItem.bottom = y1 + dxy;
+	rcItem.left = 0;
+	rcItem.right = x1 - dxy;
+	sText.Format("%6g", ymax);
+	pDC->DrawText(sText, rcItem, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
+	rcItem.top = y2 - dxy;
+	rcItem.bottom = y2 + dxy;
+	sText.Format("%6g", ymin);
+	pDC->DrawText(sText, rcItem, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
+	// Y label
+	if (yLabelInterval != 0) {
+		ftmp = (int)(ymin / yLabelInterval) * yLabelInterval;
+		if (ftmp<ymin) ftmp += yLabelInterval;
+		for (; ftmp<ymax; ftmp += yLabelInterval) {
+			itmp = y2 - (int)((ftmp - ymin) / (ymax - ymin)*(y2 - y1));
+			rcItem.top = itmp - dxy;
+			rcItem.bottom = itmp + dxy;
+			sText.Format("%6g", ftmp);
+			pDC->DrawText(sText, rcItem, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
+			pDC->MoveTo(x1 - 5, itmp);
+			pDC->LineTo(x1, itmp);
+		}
+	}
+	// Y tick
+	if (yTickInterval != 0) {
+		ftmp = (int)(ymin / yTickInterval) * yTickInterval;
+		if (ftmp<ymin) ftmp += yLabelInterval;
+		for (; ftmp<ymax; ftmp += yTickInterval) {
+			itmp = y2 - (int)((ftmp - ymin) / (ymax - ymin)*(y2 - y1));
+			pDC->MoveTo(x1, itmp);
+			pDC->LineTo(x1 + 5, itmp);
+		}
+	}
+
+	// the Y title...
+	// note: mfc bug, text extent doesn't work on a 90 degree font. So we have to deal with it.
+	sText.Format("%6g", ymax);
+	CSize sizeString = pDC->GetOutputTextExtent(sText);
+	CSize sizeTitle = pDC->GetOutputTextExtent(pXpParms->m_strYAttr);
+	rcItem.top = y1;
+	rcItem.bottom = (y2 + y1) / 2 + sizeTitle.cx / 2 + sizeTitle.cy;
+	rcItem.right = x1 - sizeString.cx - dxy;
+	rcItem.left = rcItem.right - sizeTitle.cy;
+	CFont *pOldFont = pDC->SelectObject(m_pFont90);
+	pDC->SetBkColor(GetSysColor(COLOR_WINDOW));
+	pDC->DrawText(pXpParms->m_strYAttr, rcItem, DT_LEFT | DT_BOTTOM | DT_SINGLELINE);
+	yLabelHotSpot = rcItem;
+	yLabelHotSpot.bottom = y2;
+	m_yLabelText = rcItem;
+	pDC->SelectObject(pOldFont);
+}
+
+void CCrossPlotView::DrawAllCutoffs(CDC *pDC)
+{
+	CIMACDoc* pDoc = GetDocument();
+	CXplotParms *pXpParms;
+	pXpParms = pDoc->GetXplotParms(m_viewInstance);
+	CCutoffParms *pCutoff;
+	pDC->SelectObject(&m_redBrush);
+	pDC->SetBkMode(TRANSPARENT);
+	CString sText;
+		
+	// get the object group ID if group mode is on
+	int groupID = -1;
+	if (pXpParms->m_bGroupMove && pXpParms->GetCutoffCount() > 0) {
+		groupID = pXpParms->CutoffParmsGetAt(m_activeLine)->m_nGroupID;
+	}
+
+
+	for (int i=0; i<pXpParms->GetCutoffCount(); i++) {
+		pCutoff = pXpParms->CutoffParmsGetAt(i);
+		BOOL bActive = FALSE;
+		if (m_mouseEnter && (i == m_activeLine || pCutoff->m_nGroupID == groupID)) {
+			pDC->SetTextColor(RED);
+			pDC->SelectObject(m_redPen);
+			bActive = TRUE;
+		} else if (!pCutoff->m_bEnabled) {
+			pDC->SetTextColor(RGB(0, 0, 0));
+			pDC->SelectObject(m_lightGrayPen);
+		}
+		else {
+			pDC->SetTextColor(RGB(0,0,0));
+			pDC->SelectObject(m_grayPen);
+		}
+		// Draw the cutoff LINE...
+		if (pCutoff->m_cutoffType == eLINE) {
+			CPoint vertexPoint1 = CPoint(pCutoff->lx1, pCutoff->ly1);
+			CPoint vertexPoint2 = CPoint(pCutoff->lx2, pCutoff->ly2);
+			pDC->MoveTo(vertexPoint1);
+			pDC->LineTo(vertexPoint2);
+			if (bActive) {
+				ShowVertexPoint(pDC, vertexPoint1, &m_redPen);
+				ShowVertexPoint(pDC, vertexPoint2, &m_redPen);
+			}
+			sText.Format("%d", i+1);
+			pDC->SetTextAlign(TA_LEFT | TA_BASELINE);
+			pDC->TextOut(pCutoff->lx2, pCutoff->ly2, sText);
+		// Draw the POLYGON
+		} else if (pCutoff->m_cutoffType == ePOLY) {
+			DrawPolygon(pDC, pCutoff, i, bActive);
+
+
+		// Draw the ELLIPSE
+		} else if (pCutoff->m_cutoffType == eELLIPSE) {
+			pDC->MoveTo(pCutoff->m_ellipse.GetPoint(0.0f));
+			for (float theta = 0; theta<2*(PI+.2); theta += 0.1f) {
+				pDC->LineTo(pCutoff->m_ellipse.GetPoint(theta));
+			}
+			CPoint centerPt = pCutoff->m_ellipse.GetOrigin();
+			CPoint vertexPoint = pCutoff->m_ellipse.GetXAxisEndPoint();
+			pDC->MoveTo(centerPt);
+			pDC->LineTo(vertexPoint);
+			if (bActive) ShowVertexPoint(pDC, vertexPoint, &m_redPen);
+
+			vertexPoint = pCutoff->m_ellipse.GetYAxisEndPoint();
+			pDC->MoveTo(centerPt);
+			pDC->LineTo(vertexPoint);
+			if (bActive) ShowVertexPoint(pDC, vertexPoint, &m_redPen);
+
+			sText.Format("%d", i+1);
+			pDC->SetTextAlign(TA_LEFT|TA_BASELINE);
+			pDC->TextOut(centerPt.x, centerPt.y, sText);
+		}
+
+	}
+	pDC->SetBkMode(OPAQUE);
+}
+
+void CCrossPlotView::ShowDigitizeProgress(CDC *pDC)
+{
+	CIMACDoc* pDoc = GetDocument();
+	CXplotParms *pXpParms;
+	pXpParms = pDoc->GetXplotParms(m_viewInstance);
+	CCutoffParms *pCutoff;
+	pDC->SelectObject(&m_redBrush);
+
+	// digitize polygon mode.  Show the progress...
+	if (m_bDigitizePoly) {
+		pDC->SelectObject(m_redPen);
+		int nPoint = m_pDigitizeCutoff->m_nPolyData;
+
+		// Add a new point to the poly
+		if (m_lbuttondown) {
+			m_lbuttondown = FALSE;
+			m_pDigitizeCutoff->m_arrScalars.SetAtGrow(nPoint, CFloatPoint());
+			m_pDigitizeCutoff->m_arrPolyData.SetAtGrow(nPoint++, CPoint(m_mx_origin, m_my_origin));
+			m_pDigitizeCutoff->m_nPolyData++;
+		}
+
+		// Delete the previous point
+		if (m_rbuttondown) {
+			m_rbuttondown = FALSE;
+			if (m_pDigitizeCutoff->m_nPolyData > 0) {
+				m_pDigitizeCutoff->m_nPolyData--;
+				nPoint--;
+			}
+		}
+
+		// end of digitize mode, first point becomes last
+		if (m_bEscapeDown) {
+			if (nPoint < 3) {
+				// Not enough points. Delete this poly and shut off digitize mode.
+				ClipCursor(NULL);
+				CString msg;
+				if (nPoint == 0) {
+					msg = _T("No points have been digitized");
+				} else {
+					msg = _T("Not enough points have been digitized to form a polygon");
+				}
+
+				nPoint = 0;
+				
+				for (int i=0; i<pXpParms->GetCutoffCount(); i++) {
+					pCutoff = pXpParms->CutoffParmsGetAt(i);
+					if (pCutoff == m_pDigitizeCutoff) {
+						pXpParms->CutoffParmsRemoveAt(i);
+						m_pDigitizeCutoff = NULL;
+						break;
+					}
+				}
+
+				AfxMessageBox(msg);
+
+			} else {
+				// add the first point to the end of the polygon to close it off.
+				m_pDigitizeCutoff->m_arrScalars.SetAtGrow(nPoint, CFloatPoint());
+				m_pDigitizeCutoff->m_arrPolyData.SetAtGrow(nPoint++, m_pDigitizeCutoff->m_arrPolyData[0]);
+				m_pDigitizeCutoff->m_nPolyData++;
+				m_pDigitizeCutoff->CreatePolyRgn();
+
+				// close out this polygon, it's done.
+				m_pDigitizeCutoff->lx1 = m_pDigitizeCutoff->m_arrPolyData[0].x;
+				m_pDigitizeCutoff->ly1 = m_pDigitizeCutoff->m_arrPolyData[0].y;
+				m_pDigitizeCutoff->lx2 = m_pDigitizeCutoff->m_arrPolyData[1].x;
+				m_pDigitizeCutoff->ly2 = m_pDigitizeCutoff->m_arrPolyData[1].y;
+				m_pDigitizeCutoff->rlx1 = -1.0;
+				m_pDigitizeCutoff->rly1 = -1.0;
+				m_pDigitizeCutoff->rlx2 = -1.0;
+				m_pDigitizeCutoff->rly2 = -1.0;
+				m_pDigitizeCutoff->m_cutoffType = ePOLY;
+                m_bRedrawAfterDigitize = TRUE;
+                UpdateParmPane();
+                pDoc->SetReadyToDisplay(m_viewInstance + 1, TRUE);
+				pDoc->SetReadyToCompute();
+                pDoc->UpdateViews();
+			}
+
+			m_bEscapeDown   = FALSE;
+			m_bDigitizePoly = FALSE;
+			m_lbuttondown   = FALSE;
+			ClipCursor(NULL);
+        }
+
+		// display what we have so far
+		if (nPoint > 0) {
+			DrawPolygon(pDC, m_pDigitizeCutoff, -1, TRUE);
+
+			if (m_pDigitizeCutoff->m_cutoffType == eUNDEF){
+				int lastPoint = m_pDigitizeCutoff->m_nPolyData - 1;
+				if (lastPoint >= 0) {
+					pDC->MoveTo(m_pDigitizeCutoff->m_arrPolyData[lastPoint]);
+					pDC->LineTo(m_mx, m_my);
+				}
+			}
+
+		}
+	}
+
+	m_tracePoint = 11;
+
+	// digitize Ellipse mode.  Show the progress...
+	if (m_bDigitizeEllipse) {
+		pDC->SelectObject(m_redPen);
+
+		if (m_lbuttondown) {
+			// First time with button down is the ellipse origin
+			if (m_pDigitizeCutoff->m_ellipse.IsEmpty()) {
+				CPoint clickPt = CPoint(m_mx_origin, m_my_origin);
+				m_pDigitizeCutoff->m_ellipse.SetOrigin(clickPt);
+			}
+
+		// button up closes the digitizing mode.
+		} else {
+			if (!m_pDigitizeCutoff->m_ellipse.IsEmpty()) {
+				CPoint mousePt = CPoint(m_mx, m_my);
+				float dist = m_pDigitizeCutoff->m_ellipse.GetCenterDistance(mousePt);
+				if (dist < 20) {
+					ClipCursor(NULL);
+					if (AfxMessageBox("That is a very small ellipse. Do you want to try again?", MB_YESNO) == IDYES) {
+						m_pDigitizeCutoff->m_ellipse.Init();
+					}
+				}
+				if (!m_pDigitizeCutoff->m_ellipse.IsEmpty()) {
+					CPoint centerPt = m_pDigitizeCutoff->m_ellipse.GetOrigin();
+					m_pDigitizeCutoff->m_ellipse.SetAxis(mousePt, .6f);
+					m_pDigitizeCutoff->m_cutoffType = eELLIPSE;
+					m_pDigitizeCutoff->lx1 = centerPt.x;
+					m_pDigitizeCutoff->ly1 = centerPt.y;
+					m_pDigitizeCutoff->lx2 = mousePt.x;
+					m_pDigitizeCutoff->ly2 = mousePt.y;
+					m_pDigitizeCutoff->rlx1 = -1.0;
+					m_pDigitizeCutoff->rly1 = -1.0;
+					m_pDigitizeCutoff->rlx2 = -1.0;
+					m_pDigitizeCutoff->rly2 = -1.0;
+					m_bEscapeDown      = FALSE;
+					m_bDigitizeEllipse = FALSE;
+					m_lbuttondown      = FALSE;
+					ClipCursor(NULL);
+					// Update HW
+					pDoc->SendCutoffDataToHeadwave(m_viewInstance);
+                    UpdateParmPane();
+					pDoc->SetReadyToCompute();
+					pDoc->UpdateViews();
+				}
+			}
+		}
+
+		// Display what we have so far
+		if (!m_pDigitizeCutoff->m_ellipse.IsEmpty()) {
+			CPoint mousePt = CPoint(m_mx, m_my);
+			m_pDigitizeCutoff->m_ellipse.SetAxis(mousePt, .6f);
+
+			pDC->MoveTo(m_pDigitizeCutoff->m_ellipse.GetPoint(0.0f));
+			for (float theta = 0; theta<2*(PI+.2); theta += 0.1f) {
+				pDC->LineTo(m_pDigitizeCutoff->m_ellipse.GetPoint(theta));
+			}
+			pDC->MoveTo(m_pDigitizeCutoff->m_ellipse.GetOrigin());
+			pDC->LineTo(m_pDigitizeCutoff->m_ellipse.GetXAxisEndPoint());
+			pDC->MoveTo(m_pDigitizeCutoff->m_ellipse.GetOrigin());
+			pDC->LineTo(m_pDigitizeCutoff->m_ellipse.GetYAxisEndPoint());
+		}
+
+	}
+
+}
+
+// scale the cutoff data due to a window resize.
+void CCrossPlotView::ScaleCutoff(CCutoffParms *p, CRect rcImage)
+{
+	p->lx1 = (int)(p->rlx1 * (float)rcImage.Width()) + rcImage.left;
+	p->lx2 = (int)(p->rlx2 * (float)rcImage.Width()) + rcImage.left;
+	p->ly1 = (int)(p->rly1 * (float)rcImage.Height()) + rcImage.top;
+	p->ly2 = (int)(p->rly2 * (float)rcImage.Height()) + rcImage.top;
+
+
+	// scale the polygon
+	if (p->m_cutoffType == ePOLY) {
+		for(int j=0; j<p->m_nPolyData; j++) {
+			p->m_arrPolyData[j].x = (int)(p->m_arrScalars[j].x * (float)rcImage.Width()) + rcImage.left;
+			p->m_arrPolyData[j].y = (int)(p->m_arrScalars[j].y * (float)rcImage.Height()) + rcImage.top;
+		}
+		p->CreatePolyRgn(); // keep region in sync with external data.
+	}
+
+	// scale the ellipse
+	if (p->m_cutoffType == eELLIPSE) {
+		CPoint origin  = p->m_ellipse.GetOrigin();
+		CPoint xPoint  = p->m_ellipse.GetXAxisEndPoint();
+		float  minorRatio = 1.0f / p->m_ellipse.GetAxisRatio();
+
+		origin.x = (int) (p->rlx1 * (float)rcImage.Width()) + rcImage.left;
+		origin.y = (int) (p->rly1 * (float)rcImage.Height()) + rcImage.top;
+		p->m_ellipse.SetOrigin(origin);
+
+		xPoint.x = (int) (p->rlx2 * (float)rcImage.Width()) + rcImage.left;
+		xPoint.y = (int) (p->rly2 * (float)rcImage.Height()) + rcImage.top;
+		p->m_ellipse.SetAxis(xPoint, minorRatio);
+	}
+}
+
+void CCrossPlotView::ShowVertexPoint(CDC *pDC, CPoint vertexPoint, CPen *pPen)
+{
+	CRect vRect;
+	CPen *pSavePen = pDC->SelectObject(pPen);
+	vRect.left   = vertexPoint.x - VERTEXSIZE/2;
+	vRect.top    = vertexPoint.y - VERTEXSIZE/2;
+	vRect.right  = vertexPoint.x + VERTEXSIZE;
+	vRect.bottom = vertexPoint.y + VERTEXSIZE;
+	pDC->Rectangle(vRect);	
+	pDC->SelectObject(pSavePen);
+}
+
+void CCrossPlotView::DrawPolygon(CDC *pDC, CCutoffParms *pCutoff, int index, BOOL bActive)
+{
+	int nPoint = pCutoff->m_nPolyData;
+	if (nPoint > 0) {
+		CPoint vertexPoint = pCutoff->m_arrPolyData[0];
+		if (bActive) ShowVertexPoint(pDC, vertexPoint, &m_redPen);
+		pDC->MoveTo(vertexPoint);
+
+		for (int i=0; i<nPoint; i++) {
+			vertexPoint = pCutoff->m_arrPolyData[i];
+			pDC->LineTo(vertexPoint);
+			if (bActive) ShowVertexPoint(pDC, vertexPoint, &m_redPen);
+		}
+	}
+	if (index >= 0) {
+		CString sText;
+		sText.Format("%d", index+1);
+		pDC->SetTextAlign(TA_LEFT|TA_BASELINE);
+		pDC->TextOut(pCutoff->lx1, pCutoff->ly1, sText);
+	}
+}
+
+CIMACDoc * CCrossPlotView::GetDocument()
+{
+	ASSERT(m_pDocument->IsKindOf(RUNTIME_CLASS(CIMACDoc)));
+	return (CIMACDoc*)m_pDocument;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+// CCrossPlotView diagnostics
+
+#ifdef _DEBUG
+void CCrossPlotView::AssertValid() const
+{
+	CView::AssertValid();
+}
+
+void CCrossPlotView::Dump(CDumpContext& dc) const
+{
+	CView::Dump(dc);
+}
+#endif //_DEBUG
+
+/////////////////////////////////////////////////////////////////////////////
+// CCrossPlotView message handlers
+
+
+
+void CCrossPlotView::OnMouseLeave()
+{
+//	return;
+	//TRACE("CCrossPlotView::OnMouseLeave()\n");
+	CIMACDoc* pDoc = GetDocument();
+
+	// Handle drag and drop
+	if (pDoc->IsDragMode()){
+//		pDoc->ChangeCursor(GetSafeHwnd(), pDoc->GetDefaultCursor());
+		pDoc->SetTargetCursorFlag(FALSE);
+	}
+
+	m_mouseEnter = FALSE;
+	Invalidate();
+	CView::OnMouseLeave();
+}
+
+void CCrossPlotView::OnLButtonDblClk(UINT nFlags, CPoint point)
+{
+	CIMACDoc* pDoc = GetDocument();
+
+	// Double click ends poly digitize mode.
+	if (m_bDigitizePoly && !m_firstDigitizedPoint) {
+		m_pDigitizeCutoff->m_cutoffType = ePOLY;
+		m_bEscapeDown = TRUE;
+		
+		// Update HW
+		pDoc->SendCutoffDataToHeadwave(m_viewInstance);
+
+		pDoc->SetReadyToCompute();
+		pDoc->UpdateViews();
+		Invalidate(TRUE);
+		return;
+	}
+
+	OnLButtonDown(nFlags, point);
+}
+
+void CCrossPlotView::OnLButtonDown(UINT nFlags, CPoint point) 
+{
+	// TRACE("CCrossPlotView::OnLButtonDown()\n");
+	CIMACDoc* pDoc = GetDocument();
+	m_cursor = NULL;
+
+	CRect Rect;
+	GetWindowRect(Rect);
+
+	// Check click on first point to end poly digitize mode.
+	if (m_bDigitizePoly && !m_firstDigitizedPoint) {
+		if (point.x > m_firstClickSave.x-3 &&
+			point.x < m_firstClickSave.x+3 &&
+			point.y > m_firstClickSave.y-3 &&
+			point.y < m_firstClickSave.y+3)
+		{
+			m_pDigitizeCutoff->m_cutoffType = ePOLY;
+			m_bEscapeDown = TRUE;
+			pDoc->SetReadyToCompute();
+			pDoc->UpdateViews();
+			Invalidate(TRUE);
+			return;
+		}
+	}
+
+	// Handle digitizing
+	if (m_bDigitizePoly || m_bDigitizeEllipse) {
+		if (m_firstDigitizedPoint) {
+			m_firstDigitizedPoint = FALSE;
+			m_firstClickSave = point;
+		}
+		m_mx_origin = point.x;
+		m_my_origin = point.y;
+		m_lbuttondown = TRUE;
+		ClipCursor(Rect);
+		Invalidate(TRUE);
+		return;
+	}
+
+	int hotSpot = isHotSpot(point);
+	//TRACE("Enter CCrossPlotView::OnLButtonDown %d Hotspot %d\n", m_viewInstance, hotSpot);
+
+	CXplotParms *pXpParms=pDoc->GetXplotParms(m_viewInstance);
+
+	// save the undo objects.  Only changes to cutoff objects can be undone.
+	if (hotSpot >= eP1 && pXpParms->GetCutoffCount() > 0) {
+		if (pXpParms->CutoffParmsGetAt(m_activeLine) != NULL) { // active line may not have been updated.
+			// get the object group ID if group mode is on
+			int groupID = -1;
+			if (pXpParms->m_bGroupMove) {
+				groupID = pXpParms->CutoffParmsGetAt(m_activeLine)->m_nGroupID;
+			}
+			if (groupID == -1) {
+				// save single event in the undo list
+				CUndoItem undoItem;
+				undoItem.m_cutoff  = *pXpParms->CutoffParmsGetAt(m_activeLine);
+				undoItem.m_event   = hotSpot;
+				undoItem.m_line    = m_activeLine;
+				undoItem.m_eventID = m_nextUndoEventID++;
+				UndoListAddTail(&undoItem);
+			} else {
+				// in group mode - save all members of the group
+				for (int i=0; i<pXpParms->GetCutoffCount(); i++) {
+					CCutoffParms *p = pXpParms->CutoffParmsGetAt(i);
+					if (p->m_nGroupID == groupID) {
+						CUndoItem undoItem;
+						undoItem.m_cutoff = *pXpParms->CutoffParmsGetAt(i);
+						undoItem.m_event  = eKEYBOARD;
+						undoItem.m_line   = i;
+						undoItem.m_eventID = m_nextUndoEventID;
+						UndoListAddTail(&undoItem);
+					}
+				}
+				m_nextUndoEventID++;
+			}
+		}
+	}
+
+	// Adjust the Y axis length	
+	if (hotSpot == eYAXIS) {
+		m_lbuttondown=TRUE;
+		m_lyonly=TRUE;
+		m_saveEndpoint = y1;
+		SaveCutoffParms();
+		Rect.left = x1 - MERR;
+		Rect.right = x1 + MERR;
+		Rect.top = 0;
+		Rect.bottom = y2 - BORDER;
+		ClientToScreen(Rect);
+		ClipCursor(Rect);
+		m_cursor = IDC_SIZENS;
+
+	// Adjust the X axis length
+	} else if (hotSpot == eXAXIS) {
+		m_lbuttondown=TRUE;
+		m_lxonly=TRUE;
+		m_saveEndpoint = x2;
+		SaveCutoffParms();
+		GetClientRect(Rect);
+		Rect.top = y2 - MERR;
+		Rect.bottom = y2 + MERR;
+		Rect.left = x1 + BORDER;
+		ClientToScreen(Rect);
+		ClipCursor(Rect);
+		m_cursor = IDC_SIZEWE;
+
+
+	// Adjust the slope of the cutoff line, move P1
+	} else if (hotSpot == eP1) {
+		if (m_cutoffType == eLINE) {
+			m_lbuttondown=TRUE;
+			m_lslope1=TRUE;
+			Rect.right=Rect.left+x2;
+			Rect.bottom=Rect.top+y2;
+			Rect.left+=x1;
+			Rect.top+=y1;
+			ClipCursor(&Rect);
+		}
+
+	// Adjust the slope of the cutoff line, move P2
+	} else if (hotSpot == eP2) {
+		if (m_cutoffType == eLINE) {
+			m_lbuttondown=TRUE;
+			m_lslope2=TRUE;
+			Rect.right=Rect.left+x2;
+			Rect.bottom=Rect.top+y2;
+			Rect.left+=x1;
+			Rect.top+=y1;
+			ClipCursor(&Rect);
+		}
+
+	// Adjust the origin of the graph.
+	} else if (hotSpot == eGRAPH) {
+		m_graph=TRUE;
+		m_lbuttondown=TRUE;
+		Rect.right-=RIGHTBORDER;
+		Rect.top+=BORDER;
+		ClipCursor(&Rect);
+		m_cursor = IDC_SIZEALL;
+
+	// drag an entire line
+	} else if (hotSpot == eACTIVELINE) {
+		m_lbuttondown=TRUE;
+		m_lintercept=TRUE;
+		Rect.right=Rect.left+x2;
+		Rect.bottom=Rect.top+y2;
+		Rect.left+=x1+5;
+		Rect.top+=y1;
+		ClipCursor(&Rect);
+
+	// drag a poly or ellipse
+	} else if (hotSpot == eACTIVEPOLY ||
+			   hotSpot == eACTIVEELLIPSE) {
+		m_lbuttondown=TRUE;
+		m_lintercept=TRUE;
+		ClipCursor(&Rect);
+		m_cursor = IDC_NO;
+		m_externalCursor = IDC_GRABBED;
+
+	// edit the vertex of one of the polygons
+	} else if (hotSpot == ePOLYVERTEX) {
+		m_bEditPolyVertex=TRUE;
+		m_lbuttondown=TRUE;
+		ClipCursor(&Rect);
+		m_cursor = IDC_HAND;
+
+	// edit the axis of an ellipse
+	} else if (hotSpot == eELLIPSEAXIS) {
+		m_bEditEllipseAxis=TRUE;
+		m_lbuttondown=TRUE;
+		ClipCursor(&Rect);
+		m_cursor = IDC_HAND;
+	}
+	m_mx_origin=point.x;
+	m_my_origin=point.y;
+	m_mx_click = point.x;
+	m_my_click = point.y;
+
+	if (m_lbuttondown && !m_cursor) {
+		m_cursor = IDC_HAND;
+	}
+
+	m_densityModeUpdateFlag = FALSE;
+
+	//TRACE("Leave CCrossPlotView::OnLButtonDown %d\n", m_viewInstance);
+}
+
+int CCrossPlotView::isHotSpot(CPoint point)
+{
+//	TRACE("Enter CCrossPlotView::isHotSpot %d\n", m_viewInstance);
+
+	CIMACDoc* pDoc = GetDocument();
+	CXplotParms *pXpParms=pDoc->GetXplotParms(m_viewInstance);
+	CRect rect;
+	GetClientRect(rect);
+	int hotSpot = eNONE;
+
+	// polygon vertexes, and ellipse axis.
+	for (int i=0; i<pXpParms->GetCutoffCount(); i++) {
+		CCutoffParms *pCutoff = pXpParms->CutoffParmsGetAt(i);
+		if (pCutoff->m_cutoffType == ePOLY) {
+			int iVertex = CIMACDoc::isPointNearPolyVertex((float)point.x, (float)point.y, pCutoff);
+			if (iVertex >= 0) {
+				hotSpot = ePOLYVERTEX;
+				// tuck this away for later editing.
+				m_pEditCutoff = pCutoff;
+				m_vertexIndex = iVertex;
+				break;
+			}
+		} else if (pCutoff->m_cutoffType == eELLIPSE) {
+			int iVertex = CIMACDoc::isPointNearEllipseAxis((float)point.x, (float)point.y, pCutoff);
+			if (iVertex >= 0) {
+				hotSpot = eELLIPSEAXIS;
+				// tuck this away for later editing.
+				m_pEditCutoff = pCutoff;
+				m_vertexIndex = iVertex;
+				break;
+			}
+		}
+	}
+
+	// check the active polygon or ellipse, it might be outside the axis.
+	if (pXpParms->GetCutoffCount() > 0 && hotSpot == eNONE ) {
+		CCutoffParms *pCutoff = pXpParms->CutoffParmsGetAt(m_activeLine);
+		if (pCutoff) {
+			if (pCutoff->m_cutoffType == ePOLY) {
+				if (pCutoff->m_bPolyCreated && pCutoff->polyRgn.PtInRegion(point)) {
+					hotSpot = eACTIVEPOLY;
+				}
+
+			} else if (pCutoff->m_cutoffType == eELLIPSE) {
+				if (pCutoff->m_ellipse.PtInEllipse(point)) {
+					hotSpot = eACTIVEELLIPSE;
+				}
+			} 
+		}
+	}
+
+	if ( hotSpot == eNONE ) {
+
+		// end of the Y axis
+		if (point.x>x1-MERR && point.x<x1+MERR &&
+			point.y>y1-MERR && point.y<y1+MERR) 
+		{
+			hotSpot = eYAXIS;
+
+		// end of the X axis
+		} else if (point.x>x2-MERR && point.x<x2+MERR &&
+				   point.y>y2-MERR && point.y<y2+MERR) 
+		{
+			hotSpot = eXAXIS;
+
+		// point p1
+		} else if (point.x>lx1-MERR && point.x<lx1+MERR &&
+				   point.y>ly1-MERR && point.y<ly1+MERR &&
+				   m_cutoffType==eLINE) 
+		{
+			hotSpot = eP1;
+
+		// point p2
+		} else if (point.x>lx2-MERR && point.x<lx2+MERR &&
+				   point.y>ly2-MERR && point.y<ly2+MERR &&
+				   m_cutoffType==eLINE) 
+		{
+			hotSpot = eP2;
+
+		// to the left of the Y axis or below the X axis
+		} else if ((point.x<x1 && point.x>x1-BORDER && point.y>y1 && point.y<y2+BORDER ) || 
+				   (point.y>y2 && point.y<y2+BORDER && point.x<x2 && point.x>x1-BORDER)) 
+		{
+			hotSpot = eGRAPH;
+
+		} else if (pXpParms->GetCutoffCount() > 0) {
+
+			// check the active line
+			CCutoffParms *pCutoff = pXpParms->CutoffParmsGetAt(m_activeLine);
+			if (pCutoff && pCutoff->m_cutoffType == eLINE) {
+				int itmp;
+				BOOL bChkY;
+				if (abs(lx2-lx1) > abs(ly1-ly2)) {
+					itmp = (int)((float)(point.x-lx1)/(float)(lx2-lx1)*(float)(ly2-ly1))+ly1;
+					bChkY = TRUE;
+				} else {
+					itmp = (int)((float)(ly1-point.y)/(float)(ly1-ly2)*(float)(lx2-lx1))+lx1;
+					bChkY = FALSE;
+				}
+				if ((( bChkY && (itmp>point.y-MERR && itmp<point.y+MERR)) ||
+						(!bChkY && (itmp>point.x-MERR && itmp<point.x+MERR)))
+							&& point.x>x1
+							&& point.y<y2 )
+				{
+					hotSpot = eACTIVELINE;
+				}
+
+			}
+		}
+	}
+	
+	//TRACE("LEAVE CCrossPlotView::isHotSpot %d\n", m_viewInstance);
+	return hotSpot;
+}
+
+void CCrossPlotView::OnLButtonUp(UINT nFlags, CPoint point)
+{
+	//TRACE("Enter CCrossPlotView::OnLButtonUp %d\n", m_viewInstance);
+	CIMACDoc *pDoc = GetDocument();
+
+	if (pDoc->IsDragMode()) {
+		CXplotParms *pXpParms = pDoc->GetXplotParms(m_viewInstance);
+		CString strAttr = pDoc->GetDragData();
+		float fMin = 0;
+		float fMax = 0;
+		for (int i = 0; i < pDoc->GetFileCount(); i++){
+			if (pDoc->GetAttr(i) == strAttr) {
+				fMin = pDoc->GetScanMinMax(i).min;
+				fMax = pDoc->GetScanMinMax(i).max;
+				break;
+			}
+		}
+		if (fMin == 0 && fMax == 0){
+			for (int i = 0; i < pDoc->GetVirtualVolumeCount(); i++){
+				if (pDoc->GetVirtualVolumeAttributeName(i) == strAttr) {
+					fMin = pDoc->GetVirtualVolumeMinMax(strAttr).min;
+					fMax = pDoc->GetVirtualVolumeMinMax(strAttr).max;
+				}
+
+			}
+		}
+		if (bLabelHotSpot == 1) {
+			pXpParms->m_strYAttr = strAttr;
+			pXpParms->m_fYMin = fMin;
+			pXpParms->m_fYMax = fMax;
+		} 
+		else if (bLabelHotSpot == 2) {
+			pXpParms->m_strXAttr = strAttr;
+			pXpParms->m_fXMin = fMin;
+			pXpParms->m_fXMax = fMax;
+		}
+		//		pDoc->ChangeCursor(GetSafeHwnd(), pDoc->GetDefaultCursor());
+		pDoc->SetTargetCursorFlag(FALSE);
+		pDoc->SetDragMode(FALSE);
+		pDoc->LoadData();
+		pDoc->SetReadyToCompute();
+		pDoc->UpdateViews();
+		return;
+	}
+
+	m_cursor = NULL;
+
+	// Handle digitizing modes
+	if (m_bDigitizePoly) {
+		// onDraw releases the m_lbuttondown flag.
+		return;
+	}
+	if (m_bDigitizeEllipse) {
+		m_lbuttondown = FALSE;
+		return;
+	}
+
+	CXplotParms *pXpParms=pDoc->GetXplotParms(m_viewInstance);
+
+	ClipCursor(NULL);
+
+	m_lbuttondown = FALSE;
+	m_lxonly      = FALSE;
+	m_lyonly      = FALSE;
+	m_lslope1     = FALSE;
+	m_lslope2     = FALSE;
+	m_lintercept  = FALSE;
+	m_bEditPolyVertex  = FALSE;
+	m_bEditEllipseAxis = FALSE;
+
+	// The graph has been moved, check the ends of the axis, if they fall outside the work area then rescale.
+	if (m_graph) {
+		//TRACE("CCrossPlotView::OnLButtonUp scale elements\n");
+		CRect Rect;
+		GetClientRect( &Rect );
+
+		if (x2 > Rect.right-BORDER) {
+			SaveCutoffParms();
+			m_saveEndpoint = x2;
+			x2 = Rect.right-BORDER;
+			ScaleCutoffElements(eCUT_XAXIS);
+		}
+
+		if (y1 < BORDER) {
+			SaveCutoffParms();
+			m_saveEndpoint = y1;
+			y1 = BORDER;
+			ScaleCutoffElements(eCUT_YAXIS);
+		}
+
+		pXpParms->x1 = x1;
+		pXpParms->x2 = x2;
+		pXpParms->y1 = y1;
+		pXpParms->y2 = y2;
+		m_graph = FALSE;
+	}
+
+	//Compute the slope and intercept on all lines.
+	RecomputeAllLines(pXpParms);
+	rlx1 = rlx2 = rly1 = rly2 = -1;
+	rx1 = rx2 = ry1 = ry2 = -1;
+
+	if (pXpParms->m_nScatterMode == eDENSITY && m_densityModeUpdateFlag) {
+		pXpParms->SetDensityModeUpdateFlag(TRUE);
+	}
+	m_densityModeUpdateFlag = FALSE;
+
+	// Data is sent to Headwave if Headwave mode is on.
+	pDoc->SendCutoffDataToHeadwave(m_viewInstance);
+
+	pDoc->SetReadyToCompute();
+	pDoc->UpdateViews();
+
+	//TRACE("Leave CCrossPlotView::OnLButtonUp %d\n", m_viewInstance);
+}
+
+void CCrossPlotView::RecomputeAllLines(CXplotParms *pXpParms)
+{
+	CCutoffParms *pCutoff;
+	int saveActiveLine = m_activeLine;
+	for (int i=0; i<pXpParms->GetCutoffCount(); i++) {
+		m_activeLine = i;
+		pCutoff = pXpParms->CutoffParmsGetAt(i);
+		lx1 = pCutoff->lx1;
+		ly1 = pCutoff->ly1;
+		lx2 = pCutoff->lx2;
+		ly2 = pCutoff->ly2;
+		m_intercept = pCutoff->m_fIntercept;
+		m_slope =     pCutoff->m_fSlope;
+		ComputeSlopeAndIntercept();
+		pCutoff->rlx1 = -1;
+		pCutoff->rly1 = -1;
+		pCutoff->rlx2 = -1;
+		pCutoff->rly2 = -1;
+	}
+	m_activeLine = saveActiveLine;
+	if (m_activeLine >= pXpParms->GetCutoffCount()) m_activeLine = 0;
+	if (pXpParms->GetCutoffCount() > 0) {
+		pCutoff = pXpParms->CutoffParmsGetAt(m_activeLine);
+		lx1 = pCutoff->lx1;
+		ly1 = pCutoff->ly1;
+		lx2 = pCutoff->lx2;
+		ly2 = pCutoff->ly2;
+		m_intercept = pCutoff->m_fIntercept;
+		m_slope = pCutoff->m_fSlope;
+	}
+}
+
+void CCrossPlotView::OnRButtonDown(UINT nFlags, CPoint point)
+{
+	CIMACDoc* pDoc = GetDocument();
+
+	// when digitizing a polygon the right button will delete the last point.
+	if (m_bDigitizePoly) {
+		m_rbuttondown=TRUE;
+		pDoc->SetReadyToDisplay(m_viewInstance+1, TRUE);
+		Invalidate(TRUE);
+		return;
+	}
+
+}
+
+void CCrossPlotView::OnMouseMove(UINT nFlags, CPoint point) 
+{
+	//TRACE("CCrossPlotView::OnMouseMove()\n");
+	//TRACE("Enter CCrossPlotView::OnMouseMove %d\n", m_viewInstance);
+	//TRACE("Enter CCrossPlotView::OnMouseMove %d %d\n", point.x, point.y);
+
+	CIMACDoc *pDoc = GetDocument();
+	CXplotParms *pXpParms = pDoc->GetXplotParms(m_viewInstance);
+	CCutoffParms *pCutoff;
+
+	// Handle drag and drop
+	if (pDoc->IsDragMode()){
+
+		// if button is down check for axis hot spots
+		if ((nFlags & MK_LBUTTON)) {
+			if (yLabelHotSpot.PtInRect(point)){
+				bLabelHotSpot = 1;
+			} else if (xLabelHotSpot.PtInRect(point)){
+				bLabelHotSpot = 2;
+			} else {
+				bLabelHotSpot = 0;
+			}			
+			
+			// turn the custom cursor on the first time.
+			if (!pDoc->IsTargetCursorFlag()) {
+//				pDoc->ChangeCursor(GetSafeHwnd(), pDoc->GetCustomCursor());
+				pDoc->SetTargetCursorFlag(TRUE);
+			}
+
+		// If button is up, user is no longer dragging
+		} else {			
+//			pDoc->ChangeCursor(GetSafeHwnd(), pDoc->GetDefaultCursor());
+			pDoc->SetTargetCursorFlag(FALSE);
+			pDoc->SetDragMode(FALSE);	
+			pDoc->SetReadyToCompute();
+			pDoc->UpdateViews();
+			return;
+		}
+	}
+
+	if (!m_mouseEnter) m_mouseEnter = TRUE;
+		
+	// We need to call TrackMouseEvent() to properly handle the mouse leave message.
+	// But, TrackMouseEvent() messes up the digitizing messages. So we don't turn it on when digitizing.
+	if (!m_bDigitizePoly && !m_bDigitizeEllipse) {
+		TRACKMOUSEEVENT tme; 
+		tme.cbSize = sizeof(tme); 
+		tme.hwndTrack = m_hWnd; 
+		tme.dwFlags = TME_LEAVE; 
+		tme.dwHoverTime = HOVER_DEFAULT; 
+		TrackMouseEvent(&tme); 
+	}
+
+	if (m_lbuttondown && !(nFlags & MK_LBUTTON)) {
+		// the button was released but the event was lost, so we call the handler now
+		// ie. m_lbuttondown is true but nFlags bit indicates button is up.
+		OnLButtonUp(nFlags, point);
+		return;
+	}
+
+	m_mx = point.x;
+	m_my = point.y;
+	m_cursor = NULL;
+
+	// status bar...
+	// report the cursor position...
+	float xmin, xmax, ymin, ymax;
+	xmin = pXpParms->m_fXMin;
+	xmax = pXpParms->m_fXMax;
+	ymin = pXpParms->m_fYMin;
+	ymax = pXpParms->m_fYMax;
+	if (m_mx >= x1 && m_mx <= x2 && m_my >= y1 && m_my <= y2) {
+		float fx = (float)(m_mx - x1) / (float)(x2 - x1) * (xmax - xmin) + xmin;
+		float fy = (float)(m_my - y1) / (float)(y2 - y1) * (ymin - ymax) + ymax;
+		CString sText;
+		sText.Format("x:%.2f", fx);
+		pStatusBar->SetPaneText(2, sText);
+		sText.Format("y:%.2f", fy);
+		pStatusBar->SetPaneText(3, sText);
+	}	
+
+	// Handle digitizing
+	if (m_bDigitizePoly || m_bDigitizeEllipse) {
+		RECT Rect;
+		GetWindowRect(&Rect);
+		ClipCursor(&Rect);
+		Invalidate(FALSE);
+		return;
+	}
+
+	BOOL bRedraw = TRUE;
+
+	if (m_lbuttondown) {
+		m_cursor = IDC_HAND;
+		// Adjust the length of the Y axis
+		if (m_lyonly) {
+			bRedraw = FALSE;
+			m_cursor = IDC_SIZENS;
+			y1=point.y;
+
+		// Adjust the length of the X axis
+		} else if (m_lxonly) {
+			bRedraw = FALSE;
+			m_cursor = IDC_SIZEWE;
+			x2=point.x;
+
+		// Adjust the slope of the cutoff line, move P1
+		} else if (m_lslope1) {
+			bRedraw = FALSE;
+			pCutoff = pXpParms->CutoffParmsGetAt(m_activeLine);
+			if (point.x<lx2) {
+				ly1=point.y;
+				lx1=point.x;
+
+			//flip the line over it passed vertical
+			} else if (pXpParms->GetCutoffCount() > 0) {
+				ly1=ly2;
+				lx1=lx2;
+				ly2=point.y;
+				lx2=point.x;
+				m_lslope1=FALSE;
+				m_lslope2=TRUE;
+				int itmp = pCutoff->m_nClassAbove;
+				pCutoff->m_nClassAbove = pCutoff->m_nClassBelow;
+				pCutoff->m_nClassBelow = itmp;
+			}
+			if (pXpParms->m_nScatterMode == eDENSITY) {
+				if (DoesCutoffFilterEffectVisiblePoints(pCutoff, m_classListArray)) m_densityModeUpdateFlag = TRUE;
+			}
+
+		// Adjust the slope of the cutoff line, move P2
+		} else if (m_lslope2) {
+			bRedraw = FALSE;
+			pCutoff = pXpParms->CutoffParmsGetAt(m_activeLine);
+			if (point.x>lx1) {
+				ly2=point.y;
+				lx2=point.x;
+
+			//flip the line over it passed vertical
+			} else {
+				ly2=ly1;
+				lx2=lx1;
+				ly1=point.y;
+				lx1=point.x;
+				m_lslope1=TRUE;
+				m_lslope2=FALSE;
+				if (pXpParms->GetCutoffCount() > 0) {
+					int itmp = pCutoff->m_nClassAbove;
+					pCutoff->m_nClassAbove = pCutoff->m_nClassBelow;
+					pCutoff->m_nClassBelow = itmp;
+				}
+			}
+			if (pXpParms->m_nScatterMode == eDENSITY) {
+				if (DoesCutoffFilterEffectVisiblePoints(pCutoff, m_classListArray)) m_densityModeUpdateFlag = TRUE;
+			}
+
+
+		// Adjust the position of the entire line, poly or ellipse.
+		} else if (m_lintercept) {
+			bRedraw = FALSE;
+			// get the object group ID if group mode is on
+			int groupID = -1;
+			if (pXpParms->m_bGroupMove && pXpParms->GetCutoffCount() > 0) {
+				if (pXpParms->CutoffParmsGetAt(m_activeLine)) {
+					groupID = pXpParms->CutoffParmsGetAt(m_activeLine)->m_nGroupID;
+				}
+			}
+
+			ly1 += (point.y-m_my_origin);
+			ly2 += (point.y-m_my_origin);
+			lx1 += (point.x-m_mx_origin);
+			lx2 += (point.x-m_mx_origin);
+			for (int i=0; i<pXpParms->GetCutoffCount(); i++) {
+				// do all members in the group
+				CCutoffParms *p = pXpParms->CutoffParmsGetAt(i);
+				if (i != m_activeLine && p->m_nGroupID != groupID) continue;
+				if (p->m_cutoffType == eLINE) {
+					p->ly1 += (point.y-m_my_origin);
+					p->ly2 += (point.y-m_my_origin);
+					p->lx1 += (point.x-m_mx_origin);
+					p->lx2 += (point.x-m_mx_origin);
+				} else if (p->m_cutoffType == ePOLY) {
+					m_cursor = IDC_NO;
+					m_externalCursor = IDC_GRABBED;
+					int indx = 0;
+					while (indx < p->m_nPolyData) {
+						p->m_arrPolyData[indx].x += point.x-m_mx_origin;
+						p->m_arrPolyData[indx].y += point.y-m_my_origin;
+						indx++;
+					}
+					p->polyRgn.OffsetRgn(point.x-m_mx_origin, point.y-m_my_origin);
+					p->lx1 = p->m_arrPolyData[0].x;
+					p->ly1 = p->m_arrPolyData[0].y;
+				} else if (p->m_cutoffType == eELLIPSE) {
+					m_cursor = IDC_NO;
+					m_externalCursor = IDC_GRABBED;
+					CPoint newPoint = p->m_ellipse.GetOrigin();
+					newPoint.x += point.x - m_mx_origin;
+					newPoint.y += point.y - m_my_origin;
+					p->m_ellipse.SetOrigin(newPoint);
+				}
+				if (pXpParms->m_nScatterMode == eDENSITY) {
+					if (DoesCutoffFilterEffectVisiblePoints(p, m_classListArray)) m_densityModeUpdateFlag = TRUE;
+				}
+			}
+			m_mx_origin=point.x;
+			m_my_origin=point.y;
+
+		// Adjust the location of the selected vertex
+		} else if (m_bEditPolyVertex) {
+			bRedraw = FALSE;
+			CPoint oldPoint = m_pEditCutoff->m_arrPolyData[m_vertexIndex];
+			m_pEditCutoff->m_arrPolyData[m_vertexIndex] = point;
+			if (m_vertexIndex == 0) {
+				m_pEditCutoff->m_arrPolyData[m_pEditCutoff->m_nPolyData-1] = point;
+				m_pEditCutoff->lx1 = point.x;
+				m_pEditCutoff->ly1 = point.y;
+			}
+
+			// save the point so OnDraw can highlight it.
+			m_pEditCutoff->CreatePolyRgn();
+			if (DoesCutoffFilterEffectVisiblePoints(m_pEditCutoff, m_classListArray)) m_densityModeUpdateFlag = TRUE;
+
+		// Adjust the ellipse axis
+		} else if (m_bEditEllipseAxis) {
+			bRedraw = FALSE;
+			if (m_vertexIndex == 0) {
+				m_pEditCutoff->m_ellipse.SetXAxisEndPoint(point);
+			} else {
+				m_pEditCutoff->m_ellipse.SetYAxisEndPoint(point);
+			}
+			if (DoesCutoffFilterEffectVisiblePoints(m_pEditCutoff, m_classListArray)) m_densityModeUpdateFlag = TRUE;
+
+		} else {
+			// Adjust the position of the entire graph, adjust line lengths if necessary.
+			bRedraw = FALSE;
+			CRect rcItem;
+			GetClientRect( &rcItem );
+			int left   = BORDER*2;
+			int bottom = rcItem.bottom-BORDER;
+			int right  = rcItem.right-RIGHTBORDER;
+			int top    = BORDER;
+
+			int dx = point.x - m_mx_origin;
+			int dy = point.y - m_my_origin;
+
+			x1 += dx;
+			x2 += dx;
+			y1 += dy;
+			y2 += dy;
+
+			lx1 += dx;
+			ly1 += dy;
+			lx2 += dx;
+			ly2 += dy;
+				
+			for (int i=0; i<pXpParms->GetCutoffCount(); i++) {
+				CCutoffParms *p = pXpParms->CutoffParmsGetAt(i);
+				p->lx1 += dx;
+				p->ly1 += dy;
+				p->lx2 += dx;
+				p->ly2 += dy;
+				if (p->m_cutoffType == ePOLY) {
+					int indx = 0;
+					while (indx < p->m_nPolyData) {
+						p->m_arrPolyData[indx].x += dx;
+						p->m_arrPolyData[indx].y += dy;
+						indx++;
+					}
+					p->polyRgn.OffsetRgn(dx, dy);
+
+				} else if (p->m_cutoffType == eELLIPSE) {
+					p->m_ellipse += CPoint(dx, dy);
+				}
+			}
+
+			m_mx_origin = point.x;
+			m_my_origin = point.y;
+			
+			m_cursor = IDC_SIZEALL;
+		}
+		if (pXpParms->GetCutoffCount() > 0) {
+			pCutoff = pXpParms->CutoffParmsGetAt(m_activeLine);
+			if (pCutoff && pCutoff->m_cutoffType == eLINE) {
+				pCutoff->lx1 = lx1;
+				pCutoff->ly1 = ly1;
+				pCutoff->lx2 = lx2;
+				pCutoff->ly2 = ly2;
+			}
+		}
+
+		// fine tune mode, update everything on each mouse motion event.
+		if (pXpParms->m_bFineTuneMode) {
+			ComputeSlopeAndIntercept();
+			pDoc->SetReadyToCompute();
+			pDoc->UpdateViews(TRUE);
+			return;
+		}
+
+		// if the length of the axis were changed then scale the cutoff elements appropriately.
+		if ( m_lxonly || m_lyonly ) {
+			ScaleCutoffElements(m_lxonly?eCUT_XAXIS:eCUT_YAXIS);
+		}
+
+	} else { // left button is up
+
+		bRedraw = FALSE;
+
+		// find the nearest cutoff line or poly to the cursor and make it active
+		int nearline=-1;
+		double nearest=-1;
+		double dist;
+
+		for (int i=0; i<pXpParms->GetCutoffCount(); i++) {
+			pCutoff = pXpParms->CutoffParmsGetAt(i);
+			if (pCutoff->m_cutoffType == ePOLY) {
+				int iVert = CIMACDoc::isPointNearPolyVertex((float)point.x, (float)point.y, pCutoff);
+				if (iVert >= 0) {
+					nearline = i;
+					break;
+				} else if (pCutoff->m_bPolyCreated && pCutoff->polyRgn.PtInRegion(point)) {
+					nearline = i;
+					break;
+				}
+			} else if (pCutoff->m_cutoffType == eELLIPSE) {
+				int iVert = CIMACDoc::isPointNearEllipseAxis((float)point.x, (float)point.y, pCutoff);
+				if (iVert == 0 || iVert == 1) {
+					nearline = i;
+					break;
+				} else if (pCutoff->m_ellipse.PtInEllipse(point)) {
+					nearline = i;
+					break;
+				}
+			} else {
+				dist = PointLineAbsDistance(pCutoff, point.x, point.y);
+				if (nearest < 0) {
+					nearest = dist;
+					nearline = i;
+				} else if (dist < nearest) {
+					nearest = dist;
+					nearline = i;
+				}
+			}
+		}
+
+		// set the active line, or polygon
+		if (nearline >= 0) {
+			m_activeLine = nearline;
+			pCutoff = pXpParms->CutoffParmsGetAt(m_activeLine);
+			pStatusBar->SetPaneText(1, pCutoff->m_strCutoffName);
+
+            //TRACE("New activeLine=%d\n", m_activeLine);
+		} else pStatusBar->SetPaneText(1, "");
+
+		// change the cursor when it's over a hotspot.
+		int hotSpot = isHotSpot(point);
+		
+		if (hotSpot == eXAXIS) {
+			m_cursor = IDC_SIZEWE;
+
+		} else if (hotSpot == eYAXIS) {
+			m_cursor = IDC_SIZENS;
+
+		} else if (hotSpot == eACTIVELINE ) {
+			m_cursor = IDC_HAND;
+
+		} else if (hotSpot == eACTIVEPOLY) {
+			m_cursor = IDC_NO;
+			m_externalCursor = IDC_OPENHAND;
+
+		} else if (hotSpot == eACTIVEELLIPSE) {
+			m_cursor = IDC_NO;
+			m_externalCursor = IDC_OPENHAND;
+
+		} else if (hotSpot == eP1 && m_cutoffType == eLINE) {
+			m_cursor = IDC_HAND;
+
+		} else if (hotSpot == eP2 && m_cutoffType == eLINE) {
+			m_cursor = IDC_HAND;
+
+		} else if (hotSpot == eGRAPH) {
+			m_cursor = IDC_SIZEALL;
+
+		} else if (hotSpot == ePOLYVERTEX) {
+			m_cursor = IDC_HAND;
+
+		} else if (hotSpot == eELLIPSEAXIS) {
+			m_cursor = IDC_HAND;
+		}
+
+	}
+
+	if (bRedraw) {
+		pDoc->SetReadyToDisplay(m_viewInstance+1, TRUE);
+	}
+	Invalidate(FALSE);
+
+	//TRACE("LEAVE CCrossPlotView::OnMouseMove %d\n", m_viewInstance);
+}
+
+//
+// If either of the classes above or below (inside or outside) but not both are on the class filter list
+// then that cutoff will change the visible points on the crossplot.
+// 
+BOOL CCrossPlotView::DoesCutoffFilterEffectVisiblePoints(CCutoffParms *pCutoff, BOOL *pClassListArray)
+{
+	if (pCutoff == NULL) return FALSE;
+	if (pCutoff->m_nClassAbove >= MAXCLASS || pCutoff->m_nClassAbove < 0) return FALSE;
+	if (pCutoff->m_nClassBelow >= MAXCLASS || pCutoff->m_nClassBelow < 0) return FALSE;
+	BOOL above = pClassListArray[pCutoff->m_nClassAbove];
+	BOOL below = pClassListArray[pCutoff->m_nClassBelow];
+	return (above != below);
+}
+
+void CCrossPlotView::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags) 
+{
+	CIMACDoc* pDoc = GetDocument();	
+	CXplotParms *pXpParms=pDoc->GetXplotParms(m_viewInstance);
+	if (pXpParms->GetCutoffCount() == 0) return;
+	CCutoffParms *pCutoffParms = pXpParms->CutoffParmsGetAt(m_activeLine);
+	if (pCutoffParms == NULL) return; // m_activeLine has not been updated.
+
+	CString command = " ";
+	command.SetAt(0, (char)nChar);
+	command.MakeUpper();
+
+	if (command == 'Z') {
+		//TRACE("forcing digitize mode for debug\n");
+		m_bDigitizePoly = TRUE;
+		m_firstDigitizedPoint = TRUE;
+	}
+
+	if (command == 'N') {
+		ComputeSlopeAndIntercept();
+		if (m_activeLine<pXpParms->GetCutoffCount()-1) {
+			m_activeLine++;
+		} else {
+			m_activeLine=0;
+		}
+		pCutoffParms = pXpParms->CutoffParmsGetAt(m_activeLine);
+		m_intercept=pCutoffParms->m_fIntercept;
+		m_slope=pCutoffParms->m_fSlope;
+		lx1=pCutoffParms->lx1;
+		ly1=pCutoffParms->ly1;
+		lx2=pCutoffParms->lx2;
+		ly2=pCutoffParms->ly2;
+		pDoc->SetReadyToCompute();
+		pDoc->UpdateViews();
+	} else if (command == 'P') {
+		ComputeSlopeAndIntercept();
+		if (m_activeLine>0) {
+			m_activeLine--;
+		} else {
+			m_activeLine=pXpParms->GetCutoffCount()-1;
+		}
+		pCutoffParms = pXpParms->CutoffParmsGetAt(m_activeLine);
+		m_intercept=pCutoffParms->m_fIntercept;
+		m_slope=pCutoffParms->m_fSlope;
+		lx1=pCutoffParms->lx1;
+		ly1=pCutoffParms->ly1;
+		lx2=pCutoffParms->lx2;
+		ly2=pCutoffParms->ly2;
+		pDoc->SetReadyToCompute();
+		pDoc->UpdateViews();
+	} else if (command == 'V' || command == 'H') {
+		// save the event in the undo list
+		CUndoItem undoItem;
+		undoItem.m_cutoff = *pXpParms->CutoffParmsGetAt(m_activeLine);
+		undoItem.m_event  = eKEYBOARD;
+		undoItem.m_line   = m_activeLine;
+		undoItem.m_eventID = m_nextUndoEventID++;
+		UndoListAddTail(&undoItem);
+		if (command == 'V') {
+			lx1 = lx2 = (lx2+lx1)/2;
+			ly1 = y1;
+			ly2 = y2;
+		} else { // (command == 'H')
+			ly1 = ly2 = (ly2+ly1)/2;
+			lx1 = x1;
+			lx2 = x2;
+		}
+		ComputeSlopeAndIntercept();
+		// save the cutoff parms
+		pCutoffParms = pXpParms->CutoffParmsGetAt(m_activeLine);
+		pCutoffParms->lx1 = lx1;
+		pCutoffParms->ly1 = ly1;
+		pCutoffParms->lx2 = lx2;
+		pCutoffParms->ly2 = ly2;
+		OnLButtonUp(0, CPoint(0,0));
+	} else if (command == 'M') {
+		if (pXpParms->m_nScatterMode == eDENSITY) {
+			pXpParms->m_nScatterMode = eCLASS;
+		} else {
+			pXpParms->m_nScatterMode = eDENSITY;	
+		}
+		pDoc->UpdateViews();
+	} else if (command == 'B') {
+		m_showBin = !m_showBin;
+		pDoc->UpdateViews();
+	} else if (command == 'U') {
+		OnXplotBack();
+	} else if (command == 'D') {
+		for (int i=0; i<pXpParms->GetCutoffCount(); i++) {
+			CCutoffParms *p = pXpParms->CutoffParmsGetAt(i);
+			TRACE("Cutoff %2d ", i);
+			TRACE("type %8s ", p->Type2Name(p->m_cutoffType));
+			TRACE("xy %3d %3d %3d %3d ",  p->lx1,  p->ly1,  p->lx2,  p->ly2);
+			TRACE("rxy %5.3f %5.3f %5.3f %5.3f ",  p->rlx1,  p->rly1,  p->rlx2,  p->rly2);
+			TRACE("nPoly=%d bCreated=%d ", p->m_nPolyData, p->m_bPolyCreated);
+			if (p->m_cutoffType == eELLIPSE) {
+				TRACE("Ellipse len: %5.1f %5.1f ", p->m_ellipse.GetXAxisLength(), p->m_ellipse.GetYAxisLength());
+				TRACE("F1: %5.1f %5.1f ", p->m_ellipse.GetFocalPointF1x(), p->m_ellipse.GetFocalPointF1y());
+				TRACE("F2: %5.1f %5.1f\n", p->m_ellipse.GetFocalPointF2x(), p->m_ellipse.GetFocalPointF2y());
+			} else {
+				TRACE("\n");
+			}
+		}
+		for (int i=UndoListGetCount()-1; i>=0; i--) {
+			CUndoItem *pUndo = UndoListGetAt(i);
+			CCutoffParms *p = &pUndo->m_cutoff;
+			TRACE("%d: %x: Undo item %2d ", i, pUndo, pUndo->m_line);
+			TRACE("type %8s ", p->Type2Name(p->m_cutoffType));
+			TRACE("xy %3d %3d %3d %3d",  p->lx1,  p->ly1,  p->lx2,  p->ly2);
+			TRACE("rxy %5.3f %5.3f %5.3f %5.3f ",  p->rlx1,  p->rly1,  p->rlx2,  p->rly2);
+			TRACE("nPoly=%d bCreated=%d ", p->m_nPolyData, p->m_bPolyCreated);
+			//p->DbgDump();
+			if (p->m_cutoffType == eELLIPSE) {
+				TRACE("Ellipse len: %5.1f %5.1f ", p->m_ellipse.GetXAxisLength(), p->m_ellipse.GetYAxisLength());
+				TRACE("F1: %5.1f %5.1f ", p->m_ellipse.GetFocalPointF1x(), p->m_ellipse.GetFocalPointF1y());
+				TRACE("F2: %5.1f %5.1f\n", p->m_ellipse.GetFocalPointF2x(), p->m_ellipse.GetFocalPointF2y());
+			} else {
+				TRACE("\n");
+			}
+		}
+	}
+
+}
+
+// Undo button was pressed
+void CCrossPlotView::OnXplotBack()
+{
+	CIMACDoc* pDoc = GetDocument();	
+	CXplotParms *pXpParms=pDoc->GetXplotParms(m_viewInstance);
+	if (UndoListGetCount() > 0) {
+		CUndoItem undoItem;
+		int undoID = UndoListGetTail()->m_eventID;
+		while (UndoListGetCount() > 0 && undoID == UndoListGetTail()->m_eventID) {
+			undoItem = UndoListPopTail();
+			//TRACE("m_undoCount=%d m_bPolyCreated=%d\n", UndoListGetCount(), undoItem.m_cutoff.m_bPolyCreated);
+			//TRACE("Undo #%d event %d  line %d type %d\n", m_undoCount, undoItem.m_event, undoItem.m_line, undoItem.m_cutoff.m_cutoffType);
+			pXpParms->CutoffParmsSetAt(undoItem.m_line, &undoItem.m_cutoff);
+			m_activeLine = undoItem.m_line;
+		}
+		pDoc->SendCutoffDataToHeadwave(m_viewInstance);
+
+	} else {
+		AfxMessageBox("Undo stack is empty");
+	}
+	pDoc->SetReadyToCompute();
+	pDoc->UpdateViews();
+}
+
+void CCrossPlotView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) 
+{
+	//TRACE("OnKeyDown() %d\n", m_undoCount);
+	CIMACDoc* pDoc = GetDocument();
+	BOOL bUpdated=FALSE;
+	int increment, dx, dy;
+	
+	if (m_bCtrlDown) 
+		increment=10;
+	else
+		increment=1;
+
+	if (nChar == VK_LEFT) {
+		dx = -increment;
+		dy = 0;
+		bUpdated=TRUE;
+	} else if (nChar == VK_UP) {
+		dx = 0;
+		dy = -increment;
+		bUpdated=TRUE;
+	} else if (nChar == VK_RIGHT) {
+		dx = increment;
+		dy = 0;
+		bUpdated=TRUE;
+	} else if (nChar == VK_DOWN) {
+		dx = 0;
+		dy = increment;
+		bUpdated=TRUE;
+	} else if (nChar == VK_CONTROL ) {
+		m_bCtrlDown= TRUE;
+	} else if (nChar == VK_ESCAPE ) {
+		// Flag to indicate end of digitize mode
+		if (m_bDigitizePoly) {
+			m_pDigitizeCutoff->m_cutoffType = ePOLY;
+			m_bEscapeDown = TRUE;
+			// Update HW
+			pDoc->SendCutoffDataToHeadwave(m_viewInstance);
+
+			pDoc->SetReadyToCompute();
+			pDoc->UpdateViews();
+			Invalidate(TRUE);
+			return;
+		}
+
+		// end of digitize mode, first point becomes last
+		if (m_bDigitizeEllipse) {
+			CString msg;
+			if (m_pDigitizeCutoff->m_ellipse.IsEmpty()) {
+				msg = _T("No points have been digitized");
+				AfxMessageBox(msg);
+
+				CXplotParms* pXpParms;
+				pXpParms = pDoc->GetXplotParms(m_viewInstance);
+
+				for (int i = 0; i < pXpParms->GetCutoffCount(); i++) {
+					CCutoffParms* pCutoff = pXpParms->CutoffParmsGetAt(i);
+					if (pCutoff == m_pDigitizeCutoff) {
+						pXpParms->CutoffParmsRemoveAt(i);
+						m_pDigitizeCutoff = NULL;
+						break;
+					}
+				}
+				m_bDigitizeEllipse = FALSE;
+			}
+		}
+
+		// escape will be the same as lbutton up, reset everything.
+		OnLButtonUp(0, CPoint(0, 0)) ;
+	}
+
+	if (bUpdated) {
+		CXplotParms *pXpParms;
+		pXpParms=pDoc->GetXplotParms(m_viewInstance);
+
+		if (pXpParms->GetCutoffCount() > 0) {
+			// get the object group ID if group mode is on
+			int groupID = -1;
+			if (pXpParms->m_bGroupMove) {
+				groupID = pXpParms->CutoffParmsGetAt(m_activeLine)->m_nGroupID;
+			}
+
+			// save the old cutoff parms
+			CCutoffParms* pCutoffParms = pXpParms->CutoffParmsGetAt(m_activeLine);
+			pCutoffParms->lx1 = lx1;
+			pCutoffParms->ly1 = ly1;
+			pCutoffParms->lx2 = lx2;
+			pCutoffParms->ly2 = ly2;
+
+			if (groupID == -1) {
+				// save single event in the undo list
+				CUndoItem undoItem;
+				undoItem.m_cutoff = *pXpParms->CutoffParmsGetAt(m_activeLine);
+				undoItem.m_event = eKEYBOARD;
+				undoItem.m_line = m_activeLine;
+				undoItem.m_eventID = m_nextUndoEventID++;
+				UndoListAddTail(&undoItem);
+			}
+			else {
+				// in group mode - save all members of the group
+				for (int i = 0; i < pXpParms->GetCutoffCount(); i++) {
+					CCutoffParms* p = pXpParms->CutoffParmsGetAt(i);
+					if (p->m_nGroupID == groupID) {
+						CUndoItem undoItem;
+						undoItem.m_cutoff = *pXpParms->CutoffParmsGetAt(i);
+						undoItem.m_event = eKEYBOARD;
+						undoItem.m_line = i;
+						undoItem.m_eventID = m_nextUndoEventID;
+						UndoListAddTail(&undoItem);
+					}
+				}
+				m_nextUndoEventID++;
+			}
+
+			// update the cutoff according to the keyboard action
+			lx1 += dx;
+			lx2 += dx;
+			ly1 += dy;
+			ly2 += dy;
+
+			if (groupID == -1) {
+				// update single event in the undo list
+				pCutoffParms->lx1 = lx1;
+				pCutoffParms->ly1 = ly1;
+				pCutoffParms->lx2 = lx2;
+				pCutoffParms->ly2 = ly2;
+				if (pCutoffParms->m_cutoffType == ePOLY) {
+					int indx = 0;
+					while (indx < pCutoffParms->m_nPolyData) {
+						pCutoffParms->m_arrPolyData[indx].x += dx;
+						pCutoffParms->m_arrPolyData[indx].y += dy;
+						indx++;
+					}
+					pCutoffParms->polyRgn.OffsetRgn(dx, dy);
+
+				}
+				else if (pCutoffParms->m_cutoffType == eELLIPSE) {
+					pCutoffParms->m_ellipse += CPoint(dx, dy);
+				}
+			}
+			else {
+				// in group mode - update all members of the group
+				for (int i = 0; i < pXpParms->GetCutoffCount(); i++) {
+					CCutoffParms* p = pXpParms->CutoffParmsGetAt(i);
+					if (p->m_nGroupID == groupID) {
+						p->lx1 += dx;
+						p->lx2 += dx;
+						p->ly1 += dy;
+						p->ly2 += dy;
+						if (p->m_cutoffType == ePOLY) {
+							int indx = 0;
+							while (indx < p->m_nPolyData) {
+								p->m_arrPolyData[indx].x += dx;
+								p->m_arrPolyData[indx].y += dy;
+								indx++;
+							}
+							p->polyRgn.OffsetRgn(dx, dy);
+
+						}
+						else if (p->m_cutoffType == eELLIPSE) {
+							p->m_ellipse += CPoint(dx, dy);
+						}
+					}
+				}
+			}
+
+			ComputeSlopeAndIntercept();
+			OnLButtonUp(0, CPoint(0, 0));
+		}
+	}
+}
+
+void CCrossPlotView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags) 
+{
+	if (nChar == VK_CONTROL ) {
+		m_bCtrlDown= FALSE;
+	}
+}
+
+void CCrossPlotView::ComputeSlopeAndIntercept()
+{
+	CIMACDoc* pDoc = GetDocument();
+	CXplotParms *pXpParms;
+	pXpParms=pDoc->GetXplotParms(m_viewInstance);
+	if (pXpParms->GetCutoffCount() > 0) {
+		CCutoffParms* pCutoffParms = pXpParms->CutoffParmsGetAt(m_activeLine);
+
+		if (pCutoffParms == NULL) return;
+		if (pCutoffParms->m_cutoffType != eLINE) return;
+
+		if (!ClipP1Left()) {
+			ClipP1Top();
+			ClipP1Bottom();
+		}
+		if (!ClipP2Right()) {
+			ClipP2Top();
+			ClipP2Bottom();
+		}
+
+		// compute the slope and intercept
+		if (lx2 != lx1) {
+			// extrapolate ly1 back to zero
+			float ly1tmp = ly2 + ((float)(lx2 - x1) / (float)(lx2 - lx1) * (float)(ly1 - ly2));
+			float ly2tmp = ly1 - ((float)(x2 - lx1) / (float)(lx2 - lx1) * (float)(ly1 - ly2));
+			float y1tmp = ly2tmp + (pXpParms->m_fXMax / (pXpParms->m_fXMax - pXpParms->m_fXMin) * (ly1tmp - ly2tmp));
+			m_intercept = pXpParms->m_fYMax - ((float)(y1tmp - y1) / (float)(y2 - y1) * (pXpParms->m_fYMax - pXpParms->m_fYMin));
+
+			m_slope = (float)(ly1 - ly2) / (float)(y2 - y1) * (pXpParms->m_fYMax - pXpParms->m_fYMin);
+			m_slope /= (float)(lx2 - lx1) / (float)(x2 - x1) * (pXpParms->m_fXMax - pXpParms->m_fXMin);
+		}
+		else {
+			// vertical line. Compute the intercept on the x axis.
+			m_intercept = ((float)(lx1 - x1) / (float)(x2 - x1)) * (pXpParms->m_fXMax - pXpParms->m_fXMin);
+			m_intercept += pXpParms->m_fXMin;
+			m_slope = 0;
+		}
+		pCutoffParms->m_fIntercept = m_intercept;
+		pCutoffParms->m_fSlope = m_slope;
+		pCutoffParms->lx1 = lx1;
+		pCutoffParms->ly1 = ly1;
+		pCutoffParms->lx2 = lx2;
+		pCutoffParms->ly2 = ly2;
+	}
+}
+
+
+BOOL CCrossPlotView::ClipP2Right()
+{
+	int itmp_y = ly1-(int)((float)(x2-lx1)/(float)(lx2-lx1)*(float)(ly1-ly2));
+	if (itmp_y>=y1 && itmp_y<=y2 && lx2>lx1) {
+		ly2=itmp_y;
+		lx2=x2;
+		return TRUE;
+	}
+	return FALSE;
+}
+BOOL CCrossPlotView::ClipP1Left()
+{
+	int itmp_y = ly2+(int)((float)(lx2-x1)/(float)(lx2-lx1)*(float)(ly1-ly2));
+	if (itmp_y>=y1 && itmp_y<=y2 && lx1<lx2) {
+		ly1=itmp_y;
+		lx1=x1;
+		return TRUE;
+	}
+	return FALSE;
+}
+BOOL CCrossPlotView::ClipP2Top()
+{
+	if (ly2>=ly1) return FALSE;
+	int itmp_x = (int)((float)(ly1-y1)/(float)(ly1-ly2)*(float)(lx2-lx1))+lx1;
+	if (itmp_x>=x1 && itmp_x<=x2 && ly2<ly1) {
+		lx2=itmp_x;
+		ly2=y1;
+		return TRUE;
+	}
+	return FALSE;
+}
+BOOL CCrossPlotView::ClipP2Bottom()
+{
+	if (ly2<=ly1) return FALSE;
+	int itmp_x = (int)((float)(y2-ly1)/(float)(ly2-ly1)*(float)(lx2-lx1))+lx1;
+	if (itmp_x>=x1 && itmp_x<=x2 && ly2>ly1) {
+		lx2=itmp_x;
+		ly2=y2;
+		return TRUE;
+	}
+	return FALSE;
+}
+BOOL CCrossPlotView::ClipP1Bottom()
+{
+	int itmp_x = (int)((float)(ly1-y2)/(float)(ly1-ly2)*(float)(lx2-lx1))+lx1;
+	if (itmp_x>=x1 && itmp_x<=x2 && ly1>ly2) {
+		lx1=itmp_x;
+		ly1=y2;
+		return TRUE;
+	}
+	return FALSE;
+}
+BOOL CCrossPlotView::ClipP1Top()
+{
+	int itmp_x = (int)((float)(y1-ly1)/(float)(ly2-ly1)*(float)(lx2-lx1))+lx1;
+	if (itmp_x>=x1 && itmp_x<=x2 && ly1<ly2) {
+		lx1=itmp_x;
+		ly1=y1;
+		return TRUE;
+	}
+	return FALSE;
+}
+BOOL CCrossPlotView::OnCommand(WPARAM wParam, LPARAM lParam)
+{
+	CCrossPlotFrame* pParentFrame;
+
+	pParentFrame = (CCrossPlotFrame*)GetParentFrame();
+	pToolBar = pParentFrame->GetToolBarPtr();
+	pStatusBar = pParentFrame->GetStatusBarPtr();
+	m_pParmPane = pParentFrame->GetParmPanePtr();
+	m_pFrameInstance = pParentFrame->GetFrameInstancePtr();
+
+
+	m_pParmPane->SetViewInstance(m_viewInstance);
+	*m_pFrameInstance = m_viewInstance;
+	pToolBar->m_cmbElementType.m_instance = m_viewInstance;
+	MakeWindowVisible();
+
+	return TRUE;
+}
+
+BOOL CCrossPlotView::OnEraseBkgnd(CDC* pDC) 
+{
+//	The erase is done by the OnDraw method, so don't erase here.	
+	return TRUE;
+}
+
+void CCrossPlotView::OnRButtonUp(UINT nFlags, CPoint point) 
+{
+	if (m_bDigitizePoly || m_lbuttondown) {
+		// ignore this event when digitzing
+		return;
+	}
+
+	OnEditXplotParms();
+
+}
+
+double CCrossPlotView::PointLineDistance(CCutoffParms *pLine, int px, int py)
+{
+	double alpha, gamma, fLen;
+
+	alpha = atan2((double)pLine->ly2-pLine->ly1, (double)pLine->lx2-pLine->lx1);
+	gamma = atan2((double)py-pLine->ly1, (double)px-pLine->lx1);
+	fLen = pow( (px-pLine->lx1)*(px-pLine->lx1) + (py-pLine->ly1)*(py-pLine->ly1), 0.5 );
+
+	return ( fLen * sin(alpha - gamma) );
+}
+double CCrossPlotView::PointLineAbsDistance(CCutoffParms *pLine, int px, int py)
+{
+	return fabs(PointLineDistance(pLine, px, py));
+}
+
+int CCrossPlotView::LineLineIntersection(CCutoffParms *pLine1, CCutoffParms *pLine2, CPoint &pt)
+{
+	double theta1, theta2, alpha, beta;
+	double fLen1, fLen2, fLen3;
+	double p1x, p1y;
+	double p2x, p2y;
+	double p3x, p3y;
+	double p4x, p4y;
+	double qx, qy;
+	double newx, newy;
+
+	p1x = pLine1->lx1;
+	p1y = pLine1->ly1;
+	p2x = pLine1->lx2;
+	p2y = pLine1->ly2;
+	p3x = pLine2->lx1;
+	p3y = pLine2->ly1;
+	p4x = pLine2->lx2;
+	p4y = pLine2->ly2;
+
+	// the direction of the two input lines
+	theta1 = atan2(p2y-p1y, p2x-p1x); // line 1 vector, p1 to p2
+	theta2 = atan2(p4y-p3y, p4x-p3x); // line 2 vector
+
+	// check for co-linear
+	if (theta1 < theta2+0.0001 && theta1 > theta2-0.0001 ) {
+		pt.Offset(0, 0);
+		return (-1);
+	}
+
+	// we'll rotate all the points around p1 of line1 so that line1 is horizontal.
+	alpha = atan2(p3y-p1y, p3x-p1x); // vector from p1 to p3
+	beta  = atan2(p4y-p1y, p4x-p1x); // vector from p1 to p4
+	fLen1 = pow((p2x-p1x)*(p2x-p1x) + (p2y-p1y)*(p2y-p1y), 0.5);
+	fLen2 = pow((p3x-p1x)*(p3x-p1x) + (p3y-p1y)*(p3y-p1y), 0.5);
+	fLen3 = pow((p4x-p1x)*(p4x-p1x) + (p4y-p1y)*(p4y-p1y), 0.5);
+
+	alpha -= theta1;
+	beta  -= theta1;
+	p3x = p1x + (fLen2 * cos(alpha));
+	p3y = p1y + (fLen2 * sin(alpha));
+	p4x = p1x + (fLen3 * cos(beta));
+	p4y = p1y + (fLen3 * sin(beta));
+
+	// calculate the new point and rotate back.
+	qy = p1y;
+	qx = (qy-p4y)/(p3y-p4y)*(p3x-p4x) + p4x;
+	newx = p1x + ((qx-p1x)*cos(theta1));
+	newy = p1y + ((qx-p1x)*sin(theta1));
+
+	pt.x = (int) (newx+0.5);
+	pt.y = (int) (newy+0.5);
+	return (0);
+}
+
+BOOL CCrossPlotView::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
+{
+	CIMACDoc *pDoc = CIMACDoc::GetIMACDocPtr();
+	if (m_cursor && !pDoc->IsDragMode()) {
+		if (m_cursor == IDC_NO) {
+			SetCursor(AfxGetApp()->LoadCursor(m_externalCursor));
+		} else {
+			SetCursor(AfxGetApp()->LoadStandardCursor(m_cursor));
+		}
+		return TRUE;
+	}
+	return CView::OnSetCursor(pWnd, nHitTest, message);
+}
+
+
+void CCrossPlotView::OnEditXplotParms()
+{
+	CIMACDoc* pDoc = GetDocument();
+	CXplotParms *pXpParms;
+	pXpParms = pDoc->GetXplotParms(m_viewInstance);
+	pXpParms->m_bDeleteUndoStack = FALSE;
+
+	int status = CIMACApp::EditXplotParms(m_viewInstance);
+	SetToolbarButtonState();
+	if (status == IDDELETE) CIMACApp::DeleteXplotParms(m_viewInstance);
+
+	if (pXpParms->m_bDeleteUndoStack) {
+		UndoListRemoveAll();
+		pXpParms->m_bDeleteUndoStack = FALSE;
+	}
+	
+	if (status == IDOK) pDoc->UpdateViews();
+}
+
+
+void CCrossPlotView::OnXplotExit()
+{
+	GetParentFrame()->PostMessage(WM_CLOSE);
+}
+
+void CCrossPlotView::OnXplotScatter()
+{
+	CIMACDoc* pDoc = GetDocument();
+	CXplotParms *pXpParms;
+	pXpParms=pDoc->GetXplotParms(m_viewInstance);
+	if (pXpParms->m_nScatter) {
+		m_nPreviousScatterValue = pXpParms->m_nScatter;
+		pXpParms->m_nScatter = 0;
+	} else {
+		pXpParms->m_nScatter = m_nPreviousScatterValue;
+	}
+	SetToolbarButtonState();
+	pDoc->UpdateViews();
+}
+
+void CCrossPlotView::OnXplotPointInc()
+{
+    CIMACDoc* pDoc = GetDocument();
+    CXplotParms *pXpParms;
+    pXpParms = pDoc->GetXplotParms(m_viewInstance);
+    // if scatter is off, then turn it back on instead fo doing the increment.
+    if (pXpParms->m_nScatter == 0) {
+        pXpParms->m_nScatter = m_nPreviousScatterValue;
+    } else if (pXpParms->m_dotSize < 20) {
+        pXpParms->m_dotSize++;
+    } else {
+        AfxMessageBox("Dot size of 20 is the maximum allowed.");
+    }
+    SetToolbarButtonState();
+    pDoc->UpdateViews();
+}
+
+void CCrossPlotView::OnXplotPointDec()
+{
+    CIMACDoc* pDoc = GetDocument();
+    CXplotParms *pXpParms;
+    pXpParms = pDoc->GetXplotParms(m_viewInstance);
+    // if scatter is off, then ignore this command.
+    if (pXpParms->m_nScatter > 0) {
+        if (pXpParms->m_dotSize == 1) {
+            // turn off scatter if the decrement would go to zero (zero is not allowed)
+            m_nPreviousScatterValue = 1;
+            pXpParms->m_nScatter = 0;
+        } else if (pXpParms->m_dotSize > 1) {
+            pXpParms->m_dotSize--;
+        }
+    }
+    SetToolbarButtonState();
+    pDoc->UpdateViews();
+}
+
+void CCrossPlotView::OnXplotBmp()
+{
+	CIMACDoc* pDoc = GetDocument();
+	CXplotParms *pXpParms;
+	pXpParms=pDoc->GetXplotParms(m_viewInstance);
+	
+	pXpParms->m_bDisableImage = !pXpParms->m_bDisableImage;
+	SetToolbarButtonState();
+	pDoc->UpdateViews();
+}
+
+void CCrossPlotView::OnXplotDensityMode()
+{
+	CIMACDoc* pDoc = GetDocument();
+	CXplotParms *pXpParms;
+	pXpParms = pDoc->GetXplotParms(m_viewInstance);
+
+	if (pXpParms->m_nScatterMode != eDENSITY) {
+		pXpParms->m_nScatterMode = eDENSITY;
+	}
+	else {
+		pXpParms->m_nScatterMode = eCLASS;
+	}
+	SetToolbarButtonState();
+
+    //set the color flag, so the view can use the new colormap
+    DWORD theMagicBit = 0x1 << (m_viewInstance + 2);
+    pDoc->m_bNewColorFlag |= theMagicBit;		// turn on the update bit
+
+	pDoc->UpdateViews();
+}
+
+void CCrossPlotView::OnXplotGroup()
+{
+	CIMACDoc* pDoc = GetDocument();
+	CXplotParms *pXpParms = pDoc->GetXplotParms(m_viewInstance);
+	
+	pXpParms->m_bGroupMove = !pXpParms->m_bGroupMove;
+	SetToolbarButtonState();
+	pDoc->UpdateViews();	
+}
+
+void CCrossPlotView::OnXplotAdd()
+{
+    CIMACDoc* pDoc = GetDocument();
+    CXplotParms *pXpParms = pDoc->GetXplotParms(m_viewInstance);
+
+    eCutoffType cutoffType = pToolBar->m_cmbElementType.GetElementType();
+    int status = CIMACApp::EditCutoffParms(m_viewInstance, cutoffType);
+
+    if (status == 0) {
+		// If HW mode and cutoff is a line then send to HW.  Poly's and ellipses are sent after digitizing.
+		if (cutoffType == eLINE) {
+			pDoc->SendCutoffDataToHeadwave(m_viewInstance);
+		}
+
+        pDoc->SetUpdateXplotPaneFlagsAll(TRUE);
+        pDoc->UpdateViews();
+    }
+}
+
+void CCrossPlotView::SetToolbarButtonState()
+{
+	CIMACDoc* pDoc = GetDocument();
+	CXplotParms *pXpParms;
+	pXpParms=pDoc->GetXplotParms(m_viewInstance);
+
+	m_bScatterBtn = (pXpParms->m_nScatter != 0)? TRUE: FALSE;
+	m_bPicBtn = !pXpParms->m_bDisableImage;
+	m_bGroupBtn = pXpParms->m_bGroupMove;
+	m_bDensityBtn = (pXpParms->m_nScatterMode == eDENSITY);
+}
+
+void CCrossPlotView::OnUpdateXplotGroup(CCmdUI *pCmdUI)
+{
+	pCmdUI->SetCheck(m_bGroupBtn);
+}
+
+void CCrossPlotView::OnUpdateXplotBmp(CCmdUI *pCmdUI)
+{
+	pCmdUI->SetCheck(m_bPicBtn);
+}
+
+void CCrossPlotView::OnUpdateDensityMode(CCmdUI *pCmdUI)
+{
+	pCmdUI->SetCheck(m_bDensityBtn);
+}
+
+void CCrossPlotView::OnUpdateXplotScatter(CCmdUI *pCmdUI)
+{
+	pCmdUI->SetCheck(m_bScatterBtn);
+}
+
+void CCrossPlotView::OnXplotExport()
+{	
+	CString fname;
+	CString fileFilter = "Cutoff Files (*.cut)|*.cut|All Files (*.*)|*.*|";
+	CIMACDoc *pDoc = GetDocument();
+	
+	CFileDialog fileDialog(FALSE, "cut", NULL, OFN_HIDEREADONLY|OFN_PATHMUSTEXIST, fileFilter);
+	CString path = pDoc->GetProjectPath();
+	fileDialog.m_ofn.lpstrInitialDir = path;
+	if (fileDialog.DoModal() != IDOK) return;
+
+	fname = fileDialog.GetPathName();
+	pDoc->CrossplotExport(m_viewInstance, fname);
+}
+
+void CCrossPlotView::OnXplotImport()
+{
+	FILE *pf;
+    char *ch;
+	CString fname, msg;
+	CString fileFilter = "Cutoff Files (*.cut)|*.cut|All Files (*.*)|*.*|";
+	CIMACDoc *pDoc = GetDocument();
+	CXplotParms *pParms = pDoc->GetXplotParms(m_viewInstance);
+
+	CFileDialog fileDialog(TRUE, "cut", NULL, OFN_HIDEREADONLY|OFN_FILEMUSTEXIST, fileFilter);
+	if (fileDialog.DoModal() != IDOK) return;
+		
+	fname = fileDialog.GetPathName();
+	if ((pf=fopen(fname, "r"))==NULL) {		
+		msg.Format("Cannot open file %s", fname);
+		AfxMessageBox(msg);
+		return;
+	}	
+
+	// skip the header but look for the embedded version number.
+	char buffer[BUFSIZE];
+	buffer[0] = '#';
+    int version = 1;
+	while (buffer[0] == '#' && !feof(pf)) {
+        if (strncmp(&buffer[1], "@vers", 5) == 0) {
+            sscanf(&buffer[7], "%d.", &version);
+        }
+		fgets(buffer, BUFSIZE, pf);
+	}	
+
+    // loop through the file and check that there are no classes out of range
+	int maxClassAllowed = pDoc->GetClassCount()-1;
+	int maxClassFound = -1;
+	while (!feof(pf) && !ferror(pf)) {
+		int  nClassAbove, nClassBelow, nApplyTo, nGroup;
+		char strType[NBUF];
+		int istat = fscanf(pf, "%s %d %d", strType, &nClassAbove, &nClassBelow);
+        if (istat == 3) {
+            if (nClassAbove >= maxClassFound) maxClassFound = nClassAbove;
+            if (nClassBelow >= maxClassFound) maxClassFound = nClassBelow;
+
+            if (version >= 2) {
+                int rstat = fscanf(pf, "%d %d", &nApplyTo, &nGroup);
+                if (rstat == 2) {
+                    if (nApplyTo >= maxClassFound) maxClassFound = nApplyTo;
+                }
+            }
+            // get the rest of the cutoff line containing cutoff data
+            ch = fgets(buffer, BUFSIZE, pf);
+        }
+        // get the next cutoff name, or eof.
+        ch = fgets(buffer, BUFSIZE, pf);
+	}
+
+	if (maxClassFound > maxClassAllowed) {
+		msg.Format("The Cutoff file refers to a class (%d) greater than maximum defined: %d\n", maxClassFound, maxClassAllowed);
+		msg += "Please use the Class Manager to define those classes then try again.";
+		AfxMessageBox(msg);
+		fclose(pf);
+		return;
+	}
+
+	// import the data
+	rewind(pf);
+	buffer[0] = '#';
+	while (buffer[0] == '#' && !feof(pf)) {
+		fgets(buffer, BUFSIZE, pf);
+	}
+
+	while (!feof(pf) && !ferror(pf)) {
+        int  nClassAbove, nClassBelow;
+        int nApplyTo = 0;
+        int nGroup = 0;
+		char strType[NBUF];
+        bool readOk = FALSE;
+        int istat = fscanf(pf, "%s %d %d", strType, &nClassAbove, &nClassBelow);
+        if (istat == 3) {
+            if (version >= 2) {
+                int rstat = fscanf(pf, "%d %d", &nApplyTo, &nGroup);
+                if (rstat == 2) {
+                    readOk = TRUE;
+                }
+            } else {
+                readOk = TRUE;
+            }
+        }
+        if (readOk) {
+			CCutoffParms cutoff;
+			int type = cutoff.Name2Type(strType);
+			cutoff.m_nClassAbove   = nClassAbove;
+			cutoff.m_nClassBelow   = nClassBelow;
+            cutoff.m_applyTo       = nApplyTo;
+            cutoff.m_nGroupID      = nGroup;
+            cutoff.m_cutoffType    = type;
+			cutoff.m_strCutoffName = buffer;
+
+			float x1 = (float) pParms->x1;
+			float x2 = (float) pParms->x2;
+			float y1 = (float) pParms->y1;
+			float y2 = (float) pParms->y2;
+			if (type == eLINE) {
+				float pt1x, pt1y, pt2x, pt2y;
+				if (fscanf(pf, "%f %f %f %f", &pt1x, &pt1y, &pt2x, &pt2y) == 4) {
+					fgets(buffer, BUFSIZE, pf); // get the rest of the line
+					// convert from axis coordinates to screen coordinates
+					cutoff.lx1 = (int) (x1 + (pt1x-pParms->m_fXMin) / (pParms->m_fXMax - pParms->m_fXMin) * (x2 - x1));
+					cutoff.lx2 = (int) (x1 + (pt2x-pParms->m_fXMin) / (pParms->m_fXMax - pParms->m_fXMin) * (x2 - x1));
+					cutoff.ly1 = (int) (y2 - (pt1y-pParms->m_fYMin) / (pParms->m_fYMax - pParms->m_fYMin) * (y2 - y1));
+					cutoff.ly2 = (int) (y2 - (pt2y-pParms->m_fYMin) / (pParms->m_fYMax - pParms->m_fYMin) * (y2 - y1));
+					pParms->CutoffParmsAddTail(&cutoff);
+				}
+			} else if (type == ePOLY) {
+				int nCount;
+				if (fscanf(pf, "%d", &nCount) == 1) {
+					for (int i=0; i<nCount; i++) {
+						float ptX, ptY;
+						if (fscanf(pf, "%f %f", &ptX, &ptY) == 2) {
+							CPoint pt;
+							pt.x = (int) (x1 + (ptX-pParms->m_fXMin) / (pParms->m_fXMax - pParms->m_fXMin) * (x2 - x1));
+							pt.y = (int) (y2 - (ptY-pParms->m_fYMin) / (pParms->m_fYMax - pParms->m_fYMin) * (y2 - y1));							
+							cutoff.m_arrScalars.SetAtGrow(i, CFloatPoint());
+							cutoff.m_arrPolyData.SetAtGrow(i, pt);
+							cutoff.m_nPolyData = i+1;
+						}
+					}
+					cutoff.lx1 = cutoff.m_arrPolyData[0].x;
+					cutoff.ly1 = cutoff.m_arrPolyData[0].y;
+					cutoff.lx2 = cutoff.m_arrPolyData[1].x;
+					cutoff.ly2 = cutoff.m_arrPolyData[1].y;
+					pParms->CutoffParmsAddTail(&cutoff);
+				}
+				fgets(buffer, BUFSIZE, pf); // get the rest of the line
+			} else if (type == eELLIPSE) {
+				float ellXc, ellYc, ellX1, ellY1, ellX2, ellY2;
+				if (fscanf(pf, "%f %f %f %f %f %f", &ellXc, &ellYc, &ellX1, &ellY1, &ellX2, &ellY2) == 6) {
+					fgets(buffer, BUFSIZE, pf); // get the rest of the line
+					// convert the floating coords to screen coordinates
+					ellXc = x1 + (ellXc-pParms->m_fXMin) / (pParms->m_fXMax - pParms->m_fXMin) * (x2 - x1);
+					ellYc = y2 - (ellYc-pParms->m_fYMin) / (pParms->m_fYMax - pParms->m_fYMin) * (y2 - y1);
+					ellX1 = x1 + (ellX1-pParms->m_fXMin) / (pParms->m_fXMax - pParms->m_fXMin) * (x2 - x1);
+					ellY1 = y2 - (ellY1-pParms->m_fYMin) / (pParms->m_fYMax - pParms->m_fYMin) * (y2 - y1);
+					ellX2 = x1 + (ellX2-pParms->m_fXMin) / (pParms->m_fXMax - pParms->m_fXMin) * (x2 - x1);
+					ellY2 = y2 - (ellY2-pParms->m_fYMin) / (pParms->m_fYMax - pParms->m_fYMin) * (y2 - y1);
+
+					// compute the axis length
+					float d1, d2;
+					d1 = ((ellX1-ellXc) * (ellX1-ellXc)) + ((ellY1-ellXc) * (ellY1-ellXc));
+					d1 = pow(d1, 0.5f);
+					d2 = ((ellX2-ellXc) * (ellX2-ellXc)) + ((ellY2-ellXc) * (ellY2-ellXc));
+					d2 = pow(d2, 0.5f);
+
+					// Create the ellipse
+					CPoint cPt, xPt, yPt;
+					cPt = CPoint((int)ellXc, (int)ellYc);
+					cutoff.m_ellipse.SetOrigin(cPt);
+					cutoff.lx1 = cPt.x;
+					cutoff.ly1 = cPt.y;
+					
+					
+					xPt = CPoint((int)ellX1, (int)ellY1);
+					yPt = CPoint((int)ellX2, (int)ellY2);
+					cutoff.lx2 = xPt.x;
+					cutoff.ly2 = xPt.y;
+					if (d1 > d2) {
+						cutoff.m_ellipse.SetYAxisEndPoint(yPt);						
+						cutoff.m_ellipse.SetXAxisEndPoint(xPt);
+					} else {
+						cutoff.m_ellipse.SetXAxisEndPoint(xPt);
+						cutoff.m_ellipse.SetYAxisEndPoint(yPt);						
+					}
+	
+					pParms->CutoffParmsAddTail(&cutoff);
+				}
+			}
+		}
+		char *ch = fgets(buffer, BUFSIZE, pf);
+		ch;
+	}
+
+	fclose(pf);
+
+    CXplotParms *pXpParms = pDoc->GetXplotParms(m_viewInstance);
+    RecomputeAllLines(pXpParms);
+    UpdateParmPane();
+	pDoc->SetReadyToCompute();
+    pDoc->UpdateViews();
+}
+
+void CCrossPlotView::UpdateParmPane()
+{
+	CIMACDoc* pDoc = GetDocument();
+	CXplotParms *pXpParms;
+	pXpParms = pDoc->GetXplotParms(m_viewInstance);
+	int classCount = pDoc->GetClassCount();
+	int maxExtent = 0;
+	BOOL bUserSelect = FALSE;
+		
+	CBitmapCheckListBox *pClassListBox	 = m_pParmPane->GetClassListBoxPtr();
+	CCheckListBox	*pZoneListBox    = m_pParmPane->GetZoneListBoxPtr();
+	CButton			*pActiveCheckBtn = m_pParmPane->GetActiveCheckBtn();
+	CButton			*pAllCheckBtn    = m_pParmPane->GetAllCheckBtn();
+	
+	pActiveCheckBtn->SetCheck(pXpParms->m_activeButton ? BST_CHECKED : BST_UNCHECKED);
+	pAllCheckBtn->SetCheck(pXpParms->m_allButton ? BST_CHECKED : BST_UNCHECKED);
+	
+	if (pActiveCheckBtn->GetCheck() != BST_CHECKED &&
+		pAllCheckBtn->GetCheck()    != BST_CHECKED ) {
+			bUserSelect = TRUE;
+	}
+
+	// populate the Class List Box
+	pClassListBox->ResetContent();
+	CMap<int, int, int, int> activeFlags;
+	CMap<int, int, CString, CString> tooltips;
+	for (int i=0; i<classCount; i++) {
+		activeFlags[i] = pDoc->IsClassActiveLocal(i, m_viewInstance) ? 1 : pDoc->IsClassActiveGlobal(i) == TRUE || pDoc->IsClassZoneDefined(i) ? 0 : -1;
+		CString className;
+		className.Format("%2d: %s  ", i, pDoc->GetClassifiedName(i));
+		CSize extent = pClassListBox->GetDC()->GetTextExtent(className);
+		maxExtent = (extent.cx > maxExtent)? extent.cx: maxExtent;
+		pClassListBox->AddString(className);
+		CString tooltip;
+		if (pDoc->IsClassZoneDefined(i)) {
+			CViewZoneArray* pDocZones = pDoc->GetViewZoneArrayPtr();
+			CString name;
+			for (int j = 0; j < pDocZones->GetCount(); j++) {
+				if (pDocZones->GetAt(j).GetClassifyAs() == i && i != 0) {
+					name = pDocZones->GetAt(j).GetZoneName();
+					break;
+				}
+			}
+			CString zoneName;
+			zoneName.Format("Zone %s,", name);
+			tooltip.Append(zoneName);
+		}
+		for (int j = 0; j < pDoc->GetXplotCount(); j++) {
+			if (pDoc->IsClassActiveLocal(i, j) == TRUE) {
+				CString crossplotName;
+				crossplotName.Format("Crossplot %2d,", j + 1);
+				tooltip.Append(crossplotName);
+			}
+		}
+		tooltip.TrimRight(',');
+		if (!tooltip.IsEmpty()) tooltip.Insert(0, "On ");
+		tooltips[i] = tooltip;
+		if (bUserSelect) {
+            if (pXpParms->m_classSelectState.GetCount() > i && pXpParms->m_classSelectState.GetAt(i)) {
+				pClassListBox->SetCheck(i, TRUE);
+            }
+		} else {
+			if (pActiveCheckBtn->GetCheck() == BST_CHECKED) {
+				BOOL checked = pDoc->IsClassActiveLocal(i, m_viewInstance);
+				pClassListBox->SetCheck(i, pDoc->IsClassActiveLocal(i, m_viewInstance));
+			}
+			if (pAllCheckBtn->GetCheck() == BST_CHECKED ) {
+				BOOL checked = pDoc->IsClassActiveGlobal(i) || pDoc->IsClassZoneDefined(i);
+				pClassListBox->SetCheck(i, pDoc->IsClassActiveGlobal(i) || pDoc->IsClassZoneDefined(i));
+			}
+		}
+
+	}
+	pClassListBox->SetTooltips(tooltips);
+	pClassListBox->SetBitmapFlags(activeFlags);
+	pClassListBox->SetHorizontalExtent(maxExtent);
+
+	// populate the Zone List Box
+	pZoneListBox->ResetContent();
+	CViewZoneArray *pDocZones = pDoc->GetViewZoneArrayPtr();
+	for (int i=0; i<pDocZones->GetCount(); i++) {
+		CViewZone  *pViewZone = &pDocZones->GetAt(i);
+		CSize extent = pZoneListBox->GetDC()->GetTextExtent(pViewZone->GetZoneName());
+		maxExtent = (extent.cx > maxExtent)? extent.cx: maxExtent;
+		pZoneListBox->AddString(pViewZone->GetZoneName());
+		
+		int zoneStateCount = (int) pXpParms->m_zoneSelectState.GetCount();
+		if (i < zoneStateCount) {
+			pZoneListBox->SetCheck(i, pXpParms->m_zoneSelectState.GetAt(i));
+		}
+	}
+	pZoneListBox->SetHorizontalExtent(maxExtent);
+
+	m_pParmPane->UpdateButtons();
+}
+
+void CCrossPlotView::SaveCutoffParms()
+{
+	CIMACDoc* pDoc = GetDocument();
+	CXplotParms *pXpParms;
+	pXpParms = pDoc->GetXplotParms(m_viewInstance);
+	
+	// save cutoff elements
+	m_saveCutoffParmsList.RemoveAll();
+	for (int i=0; i<pXpParms->GetCutoffCount(); i++) {
+		m_saveCutoffParmsList.AddTail(*pXpParms->CutoffParmsGetAt(i));
+	}
+
+	// save undo stack
+	m_saveUndoList.RemoveAll();
+	for (int i=0; i<m_undoList.GetCount(); i++) {
+		m_saveUndoList.AddTail(*UndoListGetAt(i));
+	}
+}
+
+void CCrossPlotView::RestoreCutoffParms()
+{
+	CIMACDoc* pDoc = GetDocument();
+	CXplotParms *pXpParms;
+	pXpParms = pDoc->GetXplotParms(m_viewInstance);
+	
+	// restore cutoff elements
+	pXpParms->CutoffParmsRemoveAll();
+	for (int i=0; i<m_saveCutoffParmsList.GetCount(); i++) {
+		pXpParms->CutoffParmsAddTail(&m_saveCutoffParmsList.GetAt(m_saveCutoffParmsList.FindIndex(i)));
+	}
+
+	// restore undo stack
+	UndoListRemoveAll();
+	for (int i=0; i<m_saveUndoList.GetCount(); i++) {
+		UndoListAddTail(&m_saveUndoList.GetAt(m_saveUndoList.FindIndex(i)));
+	}	
+}
+
+void CCrossPlotView::ScaleCutoffElements(eCUTOFF_MODE mode)
+{
+	CIMACDoc* pDoc = GetDocument();
+	CXplotParms *pXpParms;
+	pXpParms = pDoc->GetXplotParms(m_viewInstance);
+
+	float fMult = 1.0;
+	if (mode == eCUT_XAXIS) {
+		fMult = (float)(x2 - x1) / (float)(m_saveEndpoint - x1);	
+	} else {
+		fMult = (float)(y2 - y1) / (float)(y2 - m_saveEndpoint);
+	}
+
+	// adjust the cutoff objects, scale from the original.
+	RestoreCutoffParms();
+	for (int i=0; i<pXpParms->GetCutoffCount(); i++) {
+		CCutoffParms *p = pXpParms->CutoffParmsGetAt(i);
+		p->ScaleCutoff(CPoint(x1, y2), fMult, mode);
+	}
+	// adjust the cutoff objects in the undo stack.
+	for (DWORD i=0; i<UndoListGetCount(); i++) {
+		CUndoItem *pItem = UndoListGetAt(i);
+		pItem->m_cutoff.ScaleCutoff(CPoint(x1, y2), fMult, mode);
+	}
+}
+	
+BOOL CCrossPlotView::IsZoneSelected(CString zoneName)
+{
+	CCheckListBox*pZoneListBox = m_pParmPane->GetZoneListBoxPtr();
+	for (int i=0; i<pZoneListBox->GetCount(); i++) {
+		if (pZoneListBox->GetCheck(i) == TRUE) {
+			CString txt;
+			pZoneListBox->GetText(i, txt);
+			if (zoneName == txt) return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// CUndoList access functions.
+
+CUndoItem * CCrossPlotView::UndoListGetAt(DWORD i)
+{
+	if (i >= UndoListGetCount()) return NULL;
+
+	return &m_undoList.GetAt(m_undoList.FindIndex(i));
+}
+
+CUndoItem * CCrossPlotView::UndoListGetTail()
+{
+	if (m_undoList.IsEmpty()) return NULL;
+
+	return &m_undoList.GetTail();
+}
+
+CUndoItem CCrossPlotView::UndoListPopTail()
+{
+	CUndoItem item;
+	if (!m_undoList.IsEmpty()) {
+		item = m_undoList.RemoveTail();
+	}
+	return item;
+}
+
+void CCrossPlotView::UndoListAddTail(CUndoItem *pUndoItem)
+{
+	m_undoList.AddTail(*pUndoItem);
+}
+
+DWORD CCrossPlotView::UndoListGetCount()
+{
+	return (DWORD) m_undoList.GetCount();
+}
+
+void CCrossPlotView::UndoListRemoveAll()
+{
+	m_undoList.RemoveAll();
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// CUndoItem
+
+CUndoItem::CUndoItem()
+{
+	m_event = eNONE;
+	m_line  = -1;
+	m_eventID = -1;
+}
+
+CUndoItem::~CUndoItem()
+{
+}
+
+void CUndoItem::operator =(const CUndoItem& rUndoItem)
+{
+	m_cutoff  = rUndoItem.m_cutoff;
+	m_event   = rUndoItem.m_event;
+	m_line    = rUndoItem.m_line;
+	m_eventID = rUndoItem.m_eventID;
+}
+
+CUndoItem::CUndoItem(const CUndoItem& rUndoItem)
+{
+	m_cutoff  = rUndoItem.m_cutoff;
+	m_event   = rUndoItem.m_event;
+	m_line    = rUndoItem.m_line;
+	m_eventID = rUndoItem.m_eventID;
+}
+
+void CCrossPlotView::OnSetFocus(CWnd* pOldWnd)
+{
+	MakeWindowVisible();
+	CView::OnSetFocus(pOldWnd);
+}
+
+void CCrossPlotView::MakeWindowVisible() {
+//	TRACE("OnSetFocus()\n");
+	CRect crossplotRect, mainRect, tmpRect;
+
+	CWnd* pCrossplotWnd = GetParent();
+	pCrossplotWnd->GetWindowRect(&crossplotRect);
+	tmpRect = crossplotRect;
+
+	CWnd* pMainWnd = pCrossplotWnd->GetParent();
+	pMainWnd->GetWindowRect(&mainRect);
+
+	boolean bMoved = FALSE;
+	if (crossplotRect.left > mainRect.right - 100) {
+		crossplotRect.left = mainRect.right - tmpRect.Width();
+		crossplotRect.right = mainRect.right;
+		bMoved = TRUE;
+	}
+	if (crossplotRect.right < mainRect.left + 100) {
+		crossplotRect.left = mainRect.left;
+		crossplotRect.right = crossplotRect.left + tmpRect.Width();
+		bMoved = TRUE;
+	}
+	if (crossplotRect.top > mainRect.bottom - 100) {
+		crossplotRect.top = mainRect.bottom - tmpRect.Height();
+		crossplotRect.bottom = mainRect.bottom;
+		bMoved = TRUE;
+	}
+	if (crossplotRect.top < mainRect.top) {
+		crossplotRect.top = mainRect.top;
+		crossplotRect.bottom = crossplotRect.top + tmpRect.Height();
+		bMoved = TRUE;
+	}
+
+	if(bMoved) {
+		pMainWnd->ScreenToClient(&crossplotRect);
+		pCrossplotWnd->SetWindowPos(0, crossplotRect.left, crossplotRect.top,
+			crossplotRect.Width(), crossplotRect.Height(), 0);
+	}
+}

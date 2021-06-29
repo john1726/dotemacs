@@ -1,0 +1,2236 @@
+Pipeline: Feature Requests and Defects
+Priority: High
+Name: MSI - Packaging and Consolidation of QI-Pro Software Delivery
+Description: One file to have all the options for every build and dependency
+Software Component: Infrastructure
+Rank: 3 - Med
+Teams Video Link:
+
+2021.01.12
+I. Researching and implementing solution:
+
+Error: unterminated string parsing line at C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\QiPro.nsi:63
+
+-----
+
+3 installers:
+1) flex (make that option, on all installers)
+2) with headwave 
+3) with seisware (let them download correct version)
+
+QI 
+
+create sound qi splash screen 
+let them choose folder for QI pro 
+headwave - checkbox 
+seisware - checkbox - create installers for v10.3, 10.4, 10.5
+give them option for flex  
+include FlexSQI license server in installer, ask for install dir (see  Z:\Applications\QI-Pro\ClientRelease\FlexSQI64.zip\FlexSQI64)
+indicate files have been installed to N folder, please proceed according to flex docs 
+
+-----
+
+Plugin directories:
+  C:\Program Files (x86)\NSIS\Plugins\x86-ansi
+Plugin not found, cannot call newadvsplash::show
+Error in script "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\QiPro.nsi" on line 36 -- aborting creation process
+
+https://nsis.sourceforge.io/Browse_for_Folder
+
+BrowseForFolder 
+
+browse_dlg_text: Text on the "Browse For Folder" dialog, appears after clicking on "Browse" button.
+
+-----
+
+VS Code Launch command:
+PS C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>  c:; cd 'c:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer'; & 'C:\Users\moorer\AppData\Local\Programs\Python\Python39-32\python.exe' 'c:\Users\moorer\.vscode\extensions\ms-python.python-2021.2.582707922\pythonFiles\lib\python\debugpy\launcher' '52013' '--' 'c:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\create_installers.py' '109'
+
+-----
+
+	System::Call "shell32::SHBrowseForFolder(i r1) i.r2"
+
+	; Some logic checking on its output
+	${If} $2 == 0
+		MessageBox MB_OK "User canceled browsing."
+	${Else}
+		; Get the actual path from the pidl
+		System::Call "shell32::SHGetPathFromIDList(i r2, t.r3)"
+		; and display
+			MessageBox MB_OK "User selected folder: $3"
+	${EndIf} 
+	
+2021.01.25
+I. Researching and implementing solution:
+
+-Add build step to automatically create installer after a build occurs 
+-SeisWare 
+
+msbuild RM_Branch\OSI\OSI.sln /target:IMAC:Rebuild /p:Configuration=lib-build
+
+msbuild RM_Branch\OSI\OSI.sln /target:IMAC:Rebuild /p:Configuration=SW-v10.3-CI
+
+msbuild SoundQI\OSI\OSI.sln /target:IMAC:Rebuild /p:Configuration=SW-v10.3
+
+msbuild OSI\OSI.sln /target:IMAC:Rebuild /p:Configuration=SW-v10.3
+
+http://sqi009:8080/tfs/DefaultCollection/SoundQI-Branch/_versionControl/changeset/917
+http://sqi009:8080/tfs/DefaultCollection/SoundQI/_versionControl/changeset/
+
+C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\OSI\QI-Pro\x64\SW-v10.3-CI
+
+-----
+
+  c:\teamcity\buildagent\work\cee953a17e540081\rm_branch\imac\aa_qipro.cpp(7): fatal error C1083: Cannot open include file: 'gsl/gsl_math.h': No such file or directory [C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\IMAC.vcxproj]
+13:29:01
+  Done Building Project "C:\TeamCity\buildAgent\work\cee953a17e540081\RM_Branch\IMAC\IMAC.vcxproj" (Rebuild target(s)) -- FAILED.
+
+-----
+
+Xcopy /E /I C:\Sound-QI_Source\SoundQI\gsl_2_4_msvc2015_64_r1 RM_Branch\gsl_2_4_msvc2015_64_r1
+Xcopy /E /I C:\Sound-QI_Source\SoundQI\flexlm-x64\lib RM_Branch\flexlm-x64\lib
+Xcopy /E /I "C:\Sound-QI_Source\SoundQI\SeisWare SDK\10.5 BETA" "RM_Branch\SeisWare SDK\10.5 BETA"
+
+-----
+
+Get info with messagebox (see https://nsis.sourceforge.io/Docs//Chapter4.html#4.12):
+
+To access the section index, curly brackets must be used and the code must be located below the section in the script.
+
+Section test1 sec1_id
+SectionEnd
+
+Section test2 sec2_id
+SectionEnd
+
+Function .onInit
+  SectionGetText ${sec2_id} $0
+  MessageBox MB_OK "name of ${sec2_id}:$\n$0" # will correctly display 'name of 1: test2'
+FunctionEnd
+Function .onInit
+  SectionGetText ${sec2_id} $0
+  MessageBox MB_OK "name of ${sec2_id}:$\n$0" # will incorrectly display 'name of ${sec2_id}: test1'
+    # plus a warning stating:
+    #   unknown variable/constant "{sec2_id}" detected, ignoring
+FunctionEnd
+
+Section test1 sec1_id
+SectionEnd
+
+Section test2 sec2_id
+SectionEnd
+
+-----
+
+  SeiswareExportFunctions.cpp
+15:21:29
+  c:\teamcity\buildagent\work\fbef456932ac7c99\imac\seiswareapi.h(4): fatal error C1083: Cannot open include file: 'seisware/Connection.h': No such file or directory [C:\TeamCity\buildAgent\work\fbef456932ac7c99\IMAC\IMAC.vcxproj]
+15:21:29
+    SeiswareExportVirtualVolumesTab.cpp
+                          
+-----
+                          
+4.7.2.1.2 .onInit
+This callback will be called when the installer is nearly finished initializing. If the '.onInit' function calls Abort, the installer will quit instantly.
+
+Here are two examples of how this might be used:
+
+ Function .onInit
+   MessageBox MB_YESNO "This will install. Continue?" IDYES NoAbort
+     Abort ; causes installer to quit.
+   NoAbort:
+ FunctionEnd
+or:
+
+ Function .onInit
+   ReadINIStr $INSTDIR $WINDIR\wincmd.ini Configuration InstallDir
+   StrCmp $INSTDIR "" 0 NoAbort
+     MessageBox MB_OK "Windows Commander not found. Unable to get install path."
+     Abort ; causes installer to quit.
+   NoAbort:
+ FunctionEnd
+
+4.7.2.1.4 .onInstSuccess
+This callback is called when the install was successful, right before the install window closes (which may be after the user clicks 'Close' if AutoCloseWindow or SetAutoClose is set to false).
+
+Example:
+                          
+  Function .onInstSuccess
+    MessageBox MB_YESNO "Congrats, it worked. View readme?" IDNO NoReadme
+      Exec notepad.exe ; view readme or whatever, if you want.
+    NoReadme:
+  FunctionEnd                          
+
+                          
+4.7.2.1.10 .onVerifyInstDir
+This callback enables control over whether or not an installation path is valid for your installer. This code will be called every time the user changes the install directory, so it shouldn't do anything crazy with MessageBox or the like. If this function calls Abort, the installation path in $INSTDIR is deemed invalid.
+
+Example:
+
+  Function .onVerifyInstDir
+    IfFileExists $INSTDIR\Winamp.exe PathGood
+      Abort ; if $INSTDIR is not a winamp directory, don't let us install there
+    PathGood:
+  FunctionEnd
+
+-----
+
+4.9.4.21 MessageBox
+mb_option_list messagebox_text [/SD return] [return_check jumpto [return_check_2 jumpto_2]]
+Displays a MessageBox containing the text "messagebox_text". mb_option_list must be one or more of the following, delimited by |s (e.g. MB_YESNO|MB_ICONSTOP).
+
+MB_OK - Display with an OK button
+MB_OKCANCEL - Display with an OK and a cancel button
+MB_ABORTRETRYIGNORE - Display with abort, retry, ignore buttons
+MB_RETRYCANCEL - Display with retry and cancel buttons
+MB_YESNO - Display with yes and no buttons
+MB_YESNOCANCEL - Display with yes, no, cancel buttons
+MB_ICONEXCLAMATION - Display with exclamation icon
+MB_ICONINFORMATION - Display with information icon
+MB_ICONQUESTION - Display with question mark icon
+MB_ICONSTOP - Display with stop icon
+MB_USERICON - Display with installer`s icon
+MB_TOPMOST - Make messagebox topmost
+MB_SETFOREGROUND - Set foreground
+MB_RIGHT - Right align text
+MB_RTLREADING - RTL reading order
+MB_DEFBUTTON1 - Button 1 is default
+MB_DEFBUTTON2 - Button 2 is default
+MB_DEFBUTTON3 - Button 3 is default
+MB_DEFBUTTON4 - Button 4 is default
+Return_check can be 0 (or empty, or left off), or one of the following:
+
+IDABORT - Abort button
+IDCANCEL - Cancel button
+IDIGNORE - Ignore button
+IDNO - No button
+IDOK - OK button
+IDRETRY - Retry button
+IDYES - Yes button                          
+
+2021.01.26
+I. Researching and implementing solution:
+1) Taking many different custom steps:                          
+                          
+https://nsis.sourceforge.io/Demonstrating_Page%27s_Custom_Functions_Pre_Show_Leave
+
+See also https://nsis.sourceforge.io/Docs/
+https://nsis.sourceforge.io/Docs/Chapter4.html#sections
+https://nsis.sourceforge.io/Category:Tutorials
+
+
+-----
+
+File: "C:\HW-Data\QI-Pro-Plugins\ComputePlugin\computeplugin.xplot.dll" -> no files found.
+
+--------------------------------------------------------------------------------
+
+https://nsis.sourceforge.io/Docs/Modern%20UI/Readme.html
+
+3. Pages:
+
+Installer pages
+MUI_PAGE_WELCOME
+MUI_PAGE_LICENSE textfile
+MUI_PAGE_COMPONENTS
+MUI_PAGE_DIRECTORY
+MUI_PAGE_STARTMENU pageid variable
+MUI_PAGE_INSTFILES
+MUI_PAGE_FINISH
+
+Uninstaller pages
+MUI_UNPAGE_WELCOME
+MUI_UNPAGE_CONFIRM
+MUI_UNPAGE_LICENSE textfile
+MUI_UNPAGE_COMPONENTS
+MUI_UNPAGE_DIRECTORY
+MUI_UNPAGE_INSTFILES
+MUI_UNPAGE_FINISH
+
+-----
+
+4.1 "Script File Format" (see https://nsis.sourceforge.io/Docs/Chapter4.html#fileformat):
+
+Plug-ins
+
+To call a plug-in, use 'plugin::command [parameters]'. For more info see Plug-in DLLs.
+
+nsExec::Exec "myfile"
+
+Instead use pages?
+
+Page license skipLicense "" stayInLicense
+ Page custom customPage "" ": custom page"
+ Page instfiles
+
+ Function skipLicense
+   MessageBox MB_YESNO "Do you want to skip the license page?" IDNO no
+     Abort
+   no:
+ FunctionEnd
+
+ Function stayInLicense
+   MessageBox MB_YESNO "Do you want to stay in the license page?" IDNO no
+     Abort
+   no:
+ FunctionEnd
+
+ Function customPage
+   GetTempFileName $R0
+   File /oname=$R0 customPage.ini
+   InstallOptions::dialog $R0
+   Pop $R1
+   StrCmp $R1 "cancel" done
+   StrCmp $R1 "back" done
+   StrCmp $R1 "success" done
+   error: MessageBox MB_OK|MB_ICONSTOP "InstallOptions error:$\r$\n$R1"
+   done:
+ FunctionEnd
+
+                          ----
+
+Example of how you can set $INSTDIR:
+
+4.9.3.10 GetFullPathName
+[/SHORT] user_var(output) path_or_file
+Assign the full path of the file specified to user variable $x. If the path portion of the parameter is not found, the error flag will be set and $x will be empty. If /SHORT is specified, the path is converted to the short filename form. However, if /SHORT is not specified, the path isn`t converted to its long filename form. To get the long filename, call GetLongPathName using the System plug-in. Note that GetLongPathName is only available on Windows 98, Windows 2000 and above.
+
+StrCpy $INSTDIR $PROGRAMFILES\NSIS
+SetOutPath $INSTDIR
+GetFullPathName $0 ..
+DetailPrint $0 # will print C:\Program Files
+GetFullPathName /SHORT $0 $INSTDIR
+DetailPrint $0 # will print C:\Progra~1\NSIS
+StrCpy $0 C:\Progra~1\NSIS
+System::Call 'kernel32::GetLongPathName(t r0, t .r1, i ${NSIS_MAX_STRLEN}) i .r2'
+StrCmp $2 error +2
+StrCpy $0 $1
+DetailPrint $0 # will print C:\Program Files\NSIS, where supported
+                          
+2021.01.27
+I. Researching and implementing solution:
+
+https://stackoverflow.com/questions/1903145/nsis-vs-wix-vs-anyother-installation-package                          
+
+2021.01.29
+I. Researching and implementing solution:
+1) Help link:                          
+http://www.qi-pro.com/QI-Pro/HelpDocs/index.htm
+                          
+2) About Link:
+https://www.sound-qi.com/qi-pro
+                          
+3) Contact ink:
+https://www.sound-qi.com/contact
+
+"C:\Program Files (x86)\MSI Wrapper\MsiWrapperBatch.exe" config="C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\MsiInstallerConfig.xml"
+
+-----
+
+Overview of available installer creator apps:
+
+https://en.wikipedia.org/wiki/List_of_installation_software
+
+ERROR: The destination path of folder 'Program Files (64-bit) Folder' is not compatible with the project`s target platform 'x86'
+
+-----
+
+https://en.wikipedia.org/wiki/Windows_Installer#Tools
+
+Windows Installer is an alternative to NSIS and InstallShield
+
+-----
+
+msiInstallFilePath = "c:\\Program Files\\MyStuff\\MsiInstaller\\Orca.msi"
+
+
+2021.02.01
+I. Researching and implementing solution:
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\installer.wxs(15) : error LGHT0204 : ICE80: This 32BitComponent ApplicationFiles uses 64BitDirectory INSTALLDIR
+Press any key to continue . . .
+
+
+-----
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\QIProSetup.wxs(24) : warning LGHT1076 : ICE68: Even though custom action 'ExecCustomInstall' is marked to be elevated (with attribute msidbCustomActionTypeNoImpersonate), it will not be run with elevated privileges because it`s not deferred (with attribute msidbCustomActionTypeInScript).
+Press any key to continue . . .
+
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\QIProSetup.wxs(26) : error LGHT0204 : ICE77: ExecCustomInstall is a in-script custom action.  It must be sequenced in between the InstallInitialize action and the InstallFinalize action in the InstallExecuteSequence table
+Press any key to continue . . .
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>light QIProSetup.wixobj
+Windows Installer XML Toolset Linker version 3.11.2.4516
+Copyright (c) .NET Foundation and contributors. All rights reserved.
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\QIProSetup.wxs(26) : error LGHT0204 : ICE75: ExecCustomInstall is a custom action whose source is an installed file.  It must be sequenced after the CostFinalize action in the InstallExecuteSequence Sequence table
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\QIProSetup.wxs(26) : error LGHT0204 : ICE77: ExecCustomInstall is a in-script custom action.  It must be sequenced in between the InstallInitialize action and the InstallFinalize action in the InstallExecuteSequence table
+Press any key to continue . . .
+
+2021.02.02
+I. Researching and implementing solution:
+
+..\CodeSigningCertificate\SQI-SignTool.bat "$(OutDir)$(TargetName)$(TargetExt)"
+
+-----
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>CodeSigningCertificate\SQI-SignTool.bat QIProSetup.exe
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>echo Signing executable: QIProSetup.exe
+Signing executable: QIProSetup.exe
+SignTool Error: An unexpected internal error has occurred.
+Error information: "Error: Store IsDiskFile() failed." (-2147024893/0x80070003)
+
+-----
+
+Microsoft Windows [Version 10.0.19042.746]
+(c) 2020 Microsoft Corporation. All rights reserved.
+
+C:\Users\moorer>cd "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer"
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>CodeSigningCertificate\SQI-SignTool.bat QIProSetup.exe
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>echo Signing executable: QIProSetup.exe
+Signing executable: QIProSetup.exe
+SignTool Error: An unexpected internal error has occurred.
+Error information: "Error: Store IsDiskFile() failed." (-2147024893/0x80070003)
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>SQI-SignTool.bat QIProSetup.exe
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>echo Signing executable: QIProSetup.exe
+Signing executable: QIProSetup.exe
+SignTool Error: An unexpected internal error has occurred.
+Error information: "Error: Store IsDiskFile() failed." (-2147024893/0x80070003)
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>SQI-SignTool.bat QIProSetup.exe
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>echo Signing executable: QIProSetup.exe
+Signing executable: QIProSetup.exe
+SignTool Error: An unexpected internal error has occurred.
+Error information: "Error: Store IsDiskFile() failed." (-2147024893/0x80070003)
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>SQI-SignTool.bat QIProSetup.exe
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>echo Signing executable: QIProSetup.exe
+Signing executable: QIProSetup.exe
+Done Adding Additional Store
+Successfully signed: QIProSetup.exe
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>CreateInstallers.bat
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>SET /P VALUE_FROM_FILE=  0<VersionInfo.txt
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>RunInstallers.bat 4.4.4.76
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>REM Main Release build
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>echo off
+File not found - QI-Pro.exe
+0 File(s) copied
+C:\TeamCity\buildAgent\work\fbef456932ac7c99\IMAC\ReleaseNotes.txt
+1 File(s) copied
+Processing config: C:\Program Files (x86)\NSIS\nsisconf.nsh
+Processing script file: "QiPro.nsi" (ACP)
+warning 7025: "English" is not a valid language id, using language id 1033! (QiPro.nsi:66)
+warning 7025: "English" is not a valid language id, using language id 1033! (QiPro.nsi:69)
+warning 7025: "English" is not a valid language id, using language id 1033! (QiPro.nsi:71)
+
+Processed 1 file, writing output (x86-ansi):
+warning 7998: ANSI targets are deprecated
+
+Output: "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\QIProSetup.exe"
+Install: 9 pages (576 bytes), 6 sections (12432 bytes), 591 instructions (16548 bytes), 256 strings (6979 bytes), 1 language table (366 bytes).
+Uninstall: 1 page (128 bytes), 1 section (2072 bytes), 31 instructions (868 bytes), 77 strings (1283 bytes), 1 language table (194 bytes).
+Datablock optimizer saved 16950 KiB (~43.0%).
+
+Using lzma (compress whole) compression.
+
+EXE header size:               52736 / 37888 bytes
+Install code:                          (31221 bytes)
+Install data:                          (22897455 bytes)
+Uninstall code+data:                   (17813 bytes)
+Compressed data:             4687931 / 22946489 bytes
+CRC (0x224D82DA):                  4 / 4 bytes
+
+Total size:                  4740671 / 22984381 bytes (20.6%)
+
+4 warnings:
+  7025: "English" is not a valid language id, using language id 1033! (QiPro.nsi:66)
+  7025: "English" is not a valid language id, using language id 1033! (QiPro.nsi:69)
+  7025: "English" is not a valid language id, using language id 1033! (QiPro.nsi:71)
+  7998: ANSI targets are deprecated
+C:config.dat
+C:Headwave\config.dat
+C:Seisware10.3\config.dat
+C:Seisware10.4\config.dat
+C:Seisware10.5\config.dat
+5 File(s) copied
+        1 file(s) copied.
+C:QI-Pro.exe
+C:Headwave\QI-Pro.exe
+C:Seisware10.3\QI-Pro.exe
+C:Seisware10.4\QI-Pro.exe
+C:Seisware10.5\QI-Pro.exe
+5 File(s) copied
+C:ReleaseNotes.txt
+C:Headwave\ReleaseNotes.txt
+C:Seisware10.3\ReleaseNotes.txt
+C:Seisware10.4\ReleaseNotes.txt
+C:Seisware10.5\ReleaseNotes.txt
+5 File(s) copied
+C:QIProSetup.exe
+C:Seisware10.3\QIProSetup.exe
+C:Seisware10.4\QIProSetup.exe
+C:Seisware10.5\QIProSetup.exe
+4 File(s) copied
+Signing executable: Z:\Applications\QI-Pro\PreRelease\4.4.4.76\QIProSetup.exe
+Done Adding Additional Store
+Successfully signed: Z:\Applications\QI-Pro\PreRelease\4.4.4.76\QIProSetup.exe
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>
+
+-----
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>CreateInstallers.bat
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>SET /P VALUE_FROM_FILE=  0<VersionInfo.txt
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>RunInstallers.bat 4.4.4.77
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>REM Main Release build
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>echo off
+C:\TeamCity\buildAgent\work\fbef456932ac7c99\OSI\QI-Pro\x64\Release\QI-Pro.exe
+1 File(s) copied
+C:\TeamCity\buildAgent\work\fbef456932ac7c99\IMAC\ReleaseNotes.txt
+1 File(s) copied
+Processing config: C:\Program Files (x86)\NSIS\nsisconf.nsh
+Processing script file: "QiPro.nsi" (ACP)
+warning 7025: "English" is not a valid language id, using language id 1033! (QiPro.nsi:66)
+warning 7025: "English" is not a valid language id, using language id 1033! (QiPro.nsi:69)
+warning 7025: "English" is not a valid language id, using language id 1033! (QiPro.nsi:71)
+
+Processed 1 file, writing output (x86-ansi):
+warning 7998: ANSI targets are deprecated
+
+Output: "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\QIProSetup.exe"
+Install: 9 pages (576 bytes), 6 sections (12432 bytes), 591 instructions (16548 bytes), 256 strings (6979 bytes), 1 language table (366 bytes).
+Uninstall: 1 page (128 bytes), 1 section (2072 bytes), 31 instructions (868 bytes), 77 strings (1283 bytes), 1 language table (194 bytes).
+Datablock optimizer saved 16950 KiB (~43.0%).
+
+Using lzma (compress whole) compression.
+
+EXE header size:               52736 / 37888 bytes
+Install code:                          (31221 bytes)
+Install data:                          (22897455 bytes)
+Uninstall code+data:                   (17813 bytes)
+Compressed data:             4684012 / 22946489 bytes
+CRC (0xAEA1DE36):                  4 / 4 bytes
+
+Total size:                  4736752 / 22984381 bytes (20.6%)
+
+4 warnings:
+  7025: "English" is not a valid language id, using language id 1033! (QiPro.nsi:66)
+  7025: "English" is not a valid language id, using language id 1033! (QiPro.nsi:69)
+  7025: "English" is not a valid language id, using language id 1033! (QiPro.nsi:71)
+  7998: ANSI targets are deprecated
+C:config.dat
+C:Headwave\config.dat
+C:Seisware10.3\config.dat
+C:Seisware10.4\config.dat
+C:Seisware10.5\config.dat
+5 File(s) copied
+        1 file(s) copied.
+C:QI-Pro.exe
+C:Headwave\QI-Pro.exe
+C:Seisware10.3\QI-Pro.exe
+C:Seisware10.4\QI-Pro.exe
+C:Seisware10.5\QI-Pro.exe
+5 File(s) copied
+C:ReleaseNotes.txt
+C:Headwave\ReleaseNotes.txt
+C:Seisware10.3\ReleaseNotes.txt
+C:Seisware10.4\ReleaseNotes.txt
+C:Seisware10.5\ReleaseNotes.txt
+5 File(s) copied
+C:QIProSetup.exe
+C:Seisware10.3\QIProSetup.exe
+C:Seisware10.4\QIProSetup.exe
+C:Seisware10.5\QIProSetup.exe
+4 File(s) copied
+Signing executable: Z:\Applications\QI-Pro\PreRelease\4.4.4.77\QIProSetup.exe
+Done Adding Additional Store
+Successfully signed: Z:\Applications\QI-Pro\PreRelease\4.4.4.77\QIProSetup.exe
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>
+
+-----
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>CreateInstallers.bat
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>SET /P VALUE_FROM_FILE=  0<VersionInfo.txt
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>RunInstallers.bat 4.4.4.77
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>REM Main Release build
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>echo off
+C:\TeamCity\buildAgent\work\fbef456932ac7c99\OSI\QI-Pro\x64\Release\QI-Pro.exe
+1 File(s) copied
+C:\TeamCity\buildAgent\work\fbef456932ac7c99\IMAC\ReleaseNotes.txt
+1 File(s) copied
+Processing config: C:\Program Files (x86)\NSIS\nsisconf.nsh
+Processing script file: "QiPro.nsi" (ACP)
+warning 7025: "English" is not a valid language id, using language id 1033! (QiPro.nsi:66)
+warning 7025: "English" is not a valid language id, using language id 1033! (QiPro.nsi:69)
+warning 7025: "English" is not a valid language id, using language id 1033! (QiPro.nsi:71)
+
+Processed 1 file, writing output (x86-ansi):
+warning 7998: ANSI targets are deprecated
+
+Output: "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\QIProSetup.exe"
+Install: 9 pages (576 bytes), 6 sections (12432 bytes), 591 instructions (16548 bytes), 256 strings (6979 bytes), 1 language table (366 bytes).
+Uninstall: 1 page (128 bytes), 1 section (2072 bytes), 31 instructions (868 bytes), 77 strings (1283 bytes), 1 language table (194 bytes).
+Datablock optimizer saved 16950 KiB (~43.0%).
+
+Using lzma (compress whole) compression.
+
+EXE header size:               52736 / 37888 bytes
+Install code:                          (31221 bytes)
+Install data:                          (22897455 bytes)
+Uninstall code+data:                   (17813 bytes)
+Compressed data:             4684012 / 22946489 bytes
+CRC (0xAEA1DE36):                  4 / 4 bytes
+
+Total size:                  4736752 / 22984381 bytes (20.6%)
+
+4 warnings:
+  7025: "English" is not a valid language id, using language id 1033! (QiPro.nsi:66)
+  7025: "English" is not a valid language id, using language id 1033! (QiPro.nsi:69)
+  7025: "English" is not a valid language id, using language id 1033! (QiPro.nsi:71)
+  7998: ANSI targets are deprecated
+C:config.dat
+C:Headwave\config.dat
+C:Seisware10.3\config.dat
+C:Seisware10.4\config.dat
+C:Seisware10.5\config.dat
+5 File(s) copied
+        1 file(s) copied.
+C:QI-Pro.exe
+C:Headwave\QI-Pro.exe
+C:Seisware10.3\QI-Pro.exe
+C:Seisware10.4\QI-Pro.exe
+C:Seisware10.5\QI-Pro.exe
+5 File(s) copied
+C:ReleaseNotes.txt
+C:Headwave\ReleaseNotes.txt
+C:Seisware10.3\ReleaseNotes.txt
+C:Seisware10.4\ReleaseNotes.txt
+C:Seisware10.5\ReleaseNotes.txt
+5 File(s) copied
+C:QIProSetup.exe
+C:Seisware10.3\QIProSetup.exe
+C:Seisware10.4\QIProSetup.exe
+C:Seisware10.5\QIProSetup.exe
+4 File(s) copied
+Signing executable: Z:\Applications\QI-Pro\PreRelease\4.4.4.77\QIProSetup.exe
+Done Adding Additional Store
+Successfully signed: Z:\Applications\QI-Pro\PreRelease\4.4.4.77\QIProSetup.exe
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>
+
+-----
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>SQI-SignTool.bat QIProSetup.exe
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>echo Signing executable: QIProSetup.exe
+Signing executable: QIProSetup.exe
+SignTool Error: An unexpected internal error has occurred.
+Error information: "Error: Store IsDiskFile() failed." (-2147024893/0x80070003)
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>
+
+--------------------------------------------------------------------------------
+
+-Adding signtool to uninstaller:
+
+Total size:                  4740655 / 22985647 bytes (20.6%)
+
+5 warnings:
+  7025: "English" is not a valid language id, using language id 1033! (QiPro.nsi:66)
+  7025: "English" is not a valid language id, using language id 1033! (QiPro.nsi:69)
+  7025: "English" is not a valid language id, using language id 1033! (QiPro.nsi:71)
+  8021: 'SetCompress off' encountered, and in whole compression mode. Effectively ignored. (QiPro.nsi:195)
+  7998: ANSI targets are deprecated
+!makensis: returned 0
+!system: "set __COMPAT_LAYER=RunAsInvoker&"C:\Users\moorer\AppData\Local\Temp\tempinstaller.exe""
+!system: returned 2
+!system: "SignTool sign /f CodeSigningCertificate\SoundQISolutions.pfx /p Apple#Bl0ss0m! /tr http://timestamp.digicert.com /td SHA256 C:\Users\moorer\AppData\Local\Temp\uninstaller.exe"
+'SignTool' is not recognized as an internal or external command,
+operable program or batch file.
+!system: returned 1, aborting
+Error in script "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\QiPro.nsi" on line 212 -- aborting creation process
+
+-----
+
+XE header size:               52736 / 37888 bytes
+Install code:                          (32487 bytes)
+Install data:                          (22897455 bytes)
+Uninstall code+data:                   (17813 bytes)
+Compressed data:             4687915 / 22947755 bytes
+CRC (0x6C7CA5FA):                  4 / 4 bytes
+
+Total size:                  4740655 / 22985647 bytes (20.6%)
+
+5 warnings:
+  7025: "English" is not a valid language id, using language id 1033! (QiPro.nsi:66)
+  7025: "English" is not a valid language id, using language id 1033! (QiPro.nsi:69)
+  7025: "English" is not a valid language id, using language id 1033! (QiPro.nsi:71)
+  8021: 'SetCompress off' encountered, and in whole compression mode. Effectively ignored. (QiPro.nsi:195)
+  7998: ANSI targets are deprecated
+!makensis: returned 0
+!system: "set __COMPAT_LAYER=RunAsInvoker&"C:\Users\moorer\AppData\Local\Temp\tempinstaller.exe""
+!system: returned 2
+!system: "SignTool sign /f CodeSigningCertificate\SoundQISolutions.pfx /p Apple#Bl0ss0m! /tr http://timestamp.digicert.com /td SHA256 C:\Users\moorer\AppData\Local\Temp\uninstaller.exe"
+'SignTool' is not recognized as an internal or external command,
+operable program or batch file.
+!system: returned 1, aborting
+Error in script "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\QiPro.nsi" on line 212 -- aborting creation process
+
+--------------------------------------------------------------------------------
+
+1) Curious about the license agreement.  Is that the document that the clients sign?  We’ll need to get someone (Laurie, Kirk, maybe Sandi) to look at it and make sure it’s accurate.  In the meantime there are some illegible characters:
+
+
+2021.02.03
+I. Researching and implementing solution:
+
+Please note that I have been trying to create a simple installer based on https://www.codeproject.com/Articles/24187/Creating-an-Installer?msg=5782957#xx5782957xx; however, it is not clear to me how I can determine whether the checkbox is checked or not:
+
+[![enter image description here][1]][1]
+
+When I research checkboxes, I see that you can get the state using [NSD_GetState][2] but in the case of the CodeProject article, how can I find out what the name of the `control_HWND` checkbox is?  Is there some sort of default naming convention with NSIS?
+
+
+
+  [1]: https://i.stack.imgur.com/bmKgR.png
+  [2]: https://nsis.sourceforge.io/Docs/nsDialogs/Readme.html#mref-getstate
+
+-----
+
+Checkout directory: C:\TeamCity\buildAgent\work\cee953a17e540081
+Updating sources: auto checkout (on agent)
+  Will use agent side checkout
+  VCS Root: tfs: http://sqi009:8080/tfs/DefaultCollection/ $/SoundQI-Branch
+    revision: 956
+    Using .net working mode
+  Failed to perform checkout on agent: Failed to list workspaces: TF30063: You are not authorized to access http://sqi009:8080/tfs/DefaultCollection/
+
+
+
+2021.02.08
+I. Researching and implementing solution:
+
+Error: resolving install function "SelectFilesCheck" in function "mui.ComponentsPre_47.5.19"
+Note: uninstall functions must begin with "un.", and install functions must not
+
+2021.02.10
+I. Researching and implementing solution:
+
+Exception has occurred: TypeError
+system() takes at most 1 argument (2 given)
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\run_installers.py", line 25, in Run
+    os.system('copy /Y QI-Pro.exe ' + qiProFullPath, 'QI-Pro.exe')
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\run_installers.py", line 134, in <module>
+    returnCode = Run()
+
+'Z:\\\\Applications\\\\QI-Pro\\\\PreRelease\\4.4.4.76'
+
+Exception has occurred: PermissionError
+[WinError 5] Access is denied: 'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.76'
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\run_installers.py", line 147, in Run
+    os.remove(f)
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\run_installers.py", line 156, in <module>
+    returnCode = Run()
+
+Exception has occurred: OSError
+[WinError 145] The directory is not empty: 'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.82'
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\run_installers.py", line 151, in Run
+    shutil.rmtree(path)
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\run_installers.py", line 160, in <module>
+    returnCode = Run()
+
+    print("Iteration: " + str(count._count)    
+
+
+
+2021.02.11
+I. Researching and implementing solution:
+
+int CEXEBuild::uninstall_generate()
+{
+#ifdef NSIS_CONFIG_UNINSTALL_SUPPORT
+  if (ubuild_entries.getlen() && uninstaller_writes_used)
+  {
+    SCRIPT_MSG(_T("Generating uninstaller... "));
+
+    firstheader fh={0,};
+
+    GrowBuf uhd;
+    {
+      GrowBuf udata;
+
+      set_uninstall_mode(1);
+
+      PrepareHeaders(&udata);
+
+      fh.length_of_header=udata.getlen();
+      int err=add_data((char*)udata.get(),udata.getlen(),&uhd);
+      set_uninstall_mode(0);
+      if (err < 0) return PS_ERROR;
+    }
+
+    crc32_t crc=0;
+
+    // Get offsets of icons to replace for uninstall
+    // Also makes sure that the icons are there and in the right size.
+    LPBYTE unicon_data = generate_uninstall_icon_data(installer_icon, uninstaller_icon, m_unicon_size);
+    if (generate_unicons_offsets(m_exehead, m_exehead_size, unicon_data, IDI_ICON2) == 0)
+    {
+      delete [] unicon_data;
+      return PS_ERROR;
+    }
+
+    entry *ent = (entry *) build_entries.get();
+    if (!ent)
+    {
+      delete [] unicon_data;
+      return PS_ERROR;
+    }
+
+    int ents = build_header.blocks[NB_ENTRIES].num;
+    int uns = uninstaller_writes_used;
+    int uninstdata_offset = build_datablock.getlen();
+    while (ents--)
+    {
+      if (ent->which == EW_WRITEUNINSTALLER)
+      {
+        ent->offsets[1] = uninstdata_offset;
+        ent->offsets[2] = (int) m_unicon_size;
+        uns--;
+        if (!uns)
+          break;
+      }
+      ent++;
+    }
+
+    if (add_db_data((char *)unicon_data,m_unicon_size) < 0)
+    {
+      delete [] unicon_data;
+      return PS_ERROR;
+    }
+
+#ifdef NSIS_CONFIG_CRC_SUPPORT
+    {
+      // "create" the uninstaller
+      LPBYTE uninst_header = (LPBYTE) malloc(m_exehead_size);
+      if (!uninst_header)
+        return PS_ERROR;
+
+      memcpy(uninst_header, m_exehead, m_exehead_size);
+
+      // patch the icons
+      LPBYTE seeker = unicon_data;
+      while (*seeker) {
+        DWORD dwSize = FIX_ENDIAN_INT32(*(LPDWORD) seeker);
+        seeker += sizeof(DWORD);
+        DWORD dwOffset = FIX_ENDIAN_INT32(*(LPDWORD) seeker);
+        seeker += sizeof(DWORD);
+        memcpy(uninst_header + dwOffset, seeker, dwSize);
+        seeker += dwSize;
+      }
+
+      delete [] unicon_data;
+
+#ifdef NSIS_CONFIG_CRC_ANAL
+      crc=CRC32(crc, uninst_header, (DWORD)m_exehead_size);
+#else
+      crc=CRC32(crc, uninst_header + 512, (DWORD)m_exehead_size - 512);
+#endif
+
+      free(uninst_header);
+    }
+#endif
+    fh.nsinst[0]=FH_INT1;
+    fh.nsinst[1]=FH_INT2;
+    fh.nsinst[2]=FH_INT3;
+    fh.flags=FH_FLAGS_UNINSTALL;
+#ifdef NSIS_CONFIG_CRC_SUPPORT
+    fh.flags|=(build_crcchk?(build_crcchk==2?FH_FLAGS_FORCE_CRC:0):FH_FLAGS_NO_CRC);
+#endif
+#ifdef NSIS_CONFIG_SILENT_SUPPORT
+    if (build_uninst.flags&(CH_FLAGS_SILENT|CH_FLAGS_SILENT_LOG)) fh.flags |= FH_FLAGS_SILENT;
+#endif
+    fh.siginfo=FH_SIG;
+    fh.length_of_all_following_data=
+      uhd.getlen()+ubuild_datablock.getlen()+(int)sizeof(firstheader)+(build_crcchk?sizeof(crc32_t):0);
+
+    MMapBuf udata;
+
+    {
+      growbuf_writer_sink sink(&udata, mk_writer_target_info());
+      firstheader_writer w(&sink);
+      w.write(&fh);
+    }
+
+    ubuild_datablock.setro(TRUE);
+
+#ifdef NSIS_CONFIG_COMPRESSION_SUPPORT
+    if (build_compress_whole) {
+      // compress uninstaller too
+      {
+        char obuf[65536];
+        int n = compressor->Init(build_compress_level, build_compress_dict_size);
+        if (n != C_OK)
+        {
+          ERROR_MSG(_T("Internal compiler error #12345: deflateInit() failed(%") NPRIs _T(" [%d]).\n"), compressor->GetErrStr(n), n);
+          extern void quit(); quit();
+        }
+
+        compressor->SetNextIn((char*)uhd.get(), uhd.getlen());
+        while (compressor->GetAvailIn())
+        {
+          compressor->SetNextOut(obuf, sizeof(obuf));
+          compressor->Compress(0);
+          if (compressor->GetNextOut() - obuf > 0)
+          {
+            udata.add(obuf, truncate_cast(int, (size_t)(compressor->GetNextOut() - obuf)));
+          }
+        }
+
+        int avail_in = ubuild_datablock.getlen();
+        int in_pos = 0;
+        while (avail_in > 0) {
+          int l = min(avail_in, build_filebuflen);
+
+          char *p = (char*)ubuild_datablock.get(in_pos, l);
+          compressor->SetNextIn(p, l);
+
+          while (compressor->GetAvailIn())
+          {
+            compressor->SetNextOut(obuf, sizeof(obuf));
+            compressor->Compress(0);
+            if (compressor->GetNextOut() - obuf > 0)
+              udata.add(obuf, truncate_cast(int, (size_t)(compressor->GetNextOut() - obuf)));
+          }
+
+          ubuild_datablock.release();
+
+          avail_in -= l;
+          in_pos += l;
+        }
+
+        for (;;)
+        {
+          compressor->SetNextOut(obuf, sizeof(obuf));
+          compressor->Compress(C_FINISH);
+          if (compressor->GetNextOut() - obuf > 0)
+            udata.add(obuf, truncate_cast(int, (size_t)(compressor->GetNextOut() - obuf)));
+          else break;
+        }
+        compressor->End();
+      }
+
+      firstheader *_fh=(firstheader *)udata.get(0, sizeof(firstheader));
+      _fh->length_of_all_following_data=FIX_ENDIAN_INT32(udata.getlen()+(build_crcchk?sizeof(crc32_t):0));
+      udata.release();
+    }
+    else
+#endif//NSIS_CONFIG_COMPRESSION_SUPPORT
+    {
+      udata.add(uhd.get(), uhd.getlen());
+
+      int st = udata.getlen();
+      int length = ubuild_datablock.getlen();
+      int left = length;
+      udata.resize(st + left);
+      while (left > 0)
+      {
+        int l = min(build_filebuflen, left);
+        void *p = ubuild_datablock.get(length - left, l);
+        memcpy(udata.get(st + length - left, l), p, l);
+        udata.flush(l);
+        udata.release();
+        ubuild_datablock.release();
+        left -= l;
+      }
+    }
+
+    ubuild_datablock.clear();
+
+    udata.setro(TRUE);
+
+#ifdef NSIS_CONFIG_CRC_SUPPORT
+    if (build_crcchk)
+    {
+      int pos = 0;
+      int left = udata.getlen();
+      while (left > 0)
+      {
+        int l = min(build_filebuflen, left);
+        crc = CRC32(crc, (unsigned char *) udata.get(pos, l), l);
+        udata.release();
+        pos += l;
+        left -= l;
+      }
+      udata.setro(FALSE);
+      FIX_ENDIAN_INT32_INPLACE(crc);
+      udata.add(&crc, sizeof(crc));
+      udata.setro(TRUE);
+    }
+#endif
+
+    if (add_db_data(&udata) < 0)
+      return PS_ERROR;
+
+    udata.clear();
+
+    //uninstall_size_full=fh.length_of_all_following_data + sizeof(int) + unicondata_size - 32 + sizeof(int);
+    uninstall_size_full=fh.length_of_all_following_data+(int)m_unicon_size;
+
+    // compressed size
+    uninstall_size=build_datablock.getlen()-uninstdata_offset;
+
+    SCRIPT_MSG(_T("Done!\n"));
+  }
+#endif
+  return PS_OK;
+}
+
+TOK_GETTEMPFILENAME
+TOK_P_TEMPFILE
+
+-----
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer          
+
+
+2021.02.12
+I. Researching and implementing solution:
+          
+ --username domain\username : The Username the service is to run under
+ --password password : The password for the username          
+
+          
+--username SOUNDQI.LAN\moorer@soundqi.lan --password sq...
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>python "create_installers.py" install --username SOUNDQI.LAN\moorer@soundqi.lan --password sq...
+
+-----
+
+Traceback (most recent call last):
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\create_installers.py", line 5, in <module>
+    import run_installers
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\run_installers.py", line 187, in <module>
+    returnCode = Run()
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\run_installers.py", line 51, in Run
+    Path(os.path.join(pathWithVersion, 'config.dat')).touch()
+  File "C:\Users\moorer\AppData\Local\Programs\Python\Python39-32\lib\pathlib.py", line 1304, in touch
+    fd = self._raw_open(flags, mode)
+  File "C:\Users\moorer\AppData\Local\Programs\Python\Python39-32\lib\pathlib.py", line 1116, in _raw_open
+    return self._accessor.open(self, flags, mode)
+FileNotFoundError: [Errno 2] No such file or directory: 'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.install\\config.dat'
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>          
+
+-----
+
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer>python "create_installers.py" install --username "SOUNDQI.LAN\moorer@soundqi.lan" --password "sq..."
+
+Usage: 'create_installers.py [options] install|update|remove|start [...]|stop|restart [...]|debug [...]'
+Options for 'install' and 'update' commands only:
+ --username domain\username : The Username the service is to run under
+ --password password : The password for the username
+ --startup [manual|auto|disabled|delayed] : How the service starts, default = manual
+ --interactive : Allow the service to interact with the desktop.
+ --perfmonini file: .ini file to use for registering performance monitor data
+ --perfmondll file: .dll file to use when querying the service for
+   performance data, default = perfmondata.dll
+Options for 'start' and 'stop' commands only:
+ --wait seconds: Wait for the service to actually start or stop.
+                 If you specify --wait with the 'stop' option, the service
+                 and all dependent services will be stopped, each waiting
+                 the specified period.
+
+-----
+
+sys.argv
+['c:\\Users\\moorer\\OneD...tallers.py']
+special variables
+function variables
+0:'c:\\Users\\moorer\\OneDrive - sound-qi.com\\Workspace\\SoundQI\\Features\\MsiPackaging\\Installer\\create_installers.py'
+len():1
+
+2021.02.16
+I. Researching and implementing solution:
+
+-----
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	D8016	'/ZI' and '/Gy-' command-line options are incompatible	C:\cygwin64\tmp\SelfDel\Contrib\SelfDel\selfdel.vcxproj	C:\cygwin64\tmp\SelfDel\Contrib\SelfDel\cl	1	
+
+-----
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2026	module unsafe for SAFESEH image.	C:\cygwin64\tmp\SelfDel\Contrib\SelfDel\selfdel.vcxproj	C:\cygwin64\tmp\SelfDel\Contrib\SelfDel\pluginapi.lib(pluginapi.obj)	1	
+
+-----
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2019	unresolved external symbol __CrtDbgReport referenced in function __CRT_RTC_INIT	C:\cygwin64\tmp\SelfDel\Contrib\SelfDel\selfdel.vcxproj	C:\cygwin64\tmp\SelfDel\Contrib\SelfDel\MSVCRTD.lib(init.obj)	1
+          
+
+tfs: http://sqi009:8080/tfs/DefaultCollection/ $/SoundQI
+
+-----          
+		  
+tfs: http://sqi009:8080/tfs/DefaultCollection/ $/SoundQI
+
+		  
+		  
+C:\Sound-QI_Source\SoundQI>cd C:\Sound-QI_Source\SoundQI && tf get http://sqi009:8080/tfs/DefaultCollection/SoundQI /recursive
+TF10121: The path 'http://sqi009:8080/tfs/DefaultCollection/SoundQI' is not found or not supported. Type or select a different path.
+
+C:\Sound-QI_Source\SoundQI>		  
+
+C:\Sound-QI_Source\SoundQI>cd C:\Sound-QI_Source\SoundQI && tf get $/SoundQI /recursive
+All files are up to date.
+
+-----
+
+['4.4.4.100', '4.4.4.101', '4.4.4.102', '4.4.4.103', '4.4.4.104', '4.4.4.105', '4.4.4.98', '4.4.4.99', '4.4.5.106', '4.4.5.107']
+
+files = os.listdir(path)
+
+str(e)
+"[WinError 2] The system cannot find the file specified: '4.4.4.100'"
+
+function variables
+0:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.100'
+1:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.101'
+2:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.102'
+3:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.103'
+4:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.104'
+5:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.105'
+6:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.98'
+7:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.99'
+8:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.5.106'
+9:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.5.107'
+len():10
+
+files_with_path = files_with_path.sort(key=os.path.getctime)
+
+'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.5.106'
+
+Exception has occurred: PermissionError
+[WinError 5] Access is denied: 'Z:\\Applications\\QI-Pro\\PreRelease'
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\run_installers.py", line 199, in Run
+    shutil.rmtree(os.path.dirname(f))
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\run_installers.py", line 209, in <module>
+    returnCode = Run()
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\create_installers.py", line 5, in <module>
+    import run_installers
+
+-----
+
+
+9:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.5.107'
+8:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.5.106'
+7:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.99'
+6:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.98'
+5:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.105'
+4:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.104'
+3:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.103'
+2:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.102'
+1:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.101'
+0:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.100'
+
+-----
+
+print(files)
+['Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.100', 'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.101', 'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.102', 'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.103', 'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.104', 'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.105', 'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.98', 'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.99', 'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.5.106', 'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.5.107']
+
+-----
+
+
+0:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.100'
+1:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.101'
+2:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.102'
+3:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.103'
+4:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.104'
+5:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.105'
+6:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.98'
+7:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.99'
+8:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.5.106'
+9:'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.5.107'
+
+'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.5.106'          
+
+          
+2021.02.22
+I. Researching and implementing solution:
+
+
+print(version_full_path)
+C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\VersionInfo.txt
+None
+
+-----
+
+Exception has occurred: TypeError
+remove: path should be string, bytes or os.PathLike, not TextIOWrapper
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\run_installers.py", line 74, in Run
+    os.remove(version_file)
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\run_installers.py", line 236, in <module>
+    returnCode = Run()
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\create_installers.py", line 5, in <module>
+    import run_installers          
+
+-----
+
+Exception has occurred: OSError
+[WinError 123] The filename, directory name, or volume label syntax is incorrect: "<_io.TextIOWrapper name='C:\\\\Users\\\\moorer\\\\OneDrive - sound-qi.com\\\\Workspace\\\\SoundQI\\\\Features\\\\MsiPackaging\\\\Installer\\\\VersionInfo.txt' mode='rt' encoding='cp1252'>"
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\run_installers.py", line 74, in Run
+    os.remove(str(version_file))
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\run_installers.py", line 236, in <module>
+    returnCode = Run()
+
+-----
+
+type(version_file)
+<class 'str'>
+
+-----
+
+Exception has occurred: FileNotFoundError
+[WinError 2] The system cannot find the file specified: 'C:\\TeamCity\\buildAgent\\work\\fbef456932ac7c99\\OSI\\QI-Pro\\x64\\Release\\QI-Pro.exe'
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\run_installers.py", line 22, in Run
+    fileStatsObj = os.stat(qi_pro_file_path)
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\run_installers.py", line 238, in <module>
+    returnCode = Run()
+  File "C:\Users\moorer\OneDrive - sound-qi.com\Workspace\SoundQI\Features\MsiPackaging\Installer\create_installers.py", line 5, in <module>
+    import run_installers
+
+'C:\TeamCity\buildAgent\work\fbef456932ac7c99\OSI\QI-Pro\x64\Release\QI-Pro.exe'          
+
+-----
+
+C:\\TeamCity\\buildAgent\\work\\fbef456932ac7c99\\OSI\\QI-Pro\\x64\\Release\\QI-Pro.exe
+
+C:\TeamCity\buildAgent\work\fbef456932ac7c99\OSI\QI-Pro\x64\Release\QI-Pro.exe
+
+print(modificationTime)
+Mon Feb 22 13:26:04 2021
+None
+
+          
+-----
+
+          print(qi_pro_file_prev_installer_path)
+Z:\Applications\QI-Pro\PreRelease\110\QI-Pro.exe
+
+-----
+
+
+Z:\Applications\QI-Pro\PreRelease\4.4.5.110\QI-Pro.exe
+None
+
+          
+-----
+
+int(str(e))
+'str' object has no attribute 'strftime'
+None
+
+-----
+
+print(qi_pro_file_prev_installer_stats)
+os.stat_result(st_mode=33279, st_ino=3096224744056725, st_dev=1047216668, st_nlink=1, st_uid=0, st_gid=0, st_size=10888248, st_atime=1614020757, st_mtime=1613839057, st_ctime=1614020757)
+None
+type(qi_pro_file_prev_installer_stats)
+<class 'os.stat_result'>
+
+-----
+
+print(prev_installer_modification_time)
+Sat Feb 20 09:37:37 2021
+None
+
+-----
+          
+print(str(e))
+time data 'Mon Feb 22 13:26:04 2021' does not match format '%d/%m/%y %H:%M:%S'
+
+
+-----
+
+print(str(e))
+time data 'Mon Feb 22 13:26:04 2021' does not match format '%d/%m/%y %H:%M:%S'
+
+-----
+
+print(prev_installer_modification_time)
+20/02/21 09:37:37
+None
+print(latest_installer_modification_time)
+22/02/21 13:26:04
+None
+
+-----
+
+          
+
+          
+2021.03.08
+I. QI-Pro headwave:
+-Get rid of the popup dialogs -> COMPLETE 
+-Get rid of the subcategories -> COMPLETE 
+-If you select only headwave, then it shows up "You haven`t selected any sections!" -> COMPLETE 
+-Kevin doesn`t like the popup for the headwave default directory -> COMPLETE 
+-Have two browse paths for headwave? -> COMPLETE 
+
+"Setup will install HW_Data in the following folder..."
+To:
+"Select HW-Data installation location" -> COMPLETE 
+
+Top message: "Choose options for QI-Pro installation" instead of the top message "Choose the folder in which to install QI-Pro"
+-Set HEADWAVE_ROOT_DIR as a user environment variable instead of a system environment variable -> COMPLETE 
+-Headwave workspace directory has wrong message 
+
+-Get rid of "Is Headwave installed in ...?" popup as well.  Use the same kind of browse dialog that you did for Data and Workspace  -> COMPLETE 
+-Remove popups about port number and plugins, and put them on a post-install page 
+-For plug-ins, we don`t actually need the lib and exp -> COMPLETE 
+-Get Python files from TFS instead of from Z: drive -> COMPLETE 
+          
+-----
+
+
+From: Kevin Lee <kevin@sound-qi.com> 
+Sent: March 8, 2021 11:54 AM
+To: Roger Moore <roger@sound-qi.com>
+Subject: Headwave files for installer.
+
+Roger,
+
+The latest HW files are located here:
+
+Python:
+Z:\Applications\Headwave\SoundQI
+
+Plugins
+Z:\Applications\Headwave\QI-Pro-Plugins
+
+          
+
+--------------------------------------------------------------------------------
+
+2021.03.17
+I. QI-Pro headwave:
+
+-Setting up mocking using FakeIt:
+          
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2005	"void * __cdecl operator new(unsigned __int64)" (??2@YAPEAX_K@Z) already defined in LIBCMTD.lib(new_scalar.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxmem.obj)	1
+
+-> Solution (see https://stackoverflow.com/questions/1146338/error-lnk2005-new-and-delete-already-defined-in-libcmtd-libnew-obj):
+
+The CRT libraries use weak external linkage for the new, delete, and DllMain functions. The MFC libraries also contain new, delete, and DllMain functions. These functions require the MFC libraries to be linked before the CRT library is linked. http://support.microsoft.com/kb/148652
+
+Solution based on VS2005 (Replace Nafxcwd.lib with Uafxcwd.lib for ~VS2013)
+
+go to project>properties>configuration properties>linker>input
+
+add to "Additional dependency" -> Nafxcwd.lib Libcmtd.lib
+
+add to "ignore specific library" -> Nafxcwd.lib;Libcmtd.lib
+
+order of libraries is important( Nafxcwd.lib;Libcmtd.lib).          
+          
+-----
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2001	unresolved external symbol __imp_strftime	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\NativeUnitTests.obj	1	
+          
+2021-03-30 11:23:55,233-ERROR-Exception: [WinError 2] The system cannot find the file specified: 'C:\\TeamCity\\buildAgent\\work\\fbef456932ac7c99\\OSI\\QI-Pro\\x64\\Release\\QI-Pro.exe'
+
+2021.03.30
+I. Adding run_installers.py to run from TFS/TeamCity:
+          
+Error information: "Error: Store IsDiskFile() failed." (-2147024893/0x80070003)
+SignTool Error: An unexpected internal error has occurred.
+!system: returned 1, aborting
+Error in macro WriteSignedUninstaller on macroline 3
+Error in script "QiPro.nsi" on line 186 -- aborting creation process
+A subdirectory or file Z:\Applications\QI-Pro\PreRelease\4.5.1.183 already exists.
+        1 file(s) copied.
+        1 file(s) copied.
+        1 file(s) copied.
+The system cannot find the file specified.
+
+C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\Installer>echo Signing executable: Z:\Applications\QI-Pro\PreRelease\4.5.1.183\QIProSetup.exe
+Signing executable: Z:\Applications\QI-Pro\PreRelease\4.5.1.183\QIProSetup.exe
+Done Adding Additional Store
+SignTool Error: File not found: Z:\Applications\QI-Pro\PreRelease\4.5.1.183\QIProSetup.exe
+
+Number of errors: 1
+QI-Pro Changeset History
+        1 file(s) copied.
+Running installers returnCode: 1
+PS C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\Installer>           
+
+2021.04.01
+I. Adding run_installers.py to run from TFS/TeamCity:          
+          
+  QI-Pro Installer
+09:38:38
+      fd = self._raw_open(flags, mode)
+09:38:38
+    File "C:\Users\moorer\AppData\Local\Programs\Python\Python39-32\lib\pathlib.py", line 1116, in _raw_open
+09:38:38
+      return self._accessor.open(self, flags, mode)
+09:38:38
+  FileNotFoundError: [Errno 2] No such file or directory: 'Z:\\Applications\\QI-Pro\\PreRelease'
+09:38:38
+  Process exited with code 1
+09:38:38
+  Process exited with code 1 (Step: Generate Installers (Command Line))
+09:38:38
+  Step Generate Installers (Command Line) failed
+09:38:38
+Publishing internal artifacts
+09:38:38Build finished
+
+          
+-----
+
+
+PS C:\Sound-QI_Source\SoundQI-Branch\RM_Branch>
+PS C:\Sound-QI_Source\SoundQI-Branch\RM_Branch>  c:; cd 'c:\Sound-QI_Source\SoundQI-Branch\RM_Branch'; & 'c:\users\moorer\appdata\local\programs\python\python39-32\python.exe' 'c:\Users\moorer\.vscode\extensions\ms-python.python-2021.3.680753044\pythonFiles\lib\python\debugpy\launcher' '51311' '--' 'c:\Sound-QI_Source\SoundQI-Branch\RM_Branch\Installer\run_installers.py'
+Running create installers
+All files are up to date.
+183
+#pragma once
+
+#pragma warning(disable:4996) // [...] was declared deprecated.
+
+
+
+#ifndef __AFXWIN_H__
+
+        #error include 'stdafx.h' before including this file for PCH
+
+#endif
+
+
+
+#include "resource.h"       // main symbols
+
+#include "MainFrm.h"
+
+#include "../common/osi_type.h"
+
+#include "../common/License.h"
+
+#include "../common/FlexLicense.h"
+
+#include "../common/Data.h"
+
+#include "HeadwaveSocket.h"
+
+
+
+class CIMACDoc;
+
+class CIMACDocTemplate;
+
+
+
+typedef struct servermode_parm {
+
+        CIMACDoc *pDoc;
+
+        int port;
+
+} SERVERMODE_PARM;
+
+
+
+// IMAC symbols
+
+
+
+#define QI_PRO_MAJOR_REVISION 4
+
+#define QI_PRO_MINOR_REVISION 5
+
+#define QI_PRO_BUGFIX_REVISION 1
+
+--- Logging error ---
+Traceback (most recent call last):
+  File "c:\users\moorer\appdata\local\programs\python\python39-32\lib\logging\__init__.py", line 1079, in emit
+    msg = self.format(record)
+  File "c:\users\moorer\appdata\local\programs\python\python39-32\lib\logging\__init__.py", line 923, in format
+    return fmt.format(record)
+  File "c:\users\moorer\appdata\local\programs\python\python39-32\lib\logging\__init__.py", line 659, in format
+    record.message = record.getMessage()
+  File "c:\users\moorer\appdata\local\programs\python\python39-32\lib\logging\__init__.py", line 363, in getMessage
+    msg = msg % self.args
+TypeError: not all arguments converted during string formatting
+Call stack:
+  File "c:\users\moorer\appdata\local\programs\python\python39-32\lib\runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "c:\users\moorer\appdata\local\programs\python\python39-32\lib\runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "c:\Users\moorer\.vscode\extensions\ms-python.python-2021.3.680753044\pythonFiles\lib\python\debugpy\__main__.py", line 45, in <module>
+    cli.main()
+  File "c:\Users\moorer\.vscode\extensions\ms-python.python-2021.3.680753044\pythonFiles\lib\python\debugpy/..\debugpy\server\cli.py", line 444, in main
+    run()
+  File "c:\Users\moorer\.vscode\extensions\ms-python.python-2021.3.680753044\pythonFiles\lib\python\debugpy/..\debugpy\server\cli.py", line 285, in run_file
+    runpy.run_path(target_as_str, run_name=compat.force_str("__main__"))
+  File "c:\users\moorer\appdata\local\programs\python\python39-32\lib\runpy.py", line 268, in run_path
+    return _run_module_code(code, init_globals, run_name,
+  File "c:\users\moorer\appdata\local\programs\python\python39-32\lib\runpy.py", line 97, in _run_module_code
+    _run_code(code, mod_globals, init_globals,
+  File "c:\users\moorer\appdata\local\programs\python\python39-32\lib\runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "c:\Sound-QI_Source\SoundQI-Branch\RM_Branch\Installer\run_installers.py", line 406, in <module>
+    returnCode = Run()
+  File "c:\Sound-QI_Source\SoundQI-Branch\RM_Branch\Installer\run_installers.py", line 89, in Run
+    logging.debug("Previous Installer Modified Time: ", prev_installer_modification_time)
+Message: 'Previous Installer Modified Time: '
+Arguments: ('30/03/21 17:09:46',)
+--- Logging error ---
+Traceback (most recent call last):
+  File "c:\users\moorer\appdata\local\programs\python\python39-32\lib\logging\__init__.py", line 1079, in emit
+    msg = self.format(record)
+  File "c:\users\moorer\appdata\local\programs\python\python39-32\lib\logging\__init__.py", line 923, in format
+    return fmt.format(record)
+  File "c:\users\moorer\appdata\local\programs\python\python39-32\lib\logging\__init__.py", line 659, in format
+    record.message = record.getMessage()
+  File "c:\users\moorer\appdata\local\programs\python\python39-32\lib\logging\__init__.py", line 363, in getMessage
+    msg = msg % self.args
+TypeError: not all arguments converted during string formatting
+Call stack:
+  File "c:\users\moorer\appdata\local\programs\python\python39-32\lib\runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "c:\users\moorer\appdata\local\programs\python\python39-32\lib\runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "c:\Users\moorer\.vscode\extensions\ms-python.python-2021.3.680753044\pythonFiles\lib\python\debugpy\__main__.py", line 45, in <module>
+    cli.main()
+  File "c:\Users\moorer\.vscode\extensions\ms-python.python-2021.3.680753044\pythonFiles\lib\python\debugpy/..\debugpy\server\cli.py", line 444, in main
+    run()
+  File "c:\Users\moorer\.vscode\extensions\ms-python.python-2021.3.680753044\pythonFiles\lib\python\debugpy/..\debugpy\server\cli.py", line 285, in run_file
+    runpy.run_path(target_as_str, run_name=compat.force_str("__main__"))
+  File "c:\users\moorer\appdata\local\programs\python\python39-32\lib\runpy.py", line 268, in run_path
+    return _run_module_code(code, init_globals, run_name,
+  File "c:\users\moorer\appdata\local\programs\python\python39-32\lib\runpy.py", line 97, in _run_module_code
+    _run_code(code, mod_globals, init_globals,
+  File "c:\users\moorer\appdata\local\programs\python\python39-32\lib\runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "c:\Sound-QI_Source\SoundQI-Branch\RM_Branch\Installer\run_installers.py", line 406, in <module>
+    returnCode = Run()
+  File "c:\Sound-QI_Source\SoundQI-Branch\RM_Branch\Installer\run_installers.py", line 90, in Run
+    logging.debug("Last Modified Time: ", latest_installer_modification_time)
+Message: 'Last Modified Time: '
+Arguments: ('01/04/21 09:51:56',)
+QI-Pro Installer
+        1 file(s) copied.
+        1 file(s) copied.
+Archive:  Installer\flexlm.zip
+ extracting: Installer\/flexSQI.log  
+  inflating: Installer\/installs.exe
+  inflating: Installer\/lmborrow.exe
+  inflating: Installer\/lmdiag.exe
+  inflating: Installer\/lmdown.exe
+  inflating: Installer\/lmflex.exe
+  inflating: Installer\/lmgrd.exe    
+  inflating: Installer\/lmhostid.exe
+  inflating: Installer\/lmpath.exe
+  inflating: Installer\/lmremove.exe
+  inflating: Installer\/lmreread.exe
+  inflating: Installer\/lmstat.exe
+  inflating: Installer\/lmtools.exe
+  inflating: Installer\/lmutil.exe
+  inflating: Installer\/lmver.exe
+  inflating: Installer\/SQI.exe
+  inflating: Installer\/SQI-SignTool.bat  
+Processing config: C:\Program Files (x86)\NSIS\nsisconf.nsh
+Processing script file: "Installer\QiPro.nsi" (ACP)
+warning 7025: "English" is not a valid language id, using language id 1033! (Installer\QiPro.nsi:91)
+warning 7025: "English" is not a valid language id, using language id 1033! (Installer\QiPro.nsi:94)
+warning 7025: "English" is not a valid language id, using language id 1033! (Installer\QiPro.nsi:96)
+MakeNSIS v3.06.1 - Copyright 1999-2020 Contributors
+See the file COPYING for license details.
+Credits can be found in the Users Manual.
+
+Command line defined: "GENRATINGUNINST=C:\Users\moorer\AppData\Local\Temp\Uninst.exe"
+Processing config: C:\Program Files (x86)\NSIS\nsisconf.nsh
+Processing script file: "QiPro.nsi" (ACP)
+
+Processed 1 file, 1 command line command, writing output (x86-ansi):
+warning 7998: ANSI targets are deprecated
+
+Output: "C:\Users\moorer\AppData\Local\Temp\tempinstaller.exe"
+Install: 0 pages (0 bytes), 1 section (2072 bytes), 25 instructions (700 bytes), 46 strings (489 bytes), 1 language table (166 bytes).
+Uninstall: 2 pages (192 bytes), 1 section (2072 bytes), 65 instructions (1820 bytes), 88 strings (1207 bytes), 1 language table (250 bytes).
+
+Using lzma (compress whole) compression.
+
+EXE header size:               37376 / 37888 bytes
+Install code:                          (2803 bytes)
+Install data:                          (0 bytes)
+Uninstall code+data:                   (6093 bytes)
+Compressed data:                2108 / 8896 bytes
+CRC (0x1519CF15):                  4 / 4 bytes
+
+Total size:                    39488 / 46788 bytes (84.3%)
+
+1 warning:
+  7998: ANSI targets are deprecated
+Done Adding Additional Store
+Successfully signed: C:\Users\moorer\AppData\Local\Temp\Uninst.exe
+
+Processed 1 file, writing output (x86-ansi):
+warning 7998: ANSI targets are deprecated
+warning 6020: Uninstaller script code found but WriteUninstaller never used - no uninstaller will be created.
+
+
+Output: "C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\Installer\QIProSetup.exe"
+Install: 9 pages (576 bytes), 2 sections (4144 bytes), 660 instructions (18480 bytes), 289 strings (7582 bytes), 1 language table (362 bytes).
+Uninstall: 4 pages (320 bytes), 0 sections (0 bytes), 343 instructions (9604 bytes), 154 strings (2355 bytes), 1 language table (286 bytes).
+Datablock optimizer saved 16098 KiB (~41.7%).
+
+Using lzma (compress whole) compression.
+
+EXE header size:               39936 / 37888 bytes
+Install code:                          (29560 bytes)
+Install data:                          (22981525 bytes)
+Compressed data:             4711623 / 23011085 bytes
+CRC (0xD372C984):                  4 / 4 bytes
+
+Total size:                  4751563 / 23048977 bytes (20.6%)
+
+6 warnings:
+  7025: "English" is not a valid language id, using language id 1033! (Installer\QiPro.nsi:91)
+  7025: "English" is not a valid language id, using language id 1033! (Installer\QiPro.nsi:94)
+  7025: "English" is not a valid language id, using language id 1033! (Installer\QiPro.nsi:96)
+  7998: ANSI targets are deprecated
+  6020: Uninstaller script code found but WriteUninstaller never used - no uninstaller will be created.
+  6010: install function "ResetFiles" not referenced - zeroing code (572-582) out
+
+        1 file(s) copied.
+        1 file(s) copied.
+        1 file(s) copied.
+        1 file(s) copied.
+
+C:\Sound-QI_Source\SoundQI-Branch\RM_Branch>echo Signing executable: Z:\Applications\QI-Pro\PreRelease\4.5.1.183\QIProSetup.exe
+Signing executable: Z:\Applications\QI-Pro\PreRelease\4.5.1.183\QIProSetup.exe
+SignTool Error: An unexpected internal error has occurred.
+Error information: "Error: Store IsDiskFile() failed." (-2147024893/0x80070003)
+QI-Pro Headwave Installer
+        1 file(s) copied.
+        1 file(s) copied.
+        1 file(s) copied.
+        1 file(s) copied.
+        1 file(s) copied.
+unzip:  cannot find or open flexlm.zip, flexlm.zip.zip or flexlm.zip.ZIP.
+Processing config: C:\Program Files (x86)\NSIS\nsisconf.nsh
+Processing script file: "Installer\Headwave\QiProHeadwave.nsi" (ACP)
+warning 7025: "English" is not a valid language id, using language id 1033! (Installer\Headwave\QiProHeadwave.nsi:161)
+warning 7025: "English" is not a valid language id, using language id 1033! (Installer\Headwave\QiProHeadwave.nsi:164)
+warning 7025: "English" is not a valid language id, using language id 1033! (Installer\Headwave\QiProHeadwave.nsi:166)
+warning 7025: "English" is not a valid language id, using language id 1033! (Installer\Headwave\QiProHeadwave.nsi:168)
+warning 7025: "English" is not a valid language id, using language id 1033! (Installer\Headwave\QiProHeadwave.nsi:170)
+warning 7025: "English" is not a valid language id, using language id 1033! (Installer\Headwave\QiProHeadwave.nsi:172)
+MakeNSIS v3.06.1 - Copyright 1999-2020 Contributors
+See the file COPYING for license details.
+Credits can be found in the Users Manual.
+
+Command line defined: "GENRATINGUNINST=C:\Users\moorer\AppData\Local\Temp\Uninst.exe"
+Processing config: C:\Program Files (x86)\NSIS\nsisconf.nsh
+Processing script file: "QiProHeadwave.nsi" (ACP)
+
+Processed 1 file, 1 command line command, writing output (x86-ansi):
+warning 7998: ANSI targets are deprecated
+
+Output: "C:\Users\moorer\AppData\Local\Temp\tempinstaller.exe"
+Install: 0 pages (0 bytes), 1 section (2072 bytes), 25 instructions (700 bytes), 46 strings (489 bytes), 1 language table (166 bytes).
+Uninstall: 2 pages (192 bytes), 1 section (2072 bytes), 65 instructions (1820 bytes), 88 strings (1231 bytes), 1 language table (250 bytes).
+
+Using lzma (compress whole) compression.
+
+EXE header size:               37376 / 37888 bytes
+Install code:                          (2803 bytes)
+Install data:                          (0 bytes)
+Uninstall code+data:                   (6117 bytes)
+Compressed data:                2117 / 8920 bytes
+CRC (0xFC303903):                  4 / 4 bytes
+
+Total size:                    39497 / 46812 bytes (84.3%)
+
+1 warning:
+  7998: ANSI targets are deprecated
+Done Adding Additional Store
+Successfully signed: C:\Users\moorer\AppData\Local\Temp\Uninst.exe
+File: "SQI.exe" -> no files found.
+Usage: File [/nonfatal] [/a] ([/r] [/x filespec [...]] filespec [...] |
+   /oname=outfile one_file_only)
+Error in script "Installer\Headwave\QiProHeadwave.nsi" on line 487 -- aborting creation process
+        1 file(s) copied.
+
+-----
+
+EXE header size:               37376 / 37888 bytes
+Install code:                          (2803 bytes)
+Install data:                          (0 bytes)
+Uninstall code+data:                   (6093 bytes)
+Compressed data:                2108 / 8896 bytes
+CRC (0x1519CF15):                  4 / 4 bytes
+
+Total size:                    39488 / 46788 bytes (84.3%)
+
+1 warning:
+  7998: ANSI targets are deprecated
+Done Adding Additional Store
+Successfully signed: C:\Users\moorer\AppData\Local\Temp\Uninst.exe
+File: "QI-Pro.exe" -> no files found.
+Usage: File [/nonfatal] [/a] ([/r] [/x filespec [...]] filespec [...] |
+   /oname=outfile one_file_only)
+Error in script "Installer\Seisware10.3\QiProSeisware.nsi" on line 186 -- aborting creation process
+        1 file(s) copied.
+
+              
+2021.04.05
+I. Researching and implementing solution:
+
+Starting TeamCity Build Agent Launcher...
+Agent home directory is C:\TeamCity\buildAgent
+Lock file: C:\TeamCity\buildAgent\logs\buildAgent.properties.lock
+Using no lock
+Deleting C:\TeamCity\buildAgent\update
+Deleting C:\TeamCity\buildAgent\update
+Update folder deleted
+Deleting C:\TeamCity\buildAgent\backup
+Thu Apr 01 14:14:53 MDT 2021 ==> Start launch
+Agent Java runtime version is 11
+Launching agent with command:  c:\TeamCity\jre\bin\java.exe -ea -Xmx384m -Dlog4j.configuration=file:../conf/teamcity-agent-log4j.xml -Dteamcity_logs=../logs/ -classpath C:\TeamCity\buildAgent\lib\agent-configurator.jar;C:\TeamCity\buildAgent\lib\agent-installer-ui.jar;C:\TeamCity\buildAgent\lib\agent-launcher.jar;C:\TeamCity\buildAgent\lib\agent-openapi.jar;C:\TeamCity\buildAgent\lib\agent-upgrade.jar;C:\TeamCity\buildAgent\lib\agent.jar;C:\TeamCity\buildAgent\lib\annotations.jar;C:\TeamCity\buildAgent\lib\app-wrapper.jar;C:\TeamCity\buildAgent\lib\buildAgent-updates-applying.jar;C:\TeamCity\buildAgent\lib\cloud-shared.jar;C:\TeamCity\buildAgent\lib\common-impl.jar;C:\TeamCity\buildAgent\lib\common-runtime.jar;C:\TeamCity\buildAgent\lib\common.jar;C:\TeamCity\buildAgent\lib\commons-beanutils-core.jar;C:\TeamCity\buildAgent\lib\commons-codec.jar;C:\TeamCity\buildAgent\lib\commons-collections-3.2.2.jar;C:\TeamCity\buildAgent\lib\commons-compress-1.20.jar;C:\TeamCity\buildAgent\lib\commons-httpclient-3.1.jar;C:\TeamCity\buildAgent\lib\commons-io-1.3.2.jar;C:\TeamCity\buildAgent\lib\commons-logging.jar;C:\TeamCity\buildAgent\lib\coverage-agent-common.jar;C:\TeamCity\buildAgent\lib\coverage-report.jar;C:\TeamCity\buildAgent\lib\duplicator-util.jar;C:\TeamCity\buildAgent\lib\ehcache-1.6.0-patch.jar;C:\TeamCity\buildAgent\lib\ehcache-1.7.2.jar;C:\TeamCity\buildAgent\lib\freemarker.jar;C:\TeamCity\buildAgent\lib\gson.jar;C:\TeamCity\buildAgent\lib\idea-settings.jar;C:\TeamCity\buildAgent\lib\inspections-util.jar;C:\TeamCity\buildAgent\lib\jaxen-1.1.1.jar;C:\TeamCity\buildAgent\lib\jdk-searcher.jar;C:\TeamCity\buildAgent\lib\jdom.jar;C:\TeamCity\buildAgent\lib\joda-time.jar;C:\TeamCity\buildAgent\lib\launcher-api.jar;C:\TeamCity\buildAgent\lib\launcher.jar;C:\TeamCity\buildAgent\lib\log4j-1.2.12-json-layout.jar;C:\TeamCity\buildAgent\lib\log4j-1.2.12.jar;C:\TeamCity\buildAgent\lib\messages.jar;C:\TeamCity\buildAgent\lib\nuget-utils.jar;C:\TeamCity\buildAgent\lib\openapi.jar;C:\TeamCity\buildAgent\lib\patches-impl.jar;C:\TeamCity\buildAgent\lib\patches.jar;C:\TeamCity\buildAgent\lib\processesTerminator.jar;C:\TeamCity\buildAgent\lib\resources_en.jar;C:\TeamCity\buildAgent\lib\runtime-util.jar;C:\TeamCity\buildAgent\lib\server-logging.jar;C:\TeamCity\buildAgent\lib\serviceMessages.jar;C:\TeamCity\buildAgent\lib\slf4j-api-1.7.5.jar;C:\TeamCity\buildAgent\lib\slf4j-log4j12-1.7.5.jar;C:\TeamCity\buildAgent\lib\spring-scripting\spring-scripting-bsh.jar;C:\TeamCity\buildAgent\lib\spring-scripting\spring-scripting-groovy.jar;C:\TeamCity\buildAgent\lib\spring-scripting\spring-scripting-jruby.jar;C:\TeamCity\buildAgent\lib\spring.jar;C:\TeamCity\buildAgent\lib\trove-3.0.3.jar;C:\TeamCity\buildAgent\lib\trove4j.jar;C:\TeamCity\buildAgent\lib\util.jar;C:\TeamCity\buildAgent\lib\xercesImpl.jar;C:\TeamCity\buildAgent\lib\xml-rpc-wrapper.jar;C:\TeamCity\buildAgent\lib\xmlrpc-2.0.1.jar;C:\TeamCity\buildAgent\lib\xpp3-1.1.4c.jar;C:\TeamCity\buildAgent\lib\xstream-1.4.11.1-custom.jar;C:\TeamCity\buildAgent\lib\xz-1.8.jar jetbrains.buildServer.agent.AgentMain -file ..\conf\buildAgent.properties -launcher.version 85899
+Using logs directory "C:\TeamCity\buildAgent\logs"
+Log4J configuration file c:\TeamCity\buildAgent\bin\..\conf\teamcity-agent-log4j.xml will be monitored with interval 10 seconds.
+WARNING: An illegal reflective access operation has occurred
+WARNING: Illegal reflective access by org.springframework.cglib.core.ReflectUtils$1 (file:/C:/TeamCity/buildAgent/lib/spring.jar) to method java.lang.ClassLoader.defineClass(java.lang.String,byte[],int,int,java.security.ProtectionDomain)
+WARNING: Please consider reporting this to the maintainers of org.springframework.cglib.core.ReflectUtils$1
+WARNING: Use --illegal-access=warn to enable warnings of further illegal reflective access operations
+WARNING: All illegal access operations will be denied in a future release
+[2021-04-01 14:15:01,443]   WARN -      jetbrains.buildServer.VCS - '[C:\TeamCity\buildAgent\temp] hg version --quiet' command failed.
+[2021-04-01 14:15:07,614]   INFO - buildServer.AGENT.registration - Registering on server via URL "http://localhost:8111": AgentDetails{Name='SQI012-2', AgentId=null, BuildId=null, AgentOwnAddress='null', AlternativeAddresses=[192.168.56.1, 192.168.1.112], Port=9090, Version='85899', PluginsVersion='85899-md5-bc13d531777067ccda4de91ac4f9cbfd', AvailableRunners=[Ant, cargo-deploy-runner, dotnet, dotnet-tools-dupfinder, dotnet-tools-inspectcode, Duplicator, ftp-deploy-runner, FxCop, gradle-runner, Inspection, jb.nuget.installer, jb.nuget.pack, jb.nuget.publish, jetbrains.dotNetGenericRunner, jetbrains.mspec, jetbrains_powershell, JPS, Maven2, MSBuild, NAnt, NUnit, python-runner, rake-runner, SBT, simpleRunner, sln2003, smb-deploy-runner, ssh-deploy-runner, ssh-exec-runner, VisualStudioTest, VS.Solution], AvailableVcs=[tfs, cvs, jetbrains.git, mercurial, svn, perforce], AuthorizationToken='d2aaf82081fe847f78cddedbc4d987f4', PingCode='SAOMLHDLtK754HbHmHUK7RZ1Bvn6inIl'}
+[2021-04-01 14:15:07,694]   INFO - buildServer.AGENT.registration - Server supports the following communication protocols: [polling]
+[2021-04-01 14:15:07,694]   INFO - buildServer.AGENT.registration - Trying to register on server using 'polling' protocol.
+[2021-04-01 14:15:07,726]   INFO - buildServer.AGENT.registration - Registered on server with id 3 and authorization token 'd2aaf82081fe847f78cddedbc4d987f4'
+[2021-04-01 14:15:07,726]   INFO - buildServer.AGENT.registration - If this is the first time this agent registered on the server make sure it is authorized by administrator in the server web UI.
+
+--------------------------------------------------------------------------------
+
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Try the new cross-platform PowerShell https://aka.ms/pscore6
+
+PS C:\Sound-QI_Source\SoundQI>  & 'c:\users\moorer\appdata\local\programs\python\python39-32\python.exe' 'c:\Users\moorer\.vscode\extensions\ms-python.python-2021.3.680753044\pythonFiles\lib\python\debugpy\launcher' '54643' '--' 'c:\Sound-QI_Source\SoundQI\Installer\run_installers.py'
+Running create installers
+C:\Sound-QI_Source\SoundQI\Installer:
+Getting SQI-SignTool.bat
+185
+#pragma once
+
+#pragma warning(disable:4996) // [...] was declared deprecated.
+
+
+
+#ifndef __AFXWIN_H__
+
+        #error include 'stdafx.h' before including this file for PCH
+
+#endif
+
+
+
+#include "resource.h"       // main symbols
+
+#include "MainFrm.h"
+
+#include "../common/osi_type.h"
+
+#include "../common/License.h"
+
+#include "../common/FlexLicense.h"
+
+#include "../common/Data.h"
+
+#include "HeadwaveSocket.h"
+
+
+
+class CIMACDoc;
+
+class CIMACDocTemplate;
+
+
+
+typedef struct servermode_parm {
+
+        CIMACDoc *pDoc;
+
+        int port;
+
+} SERVERMODE_PARM;
+
+
+
+// IMAC symbols
+
+
+
+#define QI_PRO_MAJOR_REVISION 4
+
+#define QI_PRO_MINOR_REVISION 5
+
+#define QI_PRO_BUGFIX_REVISION 1
+
+QI-Pro Installer
+        1 file(s) copied.
+        1 file(s) copied.
+Archive:  Installer\flexlm.zip
+ extracting: Installer\/flexSQI.log  
+  inflating: Installer\/installs.exe
+  inflating: Installer\/lmborrow.exe
+  inflating: Installer\/lmdiag.exe
+  inflating: Installer\/lmdown.exe
+  inflating: Installer\/lmflex.exe
+  inflating: Installer\/lmgrd.exe
+  inflating: Installer\/lmhostid.exe
+  inflating: Installer\/lmpath.exe
+  inflating: Installer\/lmremove.exe  
+  inflating: Installer\/lmreread.exe  
+  inflating: Installer\/lmstat.exe   
+  inflating: Installer\/lmtools.exe  
+  inflating: Installer\/lmutil.exe
+  inflating: Installer\/lmver.exe
+  inflating: Installer\/SQI.exe
+replace Installer\/SQI-SignTool.bat? [y]es, [n]o, [A]ll, [N]one, [r]ename: A
+  inflating: Installer\/SQI-SignTool.bat  
+Processing config: C:\Program Files (x86)\NSIS\nsisconf.nsh
+Processing script file: "Installer\QiPro.nsi" (ACP)
+warning 7025: "English" is not a valid language id, using language id 1033! (Installer\QiPro.nsi:91)
+warning 7025: "English" is not a valid language id, using language id 1033! (Installer\QiPro.nsi:94)
+warning 7025: "English" is not a valid language id, using language id 1033! (Installer\QiPro.nsi:96)
+MakeNSIS v3.06.1 - Copyright 1999-2020 Contributors
+See the file COPYING for license details.
+Credits can be found in the Users Manual.
+
+Command line defined: "GENRATINGUNINST=C:\Users\moorer\AppData\Local\Temp\Uninst.exe"
+Processing config: C:\Program Files (x86)\NSIS\nsisconf.nsh
+Processing script file: "QiPro.nsi" (ACP)
+
+Processed 1 file, 1 command line command, writing output (x86-ansi):
+warning 7998: ANSI targets are deprecated
+
+Output: "C:\Users\moorer\AppData\Local\Temp\tempinstaller.exe"
+Install: 0 pages (0 bytes), 1 section (2072 bytes), 25 instructions (700 bytes), 46 strings (489 bytes), 1 language table (166 bytes).
+Uninstall: 2 pages (192 bytes), 1 section (2072 bytes), 65 instructions (1820 bytes), 88 strings (1207 bytes), 1 language table (250 bytes).
+
+Using lzma (compress whole) compression.
+
+EXE header size:               37376 / 37888 bytes
+Install code:                          (2803 bytes)
+Install data:                          (0 bytes)
+Uninstall code+data:                   (6093 bytes)
+Compressed data:                2108 / 8896 bytes
+CRC (0x1519CF15):                  4 / 4 bytes
+
+Total size:                    39488 / 46788 bytes (84.3%)
+
+1 warning:
+  7998: ANSI targets are deprecated
+Done Adding Additional Store
+Successfully signed: C:\Users\moorer\AppData\Local\Temp\Uninst.exe
+
+Processed 1 file, writing output (x86-ansi):
+warning 7998: ANSI targets are deprecated
+warning 6020: Uninstaller script code found but WriteUninstaller never used - no uninstaller will be created.
+warning 6010: install function "ResetFiles" not referenced - zeroing code (572-582) out
+
+
+Output: "C:\Sound-QI_Source\SoundQI\Installer\QIProSetup.exe"
+Install: 9 pages (576 bytes), 2 sections (4144 bytes), 660 instructions (18480 bytes), 289 strings (7582 bytes), 1 language table (362 bytes).
+Uninstall: 4 pages (320 bytes), 0 sections (0 bytes), 343 instructions (9604 bytes), 154 strings (2355 bytes), 1 language table (286 bytes).
+Datablock optimizer saved 16098 KiB (~41.7%).
+
+Using lzma (compress whole) compression.
+
+EXE header size:               39936 / 37888 bytes
+Install code:                          (29560 bytes)
+Install data:                          (22988693 bytes)
+Compressed data:             4714596 / 23018253 bytes
+CRC (0x959EFE5E):                  4 / 4 bytes
+
+Total size:                  4754536 / 23056145 bytes (20.6%)
+
+6 warnings:
+  7025: "English" is not a valid language id, using language id 1033! (Installer\QiPro.nsi:91)
+  7025: "English" is not a valid language id, using language id 1033! (Installer\QiPro.nsi:94)
+  7025: "English" is not a valid language id, using language id 1033! (Installer\QiPro.nsi:96)
+  7998: ANSI targets are deprecated
+  6020: Uninstaller script code found but WriteUninstaller never used - no uninstaller will be created.
+  6010: install function "ResetFiles" not referenced - zeroing code (572-582) out
+
+        1 file(s) copied.
+        1 file(s) copied.
+        1 file(s) copied.
+        1 file(s) copied.
+
+C:\Sound-QI_Source\SoundQI>echo Signing executable: Z:\Applications\QI-Pro\PreRelease\4.5.1.185\QIProSetup.exe
+Signing executable: Z:\Applications\QI-Pro\PreRelease\4.5.1.185\QIProSetup.exe
+SignTool Error: An unexpected internal error has occurred.
+Error information: "Error: Store IsDiskFile() failed." (-2147024893/0x80070003)
+
+-----
+
+Using logs directory "C:\TeamCity\buildAgent\logs"
+Log4J configuration file C:\TeamCity\buildAgent\bin\..\conf\teamcity-agent-log4j.xml will be monitored with interval 10 seconds.
+WARNING: An illegal reflective access operation has occurred
+WARNING: Illegal reflective access by org.springframework.cglib.core.ReflectUtils$1 (file:/C:/TeamCity/buildAgent/lib/spring.jar) to method java.lang.ClassLoader.defineClass(java.lang.String,byte[],int,int,java.security.ProtectionDomain)
+WARNING: Please consider reporting this to the maintainers of org.springframework.cglib.core.ReflectUtils$1
+WARNING: Use --illegal-access=warn to enable warnings of further illegal reflective access operations
+WARNING: All illegal access operations will be denied in a future release
+[2021-04-05 13:07:56,599]   WARN -      jetbrains.buildServer.VCS - '[C:\TeamCity\buildAgent\temp] hg version --quiet' command failed.
+
+-----
+
+
+
+2021.04.07
+I. Researching and implementing solution:
+
+[2021-04-07 13:48:14,564]   INFO - buildServer.AGENT.registration - Server supports the following communication protocols: [polling]
+[2021-04-07 13:48:14,565]   INFO - buildServer.AGENT.registration - Trying to register on server using 'polling' protocol.
+[2021-04-07 13:48:14,662]   INFO - buildServer.AGENT.registration - Registered on server with id 3 and authorization token 'd2aaf82081fe847f78cddedbc4d987f4'
+[2021-04-07 13:48:14,662]   INFO - buildServer.AGENT.registration - If this is the first time this agent registered on the server make sure it is authorized by administrator in the server web UI.
+[2021-04-07 15:52:55,019]   WARN - vcs.tfs.net.TfsNativeExeRunner -  tfs: http://sqi009:8080/tfs/DefaultCollection/ $/SoundQI-Branch {internal id=7}: TF30063: You are not authorized to access http://sqi009:8080/tfs/DefaultCollection/.
+[2021-04-07 15:52:55,022]   WARN - l.patch.AbstractSourcesUpdater - Error while checkout on agent: Failed to list workspaces: TF30063: You are not authorized to access http://sqi009:8080/tfs/DefaultCollection/.
+jetbrains.buildServer.vcs.VcsException: Failed to list workspaces: TF30063: You are not authorized to access http://sqi009:8080/tfs/DefaultCollection/.
+        at jetbrains.buildServer.buildTriggers.vcs.tfs.net.TfsDotnetAgentContext.findWorkspaces(TfsDotnetAgentContext.java:67)
+        at jetbrains.buildServer.buildTriggers.vcs.tfs.TfsWorkspaceProvider.getTfsWorkspace(TfsWorkspaceProvider.java:56)
+        at jetbrains.buildServer.buildTriggers.vcs.tfs.TfsUpdateByCheckoutRules.updateSources(TfsUpdateByCheckoutRules.java:73)
+        at jetbrains.buildServer.agent.impl.vcs.AgentVcsManagerExImpl$CheckoutSupportImpl.updateSources(AgentVcsManagerExImpl.java:113)
+        at jetbrains.buildServer.agent.impl.patch.ProjectSourcesOnAgent$1.run(ProjectSourcesOnAgent.java:187)
+        at java.base/java.lang.Thread.run(Thread.java:829)
+[2021-04-07 15:53:24,241]   WARN - vcs.tfs.net.TfsNativeExeRunner -  tfs: http://sqi009:8080/tfs/DefaultCollection/ $/SoundQI-Branch {internal id=7}: TF30063: You are not authorized to access http://sqi009:8080/tfs/DefaultCollection/.
+[2021-04-07 15:53:24,242]   WARN - l.patch.AbstractSourcesUpdater - Error while checkout on agent: Failed to list workspaces: TF30063: You are not authorized to access http://sqi009:8080/tfs/DefaultCollection/.
+jetbrains.buildServer.vcs.VcsException: Failed to list workspaces: TF30063: You are not authorized to access http://sqi009:8080/tfs/DefaultCollection/.
+        at jetbrains.buildServer.buildTriggers.vcs.tfs.net.TfsDotnetAgentContext.findWorkspaces(TfsDotnetAgentContext.java:67)
+        at jetbrains.buildServer.buildTriggers.vcs.tfs.TfsWorkspaceProvider.getTfsWorkspace(TfsWorkspaceProvider.java:56)
+        at jetbrains.buildServer.buildTriggers.vcs.tfs.TfsUpdateByCheckoutRules.updateSources(TfsUpdateByCheckoutRules.java:73)
+        at jetbrains.buildServer.agent.impl.vcs.AgentVcsManagerExImpl$CheckoutSupportImpl.updateSources(AgentVcsManagerExImpl.java:113)
+        at jetbrains.buildServer.agent.impl.patch.ProjectSourcesOnAgent$1.run(ProjectSourcesOnAgent.java:187)
+        at java.base/java.lang.Thread.run(Thread.java:829)
+[2021-04-07 15:54:19,842]   WARN - vcs.tfs.net.TfsNativeExeRunner -  tfs: http://sqi009:8080/tfs/DefaultCollection/ $/SoundQI-Branch {internal id=7}: TF30063: You are not authorized to access http://sqi009:8080/tfs/DefaultCollection/.
+[2021-04-07 15:54:19,843]   WARN - l.patch.AbstractSourcesUpdater - Error while checkout on agent: Failed to list workspaces: TF30063: You are not authorized to access http://sqi009:8080/tfs/DefaultCollection/.
+jetbrains.buildServer.vcs.VcsException: Failed to list workspaces: TF30063: You are not authorized to access http://sqi009:8080/tfs/DefaultCollection/.
+        at jetbrains.buildServer.buildTriggers.vcs.tfs.net.TfsDotnetAgentContext.findWorkspaces(TfsDotnetAgentContext.java:67)
+        at jetbrains.buildServer.buildTriggers.vcs.tfs.TfsWorkspaceProvider.getTfsWorkspace(TfsWorkspaceProvider.java:56)
+        at jetbrains.buildServer.buildTriggers.vcs.tfs.TfsUpdateByCheckoutRules.updateSources(TfsUpdateByCheckoutRules.java:73)
+        at jetbrains.buildServer.agent.impl.vcs.AgentVcsManagerExImpl$CheckoutSupportImpl.updateSources(AgentVcsManagerExImpl.java:113)
+        at jetbrains.buildServer.agent.impl.patch.ProjectSourcesOnAgent$1.run(ProjectSourcesOnAgent.java:187)
+        at java.base/java.lang.Thread.run(Thread.java:829)
+[2021-04-07 15:54:24,095]   WARN - vcs.tfs.net.TfsNativeExeRunner -  tfs: http://sqi009:8080/tfs/DefaultCollection/ $/SoundQI-Branch {internal id=7}: TF30063: You are not authorized to access http://sqi009:8080/tfs/DefaultCollection/.
+[2021-04-07 15:54:24,095]   WARN - l.patch.AbstractSourcesUpdater - Error while checkout on agent: Failed to list workspaces: TF30063: You are not authorized to access http://sqi009:8080/tfs/DefaultCollection/.
+jetbrains.buildServer.vcs.VcsException: Failed to list workspaces: TF30063: You are not authorized to access http://sqi009:8080/tfs/DefaultCollection/.
+        at jetbrains.buildServer.buildTriggers.vcs.tfs.net.TfsDotnetAgentContext.findWorkspaces(TfsDotnetAgentContext.java:67)
+        at jetbrains.buildServer.buildTriggers.vcs.tfs.TfsWorkspaceProvider.getTfsWorkspace(TfsWorkspaceProvider.java:56)
+        at jetbrains.buildServer.buildTriggers.vcs.tfs.TfsUpdateByCheckoutRules.updateSources(TfsUpdateByCheckoutRules.java:73)
+        at jetbrains.buildServer.agent.impl.vcs.AgentVcsManagerExImpl$CheckoutSupportImpl.updateSources(AgentVcsManagerExImpl.java:113)
+        at jetbrains.buildServer.agent.impl.patch.ProjectSourcesOnAgent$1.run(ProjectSourcesOnAgent.java:187)
+        at java.base/java.lang.Thread.run(Thread.java:829)
+
+
+2021.04.15
+I. Researching and implementing solution:                        
+
+-Update the little screen grab of the user parameters of headwave in the installer but with empty boxes where the drive is located
+-Put a red circle and an arrow to show what needs to change -> Complete
+-Last page where we pop it up in red, Laurie was a bit annoyed.  Kevin said he would just leave it open and enter in Headwave but Laurie wants a different way.  Ask if the user wants to view the readme file on last page.  Add a checkbox to see if they want to view the readme file, and leave it on by default.  Generate a readme file with the custom user values.
+-Laurie ask, "why do I have to install so many times?"  
+-Possibly put config.dat in %appdata% SoundQI but first check in the install directory because if there are multiple version of QI-Pro installed they may not get the right config.dat values.
+
+2021.04.16
+I. Researching and implementing solution:                        
+
+			if (GetFileAttributes(CONFIGFILE) != INVALID_FILE_ATTRIBUTES) {
+				strPort = m_pApp->GetSettingFromConfig(CONFIGFILE, strData);
+			}
+			else {
+				const CString appDataDir = Utilities::GetAppDataDirectory();
+				strPort = m_pApp->GetSettingFromConfig(appDataDir + "\\" + CONFIGFILE, strData);
+			}
+
+
+
+appDataDir = "C:\\Users\\moorer\\AppData\\Roaming\\Sound QI\\QI-Pro\\"
+
+
+ServerPort = 2003 
+HeadwavePort = 2004 
+HeadwaveOutputDirectory = C:\Temp\HW-Data 
+HeadwaveWorkspaceDirectory = C:\Temp\HW-Workspaces 
+
+configFile
+"C:\\Users\\moorer\\AppData\\Roaming\\Sound QI\\QI-Pro\\\\config.dat"
+    ATL::CSimpleStringT<char,1>: "C:\\Users\\moorer\\AppData\\Roaming\\Sound QI\\QI-Pro\\\\config.dat"
+
+              
+              
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              
+
+
+
+
+
+
+
+
+
+              

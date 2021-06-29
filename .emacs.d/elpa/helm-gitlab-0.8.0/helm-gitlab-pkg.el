@@ -1,0 +1,2 @@
+;;; -*- no-byte-compile: t -*-
+(define-package "helm-gitlab" "0.8.0" "Helm interface to Gitlab" '((s "1.9.0") (dash "2.9.0") (helm "1.0") (gitlab "0.8.0")) :commit "a1c1441ff5ffb290e695eb9ac05431e9385578f4" :keywords '("gitlab" "helm") :authors '(("Nicolas Lamirault" . "nicolas.lamirault@gmail.com")) :maintainer '("Nicolas Lamirault" . "nicolas.lamirault@gmail.com") :url "https://github.com/nlamirault/emacs-gitlab")

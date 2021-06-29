@@ -1,0 +1,3063 @@
+SOUNDQI.LAN\moorer@soundqi.lan
+
+roger@sound-qi.com
+
+http://sqi009:8080/tfs/DefaultCollection/SoundQI
+http://sqi009:8080/tfs/DefaultCollection/SoundQI-Branch
+http://sqi009:8080/tfs/DefaultCollection/
+
+-----
+IP Address:
+23.17.47.18
+
+Computer Name:
+SQI012.soundqi.lan
+-----
+
+Washroom:
+2101
+
+-----
+CodeCompare settings for Visual Studio:
+Compare: Command:
+
+
+Compare: Arguments:
+
+
+Merge: Command:
+
+
+Merge: Arguments:
+
+
+-----
+WinMerge settings for Visual Studio:
+Compare: Command:
+C:\Program Files\WinMerge\WinMergeU.exe
+
+Compare: Arguments:
+/e /u /wl /wr /dl %6 /dr %7 %1 %2
+
+Merge: Command:
+C:\Program Files\WinMerge\WinMergeU.exe
+
+Merge: Arguments:
+/e /u /wl /dl %6 /dr %7 %1 %2 %4
+
+-----
+
+C:\Sound-QI_Source>git-tfs clone http://sqi009:8080/tfs/DefaultCollection $/SoundQI
+Found matching Visual Studio version at C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional
+Initialized empty Git repository in C:/Sound-QI_Source/SoundQI/.git/
+
+warning: you are going to clone the whole repository or too high in the repository path !
+   => If you want to manage branches with git-tfs, clone one of this branch instead :
+ - $/SoundQI/KH-Branch
+
+PS:if your branch is not listed here, perhaps you should convert the containing folder to a branch in TFS.
+Fetching from TFS remote 'default'...
+error: a problem occurred when trying to clone the repository. Try to solve the problem described below.
+In any case, after, try to continue using command `git tfs fetch`
+
+One or more errors occurred.
+The working folder C:\Sound-QI_Source is already in use by the workspace SQI012;Roger Moore on computer SQI012.
+The working folder C:\Sound-QI_Source is already in use by the workspace SQI012;Roger Moore on computer SQI012.
+All the logs could be found in the log file: C:\Users\moorer\AppData\Local\git-tfs\git-tfs_log.txt
+All the logs could be found in the log file: C:\Users\moorer\AppData\Local\git-tfs\git-tfs_log.txt
+
+C:\Sound-QI_Source>
+
+-----
+Gpg4win:
+gpgF35...
+
+-----
+
+https://developercommunity.visualstudio.com/t/tf30063-you-are-not-authorized-to-access-after-pas/151627
+
+Error:
+Failed to perform checkout on agent: Failed to list workspaces: TF30063: You are not authorized to access http://sqi009:8080/tfs/DefaultCollection/
+
+Solution: Updated my credentials here:
+
+Control Panel\All Control Panel Items\Credential Manager\Windows Credentials\ for http://sqi009:8080
+
+"Close VS. Go to Control Panel (with small icon view)-->User Accounts-->Manage your credentials (on the left column)-->Select "Windows Credentials"-->Scroll down to the "Generic Credentials" section and look for your TFS server connection. Expand the pull down and click "Edit". Enter in new network password. Reopen VS and everything should work again."
+
+-----
+
+Link:
+john1726
+gr...
+
+-----
+
+C:\Tools\emacs-27.1-x86_64\bin\runemacs.exe -fg green -bg black
+
+C:\msys64\mingw64\bin\runemacs.exe -fg green -bg black
+
+-----
+
+Source:
+7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on  /cygdrive/c/Archive/qi_pro_rm_branch_20201210.7za /cygdrive/c/Sound-QI_Source/SoundQI-Branch/RM_Branch/IMAC
+
+7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on  "C:\Users\moorer\OneDrive - sound-qi.com\Archive\qi_pro_rm_branch_2021_06_07.7za" c:\Sound-QI_Source\SoundQI-Branch\RM_Branch -xr!bin -xr!obj -xr!Debug -xr!SW-v10.3-CI -xr!SW-v10.4-CI -xr!SW-v10.5-CI -xr!lib-build-Debug -xr!Debug-lib-build -xr!lib-build -xr!Release -xr!packages -xr!"SeisWare SDK" -xr!TestData -xr!.vs
+
+7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on  "U:\Archive\qi_pro_rm_branch_03_26.7za" c:\Sound-QI_Source\SoundQI-Branch\RM_Branch -xr!bin -xr!obj -xr!Debug -xr!Release  -xr!SW-v10.3-CI -xr!SW-v10.4-CI -xr!SW-v10.5-CI -xr!lib-build-Debug -xr!Debug-lib-build -xr!lib-build-xr! -xr!packages -xr!"SeisWare SDK" -xr!TestData -xr!.vs
+
+Workspace:
+7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on  "C:\Users\moorer\OneDrive - sound-qi.com\Archive\workspace_2021_05_21.7za" "C:\Users\moorer\OneDrive - sound-qi.com\Workspace" -xr!bin -xr!obj -xr!Debug -xr!Release -xr!packages -xr!lib-build-Debug -xr!Debug-lib-build -xr!"SeisWare SDK" -xr!TestData -xr!.vs
+
+-----
+TeamCity:
+moorer 
+:rPM7vu?g6'gyvmhSVR;
+
+http://192.168.1.112:8111/project/_Root?mode=builds
+
+-----
+
+TortoiseGit DiffViewer using WinMerge:
+C:\Program Files\WinMerge\WinMergeU.exe -e -ub -dl %bname -dr %yname %base %mine
+
+Merge Tool:
+C:\Program Files\WinMerge\WinMergeU.exe /e /ub /fr /wl /wm /dl %bname /dm %tname /dr %yname  %base %theirs %mine /o %merged /ar
+
+-----
+
+ADP User ID (see https://netsecure.adp.com/ and https://teampay.adp.com/):
+
+RMoore@RR41Y5
+adF...
+
+-------------------------------------------------------------------------------
+Questions:
+
+What is a virtual volume?
+
+-On crossplot, for setting the line automatically, type 'H' for horizontal or 'V' for vertical line
+-rather than defaulting to "Class 1" in Crossplot, do not have a default.  You always have to change the default, and we might not want to start with a class--we might actually like to start with a polygon.
+
+-----
+
+What is the difference between a record an a trace in SEG-Y?  How to the number of samples fit in here?
+
+
+
+2020.12.07
+I. Adding required libraries to debug QI Pro:
+-Copy these files from K:\SoundQI_source\OSI\QI-Pro\Debug
+
+[.]                      [..]                     config.dat               libzmq-mt-4_3_0.dll
+libzmq-mt-gd-4_3_0.dll   QI-Pro.exe               seisware.dll             SeisWare.SDK.dll         
+gseiswared.dll            SWSDKCore.dll            vcruntime140_1.dll
+
+Into the QI Pro Debug folder for your code base, e.g.,:
+
+C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\QI-Pro\x64\Debug
+
+II. Copy demo to local C:\ drive:
+-Demo name is:
+
+C:\QI-Pro Demo\Horn River Demo
+
+2020.12.08
+I. Setting up CRM:
+
+HubSpot booking meetings link:
+
+https://meetings.hubspot.com/roger144
+
+2020.12.09
+I. Setting up Python:
+
+Microsoft Windows [Version 10.0.19042.685]
+(c) 2020 Microsoft Corporation. All rights reserved.
+
+C:\Users\moorer>pip install pyspark
+Collecting pyspark
+  Downloading pyspark-3.0.1.tar.gz (204.2 MB)
+     |████████████████████████████████| 204.2 MB 2.2 MB/s
+Collecting py4j==0.10.9
+  Downloading py4j-0.10.9-py2.py3-none-any.whl (198 kB)
+     |████████████████████████████████| 198 kB 3.2 MB/s
+Using legacy 'setup.py install' for pyspark, since package 'wheel' is not installed.
+Installing collected packages: py4j, pyspark
+    Running setup.py install for pyspark ... done
+Successfully installed py4j-0.10.9 pyspark-3.0.1
+
+-----Original Appointment-----
+From: Laurie Weston <laurie@sound-qi.com> 
+Sent: December 7, 2020 11:17 AM
+To: Laurie Weston; Carl Reine; Kevin Lee; Kirk Graham; Vincent Rajic; kowther@sound-qi.com; Draga Talinga; Dave Nordin; sandi@sound-qi.com; Roger Moore; Kaushal Pander; Brenda Maloff
+Subject: Staff Meeting
+When: December 10, 2020 1:00 PM-2:00 PM (UTC-07:00) Mountain Time (US & Canada).
+Where: SQI Meeting room
+
+
+STANDARD AGENDA (To be revised as required for each meeting)
+ 
+•	Operations update
+o	Consulting projects
+o	QI-Pro update
+•	Sales update
+o	Canada & International
+o	US & Mexico
+•	Marketing update
+o	Tradeshows
+o	Website
+•	Other
+
+Attendees:
+Kevin Lee 
+Kaushal Pander 
+Kirk Graham
+Draga Talinga 
+Carl Reine
+Vincent Rajc 
+
+Carl Reine: Consulting Services:
+Two new projects:
+1) Simgen project
+2) Headwater (clearwater project)
+
+Jan. 4 starting to drill.
+-She wants some results for that campaign; is an early stage project.  Eight wells.
+
+Poseidon data
+
+Draga Talinga:
+-We are using Headwave software 
+-Used to interpret seismic data from the northwestern short of Australia
+-Carl: pretty massive 3-D data; trying to do determine how we can do things faster.
+Laurie: What about their machine learning?
+Laurie: They have machine learning algorithms for fault picking, or finding some non-conformity, so I am pretty sure that we have access to that in the next version
+Carl: We need to identify a smaller portion of the survey just because it is so large 
+Laurie: That is a good thing about the large data set, because we need to immprove the performance of QI Pro 
+Carl: That is it from the consulting side 
+
+Kirk Graham:
+-We had EAGE 
+-We had difficulties with CRNL, and why they didn't want to move forward, so we have to deal with that 
+-Laurie: They already use attribute studio to model, and they said they could rebuild ... work flow in attribute studio.  I do know that Chet, our long time user in California, he has used attribute studio for a long time, but when he saw QI Pro right away he bought our software.  They have no budget for software so they have dropped attribute studio, but Chet is still seeing if he can keep QI Pro, so I want to ask him why he likes QI Pro.  What I am concerned with is that CRNL will go with attribute studio, ..., so then they might ask attribute studio to add more features in attribute studio that already exist in QI Pro.  I think in a few months time when we get some of our development done, ..., some very clear examples of play types, and how simple it is, and the chief geophysicist was taking notes when I was telling him this, so it sounds like we are still being considered.  He is over budgeted in 2020 already.  By then, ideally, we are going to have some new features developed that are in our roadmap.
+-Kirk: We got top marks in their trialing, so they gave us extra points for ease of use and deployment.
+-Laurie: Moving on from CRNL 
+-Kirk: 
+
+Vincent: 
+-One thing they like about us compared to Geomodeling is that Geomodeling doesn't do consulting.
+-Renewels: Shapparel invoice, so that went out today.  Hopefully that goes through the queue and we get a payment on that.
+-We are going to be doing a trial for California resources, also for another company in Norway called VNO.  Just recently, I got time lapse feedback from someone at Shell.  The good news is, that QI Pro is looking good from the trial front in 2020.  
+-Laurie: If we do include the connector, do we have the ability to prevent the exporting of their result during the trial.  That is something we learned from CRNL.  Are they all using Vettrel?  I think it would be a good idea to include a connector.
+-Vincent: We have a TOTALE presentation coming up next week.  Part A is loading the data, part B is strategy.  There are ongoing discussions with companies like Enzyne.  Still trying to get on with Norway in Argentina...  Petrel had at least a 110 sq km..., now they are going to hydrate where they want to focus.  Legends is doing a stochastic enclosure..., a lot of M&A activity in the United States, so sometimes it just takes time.  BP Energy got back to me, and they don`t have any staff, hopefully focus on the Beech Energy, with John Cochrane, ...  Unfortunately, this time of the year it gets quiet...
+-Kaushel: DNI, ..., and Shell will have huge volumes of data so we need to make sure that it works well with huge volumes.
+-Laurie: We need to tell them to trim down the time window, and decimate the data on the crossplot.  We need to be prepared to tell them what they need to do if it doesn`t work the way they expected.  We have that Australian survey that we can do some benchmarking on.
+
+Kevin Lee:
+...
+
+Brenda:
+-Can now load 100 instead of 5 crossplots.
+
+Kaushal:
+-We need to market the attribute adviser, because they can do a bunch of things without any special knowledge.
+-We want to use time or depth as another attribute in the crossplot.  We need to create a SEG-Y, where instead of amplitude, we have time.
+
+Kevin:
+-It was not classifying the classes, Laurie, you wanted to classify an horizon, so we need to do that.
+
+Kaushal:
+-We want to use time or depth as another attribute in the crossplot.  We need to create a SEG-Y, where instead of amplitude, we have time.
+
+Laurie:
+-That would give us an additional level of flexibility, so sure 
+-We might want to do the training in the late afternoon for Martin who is in Perth.  He said he could get up at 4 AM which would be 3 PM our time to attend the QI Pro training.
+
+-------------------------------------------------------------------------------
+
+
+
+2020.12.15
+I. Scrum:
+
+Brenda demonstrating "Virtual Volumes" and modification to allow up to 100 Crossplots:
+
+https://web.microsoftstream.com/video/d2bd91d2-cf01-4f34-92b3-3dbd335a46e1
+
+-See "Infinite Crossplots (more than 5)" (https://app.hubspot.com/contacts/5103392/ticket/224764674/)
+-See ? for virtual volumes?
+
+II. Timesheet demo:
+
+https://web.microsoftstream.com/video/7f79f12f-eaa9-4c60-8578-80c53bbf1987
+
+
+-----Original Appointment-----
+From: Laurie Weston <laurie@sound-qi.com> 
+Sent: December 10, 2020 4:00 PM
+To: Laurie Weston; Kaushal Pander; Brenda Maloff; Roger Moore; Martin Bawden; Megayield Consulting Services Ltd
+Cc: Kirk Graham; Carl Reine; Kevin Lee; Dave Nordin; Vincent Rajic; sandi@sound-qi.com; Adebayo Okunlola; Daniel Navarrete; Blas De La Peña; jcarrero@geoprocesados.com; s.ponguta@geoilenergy.com; Adebayo Okunlola
+Subject: Introduction to QI-Pro
+When: December 16, 2020 3:00 PM-5:00 PM (UTC-07:00) Mountain Time (US & Canada).
+Where: Microsoft Teams Meeting
+
+Sorry – just realized this lands on the 16th in Australia, which was not an option for Martin. Hopefully this new day/time work better.
+
+This will be an intro to interpreting with QI-Pro for our new hires, resellers, and other interested parties. We will cover:
+
+Overview
+-	what do users want to accomplish and why would they use this tool?
+Operation
+-	loading data; standalone, plugin connectors
+-	data display options
+-	creating crossplots
+-	crossplot tools
+-	colour wheel tools
+-	map tools
+-	Attribute Advisor
+-	Virtual Volumes
+-	Volume export
+
+Workflow strategy – we likely won’t have time to get to this, but will follow up with another meeting.
+
+Notes:
+-***** QI Pro solves a big problem for E&P companies, which is to get the most amount of info our of their data in the shortest amount of time *****.
+-A wiggle trace gives you some info about geometry, and some about amplitude.
+-We talk a lot about siesmic attributes, frequency attributes of the seismic data, or restack inversion, or principal components.  Laurie says she wants to be inclusive of all of those attributes. QI Pro allows you to look at all of those attributes, and it does speed up interpretation.  This is pertaining to geological predictions, or fluid content prediction.  
+-QI Pro does speed up interpretation and investigation of seismic data 
+-QI Pro can be used in any type of play type. 
+-QI Pro is a visual way of looking at seismic attributes.
+-We use Hamspon Russel format for horizons.
+-The crossplot is the heart of the software and where all of the "magic" happens (22:01ff)
+-What is P impedance (Zp) vs Vp/Vs ratio?  How does this help to find a zone of interest in a seismic section?
+-In the crossplot window you can pivot and translate the line which changes how classification works in the CV (37:40ff)
+-Next time we will get to attribute advisor and virtual volumes 
+-See "Help" which contains videos on crossplot interpretation, plus a "Quick Start" guide.  
+-Quantitative Interpretation: Velocity of the primary vs the velocity of the sheer wave.  The sheer wave is always slower.  In a reservior of gluid like gas, the sheer wave won`t move but the primary it will.  
+
+Video link: https://web.microsoftstream.com/video/c4e1a1f6-f5a6-4561-ae50-b4fae6e870c8
+
+-----Original Appointment-----
+From: Kaushal Pander <kaushal@sound-qi.com> 
+Sent: December 17, 2020 2:31 PM
+To: Kaushal Pander; Laurie Weston; Kevin Lee; Kirk Graham; Carl Reine
+Cc: Brenda Maloff; Roger Moore; Draga Talinga; Vincent Rajic; Dave Nordin
+Subject: QI-Pro Enhancements
+When: December 17, 2020 3:30 PM-4:00 PM (UTC-07:00) Mountain Time (US & Canada).
+Where: Microsoft Teams Meeting
+
+Dear all
+
+Lets get together to discuss some enhancements for QI-Pro
+
+Regards
+Kaushal Pander
+
+
+QI Pro Enhancements:
+1) Zoom: 
+2) Crossplot: separator between plot and class filter: in class filter, cannot see the size of the classes. 
+3) DPI Settings make fonts blurry: Brenda fixed this so it is now automatic 
+4) Must be an apply button which updates the Xplot without having to hit "OK" but this has a long list of items that are waiting to be updated so it is quite complex 
+5) Double clicking the colour bar should bnring up the colour bar settings 
+6) Add standard colour bars: 
+7) Add question marks next to each box and put a tip in there (i.e., tool tips) 
+8) Categorize attributes 
+9)
+10) On opening window is hiding 
+11) Show where timeslice is in the sction 
+12) Display horizon on map window 
+13) Can`t make the classes window bigger 
+14)
+15) Deactive crossplots on "Crossplot Manager"
+16) Label sizes get smaller when you zoom in 
+17) Map scale?  How far are the wells being projected? 
+18) Units of impedance volumes 
+19) Colour bar bug from Laurie 
+
+See video link https://web.microsoftstream.com/video/44903812-c07b-4c1e-97be-75740bc6a05c
+
+2020.12.18
+I. Scrum:
+
+Headwave plugin to interface with QI Pro:
+
+C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\HW-Plugin\python\QiProPlugin.py
+
+See video link https://web.microsoftstream.com/video/fe7f8711-d753-4e3d-ae75-934664ed2906 and https://web.microsoftstream.com/video/940875a9-f384-4482-a9fa-4a4db23719dd
+
+2021.01.04
+I. Scrum: 
+ 
+-Brenda working on virtual volumes bug: 
+-I am working on adding time slice for zero time:
+ 
+https://web.microsoftstream.com/video/98805e50-2861-4adc-928b-641d103f1143
+
+
+2021.01.05
+I. Scrum: 
+
+Bugs:
+Multi selecting and removing seismic attributes option in QI Pro 
+Third attribute color bug (Color bar bug from Laurie)
+
+Brenda: Point Density--recomputes sometimes when it doesn`t need to recompute 
+
+See https://web.microsoftstream.com/video/485c6a3e-4c66-467e-ad5d-11ccb767952f
+
+2021.01.06
+I. Scrum: 
+
+-Discussion on how to merge with TFS:
+
+https://web.microsoftstream.com/video/e1a3b415-6974-4587-a869-ea7cae97d590
+
+- Allow user to enter RGB as numeric value for Color Bar in "Edit Class Names" feature
+- Show time slice on Classified Volume feature
+- Multi selecting and removing seismic attributes option in QI-Pro feature
+- Color Bar icon change in Classified Seismic Volume due to scrollbar fix
+
+2021.01.07
+I. Scrum: 
+
+-QIInfoBox - "Loading one of 2, 2 of 3,etc." -> This is kind of like a progressbar that Kevin uses.
+-When there are no horizons the time slices don`t show up 
+-The dotted line at 10 ms loses its color 
+-The time zero offset slice is not quite on the exact line 
+
+See https://web.microsoftstream.com/video/a2fd0ea2-b10c-4693-b83c-6c28d6fe75b5
+
+
+-----Original Appointment-----
+From: Laurie Weston <laurie@sound-qi.com> 
+Sent: December 7, 2020 11:17 AM
+To: Laurie Weston; Carl Reine; Kevin Lee; Kirk Graham; Vincent Rajic; Draga Talinga; Dave Nordin; sandi@sound-qi.com; Roger Moore; Kaushal Pander; Brenda Maloff
+Subject: Staff Meeting
+When: January 7, 2021 1:00 PM-2:00 PM (UTC-07:00) Mountain Time (US & Canada).
+Where: SQI Meeting room
+
+
+STANDARD AGENDA (To be revised as required for each meeting)
+ 
+•	Operations update
+o	Consulting projects
+o	QI-Pro update
+•	Sales update
+o	Canada & International
+o	US & Mexico
+•	Marketing update
+o	Tradeshows
+o	Website
+•	Other
+
+Plan for development over the coming year:
+-Implementing 3D visualization 
+-Implementing machine learning 
+
+well crossplotting - everybody else can already do that, so do we really want to do that?  Instead, Laurie says she wants to focus on our areas of innovation instead.
+
+2021.01.08
+I. Scrum: 
+
+-Kevin demonstrated how to duplicate the Third Color Attribute bug in the crossplot settings dialog:
+
+https://web.microsoftstream.com/video/5b1d00db-e7b8-4e30-a168-66c22f614795
+
+--------------------------------------------------------------------------------
+
+BUG: All the horizons are half a sample out (also this video gives an example of loading free format horizons, e.g., horizon900.csv).  Note, also have to click on the "Inline" radio button in the main menu with this set to 5440 to actually show the horizon 900 line.
+
+See https://web.microsoftstream.com/video/a7b14b04-f1f2-4d29-a0e5-211482745982
+
+
+2021.01.11
+I. Scrum: 
+
+"(int)(m_vScale / 2.0);" is half a sample
+
+See https://web.microsoftstream.com/video/bf72e29d-6a1f-4c9b-98f5-d1c1adf7f6fb
+
+-Discussed timeslice feature, Third Attribute Color bug for crossplot display settings for me, SeisWare connector with Brenda, and virtual volume updates with Kevin 
+
+II. Prioritizing features and bugs:
+
+-----Original Appointment-----
+From: Kevin Lee <kevin@sound-qi.com> 
+Sent: January 8, 2021 12:06 PM
+To: Kevin Lee; laurie@sound-qi.com; kaushal@sound-qi.com; roger@sound-qi.com; brenda@sound-qi.com
+Subject: Review and prioritize bug list
+When: January 11, 2021 10:30 AM-11:30 AM (UTC-07:00) Mountain Time (US & Canada).
+Where: Microsoft Teams Meeting
+
+See https://web.microsoftstream.com/video/4d2749b6-b506-4d0c-8819-db29ce999a55 and
+    https://web.microsoftstream.com/video/7c0252ad-bd3e-4ea9-94a6-78f022e72361
+	
+Items for me to work on after third attribute color bug:
+
+1) MSI - Packaging and Consolidation of QI-Pro 
+2) Unit test framework and Continuous build 
+
+yPrev = yPrev - timeSliceWidth (instead of -1?)
+
+III. QI Pro Training 2:
+
+-----Original Appointment-----
+From: Laurie Weston <laurie@sound-qi.com> 
+Sent: January 4, 2021 1:35 PM
+To: Laurie Weston; kaushal@sound-qi.com; brenda@sound-qi.com; roger@sound-qi.com; Martin Bawden; Megayield Consulting Services Ltd; Daniel Navarrete
+Cc: kirk@sound-qi.com; carl@sound-qi.com; kevin@sound-qi.com; dave@sound-qi.com; vincent@sound-qi.com; sandi@sound-qi.com; bayookunlola@megayieldns.com; Blas De La Peña; jcarrero@geoprocesados.com; s.ponguta@geoilenergy.com; soni.copia3@geoilenergy.com
+Subject: QI-Pro Training
+When: January 11, 2021 3:00 PM-5:00 PM (UTC-07:00) Mountain Time (US & Canada).
+Where: Microsoft Teams Meeting
+
+Happy New Year everyone!
+Let’s continue where we left off before the holidays:
+
+This will be an intro to interpreting with QI-Pro for our new hires, resellers, and other interested parties. We will cover:
+
+Overview
+-	what do users want to accomplish and why would they use this tool?
+Operation
+-	loading data; standalone, plugin connectors
+-	data display options
+-	creating crossplots
+-	crossplot tools
+-	colour wheel tools
+-	map tools
+-	Attribute Advisor
+-	Virtual Volumes
+-	Volume export
+
+Workflow strategy
+-	Play-specific and data-specific strategies
+
+Notes:
+
+-Inversions: They try to reverse the seismic from recorded seismic back to the geology.  It ties wells and the seismic together.  They are using logs to tie those together.
+
+QI Pro Training II:
+-Working with crossplots 
+
+-What are fish scales?  -> It is a seismic formation.  Like there is a seismic formation also called jumping pound.
+
+Is that when the seismic wiggle traces?
+
+-> Like a heart monitor.  It is a geophone on the ground.  
+
+-Hard rock will reflect differently than soft rock, and differently than oil or gas.
+-Vp: Primary wave.
+-Vs: Shear wave.  This runs slower.  The blast shootsparticles in every direction.  Like shaking a slinky sideways.  If we get a shear wave, it means the particles are quite dense.  If it hits a fluid, there is no shear form of the wave.  Especially, none through a gas.  Using Vp and Vs they can come up with a lot of rock properties.  Rho is the density.  They can be used to calculate a water saturation.
+Brenda:  They are trying to figure out different aspects of the rocks under the earth.  They try to tie the info from the well data to the seismic data.
+
+Templates:
+
+
+Attribute Advisor (01:23ff):
+-Data points from two regions, only those points that come from those regions and put them on little thumbnail plots.
+-Select 30 attributes, so this creates 900 crossplots.  Then ranks the thumbnails by the ones that separate the two clusters the best.
+
+-Cannot sub-classify two different classes on the same crossplot.
+
+-Try adjusting things, switching the order of crossplots, and try to predict what is going to happen on the crossplot before it happens.
+
+Virtual Volumes:
+-Didn`t get to VV today
+
+2021.01.12
+I. Scrum: 
+
+CSI (Cascaded Seismic Inquiry?): Standalone app: 
+-Now they wanted to integrated it into IMAC/QI Pro but there were a bunch of layoffs in 2015 so it kind of fizzled out 
+-You load multiple SEG-Y files and you give it a volume type, and then for each volume type you have different parameters for doing inversions and whatnot 
+-It loads the volume and saves that image as a bitmap 
+-Right now CSI is only used internally 
+-Only need one global header map 
+-Description of bug at 9:33ff
+-Now that is built into QI Pro as well 
+
+-Source control explorer; right-click and get history, then say "Get this version"
+
+II. Working on Third Attribute Color Bug (see https://web.microsoftstream.com/video/5b1d00db-e7b8-4e30-a168-66c22f614795):
+
+See ~\SoundQI\Bugs\ThirdAttributeColorBug\notes.txt
+
+2021.01.14
+I. Scrum: 
+
+-Brenda described UI update discussions with Kaushal, Carl and Laurie 
+-Kevin described his work on the Virtual Volumes and explains his souce code 
+
+See https://web.microsoftstream.com/video/97ff5fd7-439f-41f8-838c-00d47211f2a4
+
+In IMACDoc::CreateVirtualVolumeTask:
+-Created new class CVVEquationHW: To implement equation:
+
+    CVVEquationHW testEquation;
+    CString equation = vvEquationRef->GetEquation();
+    testEquation.SetEquation(equation); // inside headwave do a SetEquation
+	testEquation.Parse();
+	
+	for(int i = traceStart; i <= traceEnd && !ShouldTerminate(pCUPDUPData); i++) {
+		// ...
+		
+		for (int j = 0; j < nsamps; j++) {
+			// get input samples 
+			for (int k = 0; k < fileCount; k++) {
+				float *pTrace = (float *)arrTracePtrs.GetAt(k);
+				values.SetAt(k, pTrace[j]);
+			}
+			
+			// compute Virtual Volume data sample 
+			pData[j] = vvEquationRef->Evaluate(&values, (float) startTime + j * ...?);
+		}
+		
+		// test code... remove this later (once HW VV is working)
+		std::vector<float> stdValues;
+		for (int ii = 0; ii < values.GetCount(); ii++) {
+				stdValues.push_back(values.GetAt(ii));
+		}		
+		float a = vvEquationRef->Evaluate(&values, 0);
+		float b = testEquation.Evaluate(&stdValues, 0);
+		assert(a == b);
+	}	
+
+-> The reason Kevin is doing this is because initially he had written the equation in MFC C++, which has CString, and a bunch of other APIs, but HeadWave doesn`t work with MFC C++, so Kevin has been porting it over to STL C++ so it can work with HeadWave.
+
+2021.01.20
+I. Scrum: 
+
+-Kevin discussing his virtual volumes work:
+
+https://web.microsoftstream.com/video/7467dc1f-9ead-4bbd-99ff-df6483da6104
+
+2021.01.21
+I. Scrum: 
+
+https://web.microsoftstream.com/video/0b086dd2-0b3e-413d-8593-41f27b88a5a8
+
+Edit Class Names Dialog:
+-Cancel button: Go to resource editor, click on button, so this does not have any movement defined 
+
+-Cancel button needs to move 100% horizontal and vertical 
+-SetColor button should only move vertically
+
+-----
+
+-Inversions: They try to reverse the seismic from recorded seismic back to the geology.  It ties wells and the seismic together.  They are using logs to tie those together.
+
+QI Pro Training II:
+-Working with crossplots 
+
+-What are fish scales?  -> It is a seismic formation.  Like there is a seismic formation also called jumping pound.
+
+Is that when the seismic wiggle traces?
+
+-> Like a heart monitor.  It is a geophone on the ground.  
+
+-Hard rock will reflect differently than soft rock, and differently than oil or gas.
+-Vp: Primary wave.
+-Vs: Shear wave.  This runs slower.  The blast shootsparticles in every direction.  Like shaking a slinky sideways.  If we get a shear wave, it means the particles are quite dense.  If it hits a fluid, there is no shear form of the wave.  Especially, none through a gas.  Using Vp and Vs they can come up with a lot of rock properties.  Rho is the density.  They can be used to calculate a water saturation.
+Brenda:  They are trying to figure out different aspects of the rocks under the earth.  They try to tie the info from the well data to the seismic data.
+
+Templates:
+
+
+Attribute Advisor (01:23ff):
+-Data points from two regions, only those points that come from those regions and put them on little thumbnail plots.
+-Select 30 attributes, so this creates 900 crossplots.  Then ranks the thumbnails by the ones that separate the two clusters the best.
+
+-Cannot sub-classify two different classes on the same crossplot.
+
+-Try adjusting things, switching the order of crossplots, and try to predict what is going to happen on the crossplot before it happens.
+
+Virtual Volumes:
+-Didn`t get to VV today
+
+-----
+
+
+-TimeSlice pointer to line is a bit off 
+-on Apply in CV Settings dialog it doesn't change the color 
+
+
+
+-Press button for Third Attribute Color bar after 
+
+then you would have to switch it after you press the button 
+
+-------------------------------------------------------------------------------
+Carl:
+-7gen is maxing out our space on the server, 1.9 TB. 
+
+Draga:
+
+Laurie:
+-Any word from Suncor.  Carl: No word from the, I have to contact them.
+
+Kirk:
+-
+
+Carl:
+-I have the CSEG showcase in a couple weeks.  It shifts your talk if it is CSEG members or managers attending.  Now it is %65.
+-Vertec was a tough sell for Dallas.  They want to get a feel for it first.
+
+Kirk:
+-EAGE deadline is tomorrow.  The organizers are skeptical, it may be pushed to November, for the in person one.
+-Introduced Kaushel to people at Suncor and Birchcliffe.  Showed Kaushel what you can do even if you don't have inverted volumes.
+-Newcross was a good meeting--moved the ball forward.  They are a Nigerian firm.  They were interested in Draga's abstract.
+-Turkey petroleum had hit us on the website, Carl had responded back.  
+-Kaushel giving a talk to the CSEG, student chapter.
+
+Laurie: Question about Pioneer, haven't heard about Pioneer for awhile?
+
+Kirk:
+-We had a meeting in the 1st week of December, need to do some follow up.  They are in the middle of a merger with Parsons/Parslie(?)
+
+Vince:
+-Renewals.
+-Chaparral is done.  Marathon, look into that in Q1, he hasn't given me a date yet.  No feedback from Chet.
+-Regarding demos, heard back from DNO, so will re-connect in February.
+-California Resources: Christopher Seine got back to me.
+-Haven't heard back from Shell or ONB for the start of a trial.
+-Wintershell, I think that went really well, met with Norway team there alone with the Germany team, so they are interested in moving discussions forward for the trial.
+-Mark Beller, Jim Fowler, ..., Christian Hendrik, who is the chief geophysicist out of Hamburg.
+-We've had momentum with Argentina.
+
+Dave:
+-Have you heard anything back from Rodney at BP?
+
+Vince Rajic:
+-Haven't heard anything yet but I think we need to just keep pushing them.
+
+Dave Nordin:
+-Colorado School of mines: sent off that signed license as well as a W8-VEN-E which is some sort of an IRS form for them.  If that is not sufficient then I guess we will have to fill out a WB.
+-Aspect Energy is going to have the Petrel connector, we were looking for a way to be able to generate the license ourselves. 
+
+Kevin: I don't think there is enough time to do what we have to do.
+
+Brenda: Still waiting for a license from Pablo.
+
+Dave:
+-That demo is set for the 15th of Februray
+-TAQA is expected to be in a position to make a decision by the end of the month
+-There is just not enough understanding on the streets of this town in terms of what it is we do so ... would be a good resource 
+
+Kaushal:
+-I have almost finished making the video, just give me one more day and I will share everything, part of making the training and planning.
+
+Laurie:
+-I know the Microseismic we have talked about before, so let us talk about this first before you spend too much time...
+-We need to talk about if it is something that we need to do (CSI?) or if we just want to keep that internal
+
+Kevin:
+-We had our buglist meeting 
+-Mateo actually had a copy; we never heard back 
+
+Kirk:
+-That is Mateo's big spend on Gordondale
+
+Laurie:
+-We can build a workflow for that but let us make sure that we are using our own tools as much as possible 
+
+Kevin:
+-Been working on porting the HeadWave connector from MFC to STL C++
+-Going to work with Roger to get a better way to install QI Pro.
+
+Laurie:
+-If we get deployments to OMV, DNO, Santos, Wintershell, they are going to grind to a halt as soon as they put their first 3D in there.
+
+Kirk:
+-...it will accelerate as people try to cut IT costs.
+
+
+-----
+
+ProcessElement: processes 1 pixel on the screen so HW kernel spews out threads on the GPU 
+workEquation.Evaluage(&values, 0);
+GPU programming 
+
+2021.01.26
+I. Scrum: 
+
+Bug:
+-Tile button causes it to go off the top 
+
+Color Specification:
+-
+
+-Just press every button, make sure every edit works as it is supposed to work 
+-Just try every possible scenario that you can think of 
+-Try resizing dialogs, check if buttons move, etc.
+-Try to break the app 
+
+Brenda:
+-Run this side by side, with the old version, to see how the old version works
+-Just think about usability (would a user want to have to stretch the screen out all the time if it starts with a scrollbar?)
+
+Third Attribute Color Bar:
+Bug: 
+-There is one more thing--the number of colurs
+
+
+Have a bool that says if you are on the class map or not, and if not, then don't show the class names 
+-If it is not from the class window then they shouldn't see the class names 
+
+Grey out "Edit Class Names" if it is for the "third attribute"
+
+Kevin:
+
+VirtualVolumeKernel::ProcessElement
+
+-Kevin getting linker error when trying to connect *.cu CVVEquation with CVVEquationHW:
+
+https://forums.developer.nvidia.com/t/passing-an-object-to-the-device-by-using-zero-copy-memory/30149/2
+
+from: https://www.google.com/search?safe=active&rlz=1C1CHBF_enCA894CA894&sxsrf=ALeKk026RC9weHHve2xihjSstEO0rwn4Sw%3A1611681702950&ei=pk8QYOy1Oe2U0PEPpJiM-AM&q=cuda+programming+how+do+I+pass+a+custom+class+from+host+to+device&oq=cuda+programming+how+do+I+pass+a+custom+class+from+host+to+device&gs_lcp=CgZwc3ktYWIQAzIECCMQJzoHCCMQsAMQJzoHCAAQRxCwA1CUJFjyKWDLLGgBcAJ4AIABTIgBjwGSAQEymAEAoAEBqgEHZ3dzLXdpesgBBsABAQ&sclient=psy-ab&ved=0ahUKEwjsoJSbjrruAhVtCjQIHSQMAz8Q4dUDCA0&uact=5
+
+-For installer, ensure to add dll files for HeadWave: see readme.txt 
+
+2021.02.02
+I. Scrum: 
+
+Roger:
+-Do not include license file in installer 
+-Sign installer exe as well 
+
+Kevin:
+-Testing equations. 54 ms using MFC, 144 ms using STL, and 1.0 ms using GPU.
+
+Brenda:
+-Getting it so that the compute engine doesn't compute as much 
+-Cut the computing time in half by threading it 
+-I'm using shaders, so now I am not sending thousands of rectangles. 
+
+
+2021.02.04
+I. Scrum: 
+
+-Click browse, and check the folder selection 
+-Change installer icon to QI Pro
+-Think of every test case
+
+TeamCity:
+-Source control history message 
+
+Brenda:
+-Classified volumes 
+-Still need to do some work on the drawing 
+-
+
+2021.02.04
+I. Scrum: 
+
+Roger:
+1) Installer:
+-Update the Headwave one 
+-Add a pre-build step for unit tests (cancelled)
+-Fix code signing in RunInstallers.bat 
+-Change the browse for folder dialog 
+
+2) Unit tests:
+-Create pre-build event to copy over lib files 
+
+Brenda:
+-Trying to get drawing faster 
+-Working on memory problem: Trying to duplicate, related to the huge volume project 
+-Add threading 
+
+Kevin:
+-When I turned on the GPU, the results were blank-it returned nothing 
+-Spent the whole day messing around with it, there is a bug in there, andthen suddenly it started working 
+
+
+2021.02.08
+I. Scrum: 
+
+Multiple 2D lines in one QI-Pro project 
+-wouldn`t have common traces 
+
+Zoom and reset zoombutton in Xplot window 
+
+Deactive Xplots in Xplot manager window (instead of deleting them) 
+
+Add standard colour bars like Rainbow, Sand shale etc to the 
+
+Double clicking hte color bar to bring up color settings
+
+Class Filter window in Xplot resize option 
+
+Add tops source to Seisware connector 
+
+Active Volume selection - Seisware connector 
+
+SeisWare connector - Set the server location 
+
+Highlight polygons (right now it is a box, they want a polygon).  Now they want to be able to drag it and save the location.
+
+Edit Overlapped Polygons in crossplot window 
+
+Edit User Lines 
+-Once you digitize a user line, you can change the numbers manually, but there is no GUI for it  
+
+Bulk Coordinate 
+
+Depth/Time well curve select options 
+
+Crossplot Context Menu 
+
+Multi-curve loader to multi-wells 
+-Now have to load them individually 
+
+Element name on crossplot 
+
+Polygon - Snap together feature 
+
+The clients always have older versions of QI-Pro, so they can't give the client the version they are working on 
+-All we need to do is save the cut-off data 
+
+Save project option for older versions of QI-Pro 
+
+
+2020.02.04
+I. Staff meeting:
+-
+
+
+Draga:
+-
+
+Laurie:
+-We are working on a deal in Pakistan with the OGDCL
+
+Carl:
+-Meeting with 7th Gen afterwards 
+
+David:
+-Made first sale!  Peyto consulting project is kicking off.
+-Want to speak to geophysicists who have used our expertise on the Montney
+-Aspect: We still do not have a 2020 connector, but Kaushal has found a workaround if we don't get one from the Chinese connection prior to the 22nd.
+-Made contact with a company called Touchstone which is having great success in Trinidad.
+-Doug Uffin
+-Grand Tierra is showing signs of life: They have done a post-stack inversion, but if they don't get anywhere they will look at doing a pre-stack inversion.
+-Torkson is showing signs of life; perhaps later in the year they will look at doing an inversion.
+
+Laurie:
+-Congrats on the sale, it is because of persistence, and just being there whey they are ready 
+
+David:
+-Dave O'Neil has retired appearently, and that is who they are looking to replace 
+
+Vincent:
+-Was going to jump on Argentina stuff 
+-Kaushal was setting up a trial license for Claudia 
+
+Kirk:
+-Have some good connections at Suncor; have some follow-ups next week, setting expectations on their Petrel rollout 
+-There is postive new where in the US WTI is pretty high, which ultimately does help us 
+-Husky and Cenovus has been mapping the losses, we have had some interest in the East Coast as well 
+-Getting to figure out my next steps with CRNL 
+-We've got a great meeting lined up with Petronas, and the best collection of geophycists we've ever had in a room.  I am getting in touch with Martin who gets online in about 4 to 5 hours. 
+
+Kaushal:
+-Marathon: I am giving them demo data.  People in general are afraid to load data into QI Pro, there is usually a special team that does it so they do not know how to load data themselves.
+
+Kevin:
+-Worked on the latest release 
+-Lots of activity on the Petrel plug-in, Colorado has their version, Aspect is getting one built, DNO, we don't have one that is up to date for them, then Marathon came up today.  
+-Virtual Volume project on Headwave: had to rewrite that equation evaluation method so that it would work on the GPU, and then test it. 
+-Now I have to do the rest of the plug-in.
+
+Brenda:
+-Trying to make QI Pro a little faster for the big volumes.
+-Also making the drawing faster 
+-Fixed a couple bugs while testing: found bugs in the math when you edding and deleting lines
+
+Unit tests/continuous integration: Helping Kevin and Brenda be able to use that (equation testing)
+Core functionality is basically there, so lately been working on "nice to haves" like custom branding, QI icon, browse for files dialog
+
+-----
+
+2021.02.09
+I. Scrum:
+-Flag is put in high byte to say that it is undefined, because the high byte is not being used 
+-In xplot settings draw the box with a red X through it to show that it is undefined, also in Color Bar Editor 
+-Maybe not even show them in the Xplot window (?)  Kevin says that gets a little tricky, because what if they are in the middle 
+
+Serialization issues
+-Carl and Draga have the newest version of QI-Pro, and are working on projects, but then they can`t give that project to a client, because they have an older version 
+-Need to save the cutoffs, but the wells take a lot of time sometimes.
+
+Brenda:
+-Dealing with Petrel licensing issues 
+
+II. Bug/Enhancement Priority Meeting:
+
+-----
+
+
+2021.02.10
+I. Scrum:
+Brenda:
+Create a ComputeEngine unit tests 
+
+Kevin:
+-Testing GPU code on virtual volumes and the app crashed, but it was because of a dialog, and not  the GPU code, so that can be fixed.  When you have a leading negation operations, -e -v, but when you have a new volume, and you negate that virtual volume, then it has two negation operations, and so there is a problem.  It didn't just fail, it locked up. 
+-DefineCommonTraces is another one we could use to create a unit test 
+-Then the other one I am going to do is the retro-active output, to be able to write to old versions.
+
+Roger:
+-Get version number from imac.h
+-Make sure that it runs every night 
+-Stop using xcopy
+
+
+2021.01.11
+I. Scrum:
+
+-Update unintall script to delete from TEMP 
+-Install python script as a windows service 
+-Color bar bug 
+
+Brenda:
+-
+
+2021.02.17
+I. Scrum:
+
+-This kind of thing happens when the serialization gets mixed up 
+
+Kevin:
+-Work on Virtual Volumes 
+
+Brenda:
+-Finish up dead traces 
+-Need to get back to Lumina about the license 
+
+Roger:
+-
+
+-----
+
+2021.02.18
+I. Scrum:
+Brenda:
+-Doing project extents so I could edit those 
+-Got the extents working for the classified view 
+-Need to look at attribute advisor to ensure it ias using the smaller extents 
+
+Roger: New task: 
+-Remove default line on crossplots.  Allow removing all cutoffs. 
+-Horizon by XY option: right now horizons don't use the XY coordinates  
+
+-----
+
+Staff meeting:
+Carl: Getting near the end of consulting, just playing with depth conversion work 
+-Got well data for Payto 
+
+Draga: We have headwater 
+-Still working with Baytex 
+
+Kirk:
+-The fastest way we could get that is by going with a 4D presentation from geocon 
+
+Laurie:
+-Just phone your network and ask what projects they have on the go, especially the technical people 
+-Carl, and Draga, you have journals that you read, so maybe make a list, and send them a message 
+
+Dave:
+-Also let us know in the business development side 
+
+Laurie:
+-A lot of companies are not actually doing 4D right now; I think I would go more with a fundamentals talk that you did last week 
+
+Dave:
+-Aspect is due to start next week; we are ironing out issues with the install 
+
+Kaushal:
+-We gave them the installer, for some reason the installer is not able to pick up the license 
+
+Dave:
+-It may have something to do with Hampson Rusell
+-School of mines is still in the process of getting the software loaded and running 
+
+Vince:
+-Wintershell, looks like they are going to go on trial 
+
+Laurie:
+-Kaushal and I are putting together a bid for Pakistan.  The deadline is Tuesday, in Pakistan.
+
+Kirk:
+-Pioneer was in my plans but have to put that on hold for the next couple weeks because people are trying to keep their kids and pipes from freezing 
+-Suncor 
+-This week we had amazing progress at Petronos 
+
+Laurie:
+-Had a meeting with the geoscience head at Petronos
+-They have a testing dataset field 
+-They are using some sort of AI to do data mining in their parameters (Elistidocs, former CGG people, who have come up with this AI, data mining algorithm).  Maybe that would be good for finding rock physics templates, to scan through articles and find templates.
+
+Vince:
+-Santos is delayed until the end of Q1; she is going to be ready in April 
+-Beach energy; sounds like they have nothing right now 
+
+Kirk:
+-Cenovus and husky, there is nothing immediate
+-Have CNRL? in my notes 
+-EAGE 
+
+Kaushal:
+-Existing clients, Marathon, and not communicating with them anymore 
+-Suncor, I approached Kennedy, and now he has deferred it by 2 more weeks
+-Birchcliff, asking, what is the progress in microseismic? Birchcliff has approved renewal. This can be done in Petrel as well.
+
+Kaushal:
+-We can use Petrel to make a seismic volume and put that in QI-Pro 
+-The other option is that if Kevin says, in a couple days, if we could make this feature in QI-Pro, then that would be good. 
+
+Laurie:
+-If it is immediate, then help them use Petrel 
+-Kathleen Dorey just wrote an article in CSEG journal about how geophysics is used in geothermal as well 
+
+Kevin:
+-We had some backup issues, want to connect the backup server on the second network adapter.  That will take the backups offline, so it can be done anytime, and it won`t affect the network.
+-Waiting for Jonathan and blueware for that writable buffer 
+-Fixed the bug with the broken aspect ratio.  ...could also grab the slider, and change the size of the parameter panel.  That slider on the parameter panel was not a straightforward fix, but I have got it now.
+-Want to get back on the Virtual Volumes  
+-What about hooking up with Ryan at U of C, who is getting a free trial of QI-Pro, so maybe we could use his machine to do some testing.
+
+Brenda:
+-Finishing up doing the dead traces, so that in the classified section you see them as a gab.  Now I am workingon being able to change the project extents, so for a big volume it can help you whittle it down to a smaller subsection.
+
+Roger:
+-The unit tests and continuous integration has been functioning, but I am making a few tweaks here and there, and of course in the future the idea is to keep writing unit tests first or in parallel to writing code to help in software development quality.
+-Basic, standard installer has the functionality, but it sounds like Kevin wants me to make some changes to the Headwave installer, because that one is more complex.
+-Starting on the horizon XY task from the high priority list; presently using inline/crossline, so now we weant to be able to add them using XY coordinates instead. 
+-Color bar sepecification with NOCOLOR classes in "Edit Class Names" and "Crossplot settings"
+
+Laurie:
+-That will give us more control over our Decision space testing environment, and it is free!  I could not believe it is free.  We can get some help from Haliburton, in selling to DSG.
+
+
+2021.02.19
+I. Scrum:
+-Color bar issue, black color issue
+-If the QI-Pro.exe file in the TeamCity folder has not been built today then don`t create a new installer.
+-Instead of deleting folders older than 7 days, just keep the last 7 folders 
+-Store version in version.txt file
+
+Horizon XY:
+-Get rid of this:
+	Please define both "X" and "Y"
+
+2021.02.23
+I. Scrum:
+Roger:
+-sign headwave/QI-Pro uninstaller 
+-Only perform job if exe is newer 
+-HorizonXY 
+
+Brenda:
+-Getting the exports of the virtual volumes.  Once that is done, on to the next thing.
+-Look at the cutoffs 
+
+Kevin:
+-Today is the day that the Aspect Energy trial starts 
+-Going to get busy on doing the scratch buffer on Virtual Volumes in Headwave 
+
+-----	
+
+2021.02.24
+I. Scrum:
+
+Brenda:
+-
+
+Kevin:
+-Spent yesterday working with Jonathan`s code, with the scratch buffer
+
+Roger:
+-Only copying over QI-Pro.exe to PreRelease if a new build has occurred in TeamCity (i.e., new changes have been checked in)
+-Delete CppUtil test code 
+
+-----
+
+HorizonXY:
+-Don`t put translation from m_pX/m_pY in the Horizon class; maybe it is better to put it in the IMACDoc class and create getters/setters
+
+Brenda:
+-Remove default line on crossplots.  Allow removing all cutoffs.
+
+2021.02.25
+I. Scrum:
+Roger:
+-Add standard color bars like Rainbow, Sand Shale, etc.
+
+II. Staff meeting:
+Carl:
+-7thgen is all translated, I transferred it over to their hands now 
+-Peyto: chatted with John last week, and agreed that maybe some more wells would b euseful.
+
+Roger:
+-Installation packages: made some customizations for Kevin to automate some issues, like only creating a new installer if code updates have been checked in, and etc.
+-Horizons are entered by inline/crossline. Add an option to define horizons by XY.  When entering Horizons only ask for either inline/crossline or XY, not both: got basic functionality working, but there are some performance issues and need to be able to distinguish between the XY and inline/crossline better 
+-Save crossplot elements with the axis information (see 53:10ff in Scrum Soundqi 2021 02 25.m4v)
+-Check for Windows Network SysAdmin expert 
+
+Kirk Franklin:
+-What is happening with the ground penetrating radar 
+-Looking for Denver contacts 
+-Have had good effort by Laurie on Petronos; hopefully will get a trial with an asset at Petronos 
+-Have a huge list of names with PDO from Oman 
+-Ecopetrol
+-Laurie: There are also some contacts with KOC 
+-Had a conversation with Carl to discuss with GeoEnergy...so they could bring us referrals. 
+-Had a good conversation with Haliburton
+-Seeing if I can get around buying a full Petrel license 
+-Prospecting into Denver and Africa 
+
+Dave Nordin:
+-Tiger Woods was in a car accident and was injured 
+-Hoping to start a trial license with ManCal energy on Monday 
+-Aspect Energy is underway, Kaushal is doing a lot of work with Rowina 
+-Her offset stacks were at 4 ms, all of her inversion products were at 3 ms
+-Laurie: I have never heard of a 3 ms sample rate 
+-Sending out Laurie's talks so people realize that not all inversions are created equal 
+-Laurie: Direct them to Carl's upcoming webinar, too 
+-Just using these throw-in inversions are not delivering all that inversions can deliver 
+-A lot of these montney players are drilling 1-15 wells from a single pad 
+
+Vince:
+-Marathan: Kaushal is working on stuff with Huan
+
+Kaushal:
+-Need to move the wells from Petral to QI, but she is not agreeing to it, but she wants to bring 100 wells 
+-Birchcliff, we have a session with them tomorrow 
+
+Kevin:
+-Did make progress on virtual volumes, however, I got some code from Jonathan, in Houston, that allocates the buffer, but there is something about that that slows down the plug-in, so at least I can create a scratch buffer.
+
+Brenda:
+-Was working on extents, so now you can truncate extents.
+-Other thing was I got rid of that default cutoff, so now you don't have any cutoff.
+
+Laurie:
+-Applying for some government money; applying for SRED
+-Looking for a replacement for Kaushal 
+
+-----
+
+20201.03.01
+I. Scrum:
+Roger: 
+-Give the starting index so it doesn't have to search 
+-Use the bin size of the seismic file and see if it is in that bin 
+-Brenda: Find the first trace that is within half a bin 
+-Kevin: I was thinking just find the nearest trace 
+-Roger, add SSL to qi-pro.com.  Just make sure that the FTP site still works.
+
+Brenda:
+-Working on multi-file, multi-load stuff 
+-Carl is still using 4.4.4 which has that bug with the consolidated indexes, so we should probably get rid of it 
+-I created a Halliburton account on their help website 
+
+Kevin: 
+-Still working on Virtual Volumes 
+
+-----
+
+See https://seg.org/Portals/0/SEG/News%20and%20Resources/Technical%20Standards/seg_y_rev2_0-mar2017.pdf
+D-2. SEISMIC BIN GRID DEFINITION: IOGP P6/11..................................................................... 65
+
+FIGURE 3 BIN GRID DEFINITION (RIGHT-HANDED CASE) ................................................................... 105
+
+TABLE 2 BINARY FILE HEADER ........................................................................................................... 6
+
+-What is the difference between a record an a trace in SEG-Y?  How to the number of samples fit in here?
+
+-----
+
+7. Data Traces
+7.1. Trace Header
+The SEG-Y trace header contains trace
+attributes, most of which are defined with
+two-byte or four-byte, two's complement
+integers. The values in bytes 1–180 were
+defined in the 1975 standard and these
+entries remain unchanged, although
+clarification and extensions may be supplied
+where appropriate. Bytes 181–240 were for
+optional information in the 1975 standard
+and this has been the main area of conflict
+between different flavors of SEG-Y.
+
+// .....
+
+7.2. Trace Data
+Trace Data immediately follow their
+attached Trace Header(s), with the trace
+data arranged in samples of fixed size (1, 2,
+3, 4, or 8 bytes) described in Appendix E.
+The format of the data sample is specified in
+the Binary File Header (bytes 3225–3226).
+With SEG-Y revision 2, provision has been
+made via bytes 3297–3300 of the Binary
+File Header to consistently support littleendian byte ordering or pairwise byte
+swapping of the Binary File Header and
+both Trace Headers and Trace Data.
+The seismic data in a SEG-Y file is
+organized into ensembles of traces or as a
+series of stacked traces. When the trace
+data is organized into ensembles of traces,
+the ensemble type may be identified (Binary
+File Header bytes 3229–3230)
+
+// .....
+
+D-2. Seismic Bin Grid Definition: International Association of Oil
+and Gas Producers P6/11 (p. 65ff):
+
+// .....
+
+D-2.1 P6 Header: File Content Definitions
+H6,0,0,0: File Contents Description
+Field Description Data Type Reference Code Comments
+5 "File Contents Description" Text, LJ50
+6 Description Text
+7 Any Other Details Text Optional
+
+
+-------------------------------------------------------------------------------
+
+Kaushal Pander    21 hours ago 
+Hi Developers...Can anyone look into the code and provide me with the formula on how it calculates the point density in Xplot window 
+
+-> See ~\Workspace\SoundQI\ClientSupport\notes.txt
+
+
+
+20201.03.02
+I. Scrum:
+
+Roger:
+Discussing HorizonXY:
+Kevin:
+-Carl is having problems with deviation surveys.  Cannot load them using CSV files.
+-His deviation was over 1 km, and it should only be 100 m.  It seemed like it was projecting too far.
+ 
+
+4 x,y coordinates of your survey, and then you know how many inlines, and how many xlines, and then you have so many distances in the x direction, and then you do a  divide.
+
+take x,y, points for the corners, and divide by the inlines and xlines to get the number of bins
+
+-There are times when your survey isn't square.  
+Kevin: it always isn't totally square, and they have to bin it along the shot lines.  I think the bins are longer in the short-line than in the xline.
+-If you always looking along the inline for the bin size then you just need the x-coordinate 
+-Each inline and xline may not necessarily be ascending--they may go west to east, or east to west, so you don`t know the order 
+-x, y, inline, xline, quicksort, 3 args, or 4 args.  That way all of points would be sorted.  Then you just zip down, and find the x-coordinate that is within the range.
+Brenda: You are probably going to have to incorporate some kind of search, or sort.  The only way you can calculate that is by using the corner points and the bin sizes.  
+-Kevin: The deviation survey uses that FindNearestTrace, but ususally it is only a couple hundred points, but if you have a horizon file that has 40 000 points, then it would take a while.
+-Using x,y coordinates, and then your bin sizes, should get you in the vicinity.  You could do the sort first.  If you find the bin, then it is going to be within a trace.
+Brenda: You might be off by 1/2 a bin, 
+Kevin: or just check one trace in each direction.  Do the computation with doubles.
+
+Formula:
+Take your x,ys so you are going to get your 4 corner points,then you are going to get your min xline, min inline, then you will have a range, so then just do a divide.  
+-Check the trace numbers because it could be a missing trace, then you know the bin size, so just subtract the coordinate, then go find that trace, and see if the actual coordinates are within a bin, then boom!
+Brenda: It should get you within a bin, but you could just search around it 
+
+Brenda: 
+-Continuing to do multi-load, multi-well.  I am pretty well touching every well import.
+
+Kevin:
+-Take a look at Carl`s problem 
+
+20201.03.03
+I. Scrum:
+
+-Kevin: Had meeting with Laurie and Kaushal about the virtual volumes, and they made a comment, that pretty consistently, they had a project open, one xplot, with the timeslice relative to a horizon.  Then they delete the xplot, it doesn`t update the timeslice, then they press the update buttonon the map, and it crashes.
+
+-Brenda: m_file: there is both a filename and a file, so I think you want to use the filename and not the file.  The SEG-Y file is not always loaded when a xplot is open. 
+
+[9:26 AM] Brenda Maloff
+    
+int index = pDoc->GetAttributeIndex(name);
+​[9:26 AM] Brenda Maloff
+    
+CString filename = pDoc->GetFile(index);
+
+
+Kevin: You need to get the attribute, give it the index, and then there is the get the file, give it the index and it will give you the filename. 
+
+-Kevin: In the view, you know the attribute name, then give me the index, then call to give me the SEG-Y file with that index
+
+-Kevin: The bins that are here are from a crossplot, and so they are not the same as the bins in the CV for finding xline/inline from X/Y.
+-> See void CXplotParms::ComputeDensityTable(CIMACDoc* pDoc, int viewInstance, int startTime, int endTime, CViewZoneArray& selectedZones)
+
+-----
+
+-Kevin: Yesterday, I had about a million interruptions, I was trying to debug my virtual volumes.  Still haven`t figured out the problem.  Draga had a lot of trouble yesterday.  Then Laurie and Kaushal went in and did a bunch of work using v4.4.4, and we had deleted that before because of a bug.  
+-Brenda: Carl had spent two hours working on this project, but v4.4.4 had this problem with consolidated indexes.
+
+-> See 2020_03_03_BrendaExplainsInlineXlineBinsTracesRecs.m4v
+-Inline/Xline don`t necessarily start at 0.
+-Functions in SegyIndex, given this trace number, give me the inline, or given this trace number, give me the xline.
+-Given an inline/xline, you can always figure it out, given the count. SEG-Y files always go inline, then xline.  
+-xlines are columns, inlines are rows, so it is always inline first, then xline 
+-You always have 1 less bin 
+-nRec is the number of traces 
+
+2021.03.04
+I. Scrum:
+
+Roger:
+nRecs (horizon): This is the number of records in the horizon file, this is not the number of traces.
+-Definitely there won`t be a trace for every record; only if it is in range 
+
+Brenda:
+-When I was looking at the code for the extents, I realize that obviously I don't need to let them set the extents.
+-I've got the timeslice drawing, but I may want to fix the way it is drawing, and you get some sort of ziggy thing.  But I have a bug where I am getting some dead traces where I don't think I should be getting any.
+-I have calculated the bin size so you don't get gaps between them.  
+  
+Kevin:
+-I did find that bug, like I said.  It was so simple!  There is a function called CudaMemCpy, and it just takes the CPU memory and copies it to the GPU.  Every time it called the kernel, I copied over those entire buffers, so sometimes that thing is like 600 MB, so just copying that thing down took some time.  So now I just allocate the space on the GPU, and then copy over that 300 byte buffer, and let each thread copy their parts over.
+-The number of inputs, so for optimizing, they like to have everything declared as constant, because they can optimize it better.  For every input, you have the input, this trace, the data block, and then an indexer.  They are declared on one line.
+-It gets messy when you have more and more.
+-To get this thing, I had to take the virtual volume stuff in QI-Pro, where I was using the STL, but that didn't work on the GPU, so now I have like 3 versions of that class.
+
+II. Staff meeting:
+
+Roger:
+-Completed "Save Crossplots with Axis Info" so just waiting for a code review on that right now 
+-Horizon XY, had it running using OpenMP but then Kevin mentioned that he has found errors pop up when using that Parallel processing framework so changing to load Horizon XY using bins.
+
+Laurie:
+-Headwave is a plug-in to a 3D solution, but we still need a 3D solution 
+-We don`t have any customers using Headwave; nobody outside of some of the NOCs have never heard of it, so we need our own 3D solution, so that is what the INT investigation is all about. 
+-And then read VDS into QI-Pro, and then use their viewers within QI-Pro.
+-Even while INT is doing their development to create what we need, we can be working incorporating their modules as is.
+-If their plans change then we are out of luck, which is what happened with Blueware, and that also happened with Lumina
+-There are many companies who do not have Headwave, so it would be beneficial if we had a 3D solution to help sell QI-Pro 
+-To incorporate INT into our modules, that will cost $60k, then we will pay them $3k per seat for every QI-License we sell
+-Aside from this development, there are no fees for this SDK.
+-Anything that helps QI-Pro look more professional, then that makes us look better compared to Petrel, Kingdom, SeisWare
+
+Vincent:
+-There is a 3D visualization Envision VSX
+
+Dave:
+-It is not 3D visualization in the way we think; he is actually just making the amplitude into mountains 
+
+Laurie:
+-We have some really big potential clients, DBO, Petronos, who are doing a trial, but they want us to do some consulting for them first, which is good, because that gives us a chance to test and work out all the issues, and then they get a 6-month license 
+-Abu Dabi is interested in a trial--they have the largest 3D survey in the world, 75k sqkm
+
+Brenda:
+-Started on mult-wave, multi-well, but derailed by bug fixes related to dead traces.  Last Friday I signed up for that open-earth forum, but I don't have access to anything.
+
+Laurie:
+-We want to nudge them towards decision space until we get Petrel working 
+
+Carl: 
+-For Peyto: John has sent the seismic data.  He has a bunch of fluid analysis from different wells.
+-We also have Min over at Mancal all setup 
+
+Draga:
+-Carl and I have been working on an article for the recorder 
+
+Carl:
+-I was talking to Kennedy at Suncor; they are fixing up a Hampson Russel project.  They are taking the Macai and Firebank routes and merging them together, so that will be a supergroup of activities.
+
+Kaushal:
+-Existing trials: Aspect Energy, it is just that I don`t think they have good data, a good inversion data set.
+
+Laurie:
+-Carl, do you know how you can get S-impedance from post-stack data?  
+
+Carl:
+<You can`t do it>
+
+Kaushal:
+-DNO we did a small session where we showed how to move data from Petrel to QI-Pro 
+-I had a session with Mateo with Microseismic 
+-Apart from that I am working with training videos and training slides 
+
+Vincent:
+-Marathon, just waiting on a license.  Petrel 2020 is coming out next week, so the big idea is to get them with the Petrel 2020 plug-in.
+-ONB: Got confirmation on Monday that the trial is coming 
+-Hunt: Jeff Walsh, I need those contacts for the Permian group 
+-Going to 3D symposium on March 23...
+
+Dave:
+-Talked about Mancal, the trial is under way there 
+-Got a note back from Amer Hack at Torkson 
+-No word from Vermillion; they haven`t hired a geophysicist yet 
+-Matt Williams has moved on to a company called Avetta 
+
+2021.03.05
+I. Scrum:
+
+Kevin: How could we add auto-save?
+Brenda: We could just start up a thread to save.
+Kevin: What if they exit a dialog at the same time an auto-save is started?  We would get into a deadlock situation.
+-Cleaning up that code yesterday; adding more inputs.  Basically you need an input for every variable on the virtual volume equation.
+-Equation stuff: started eliminating the duplicated code that I had added.
+Roger: -Updated QiPro.nsi, QiProSeisware.nsi and QiProHeadwave.nsi to ensure that the uninstall icon is QI-Pro icon, QiProLicense.txt is not left in the install directory
+-Updated QiProSeisware.nsi to ensure that directories are deleted on uninstall
+-Updated run_installers.py so that it executes NSIS installers in the correct directories for Seisware and Headwave versions
+-Updated QI-Pro Seisware installers to install required files and get right exes from TeamCity
+
+
+-Make sure seisware.dll is unique for 10.3, 10.4, and 10.5
+
+Headwave:
+TODO: -Set ENV variable -> COMPLETE
+TODO: -Present them with a browse dialog to get Headwave directory -> COMPLETE
+TODO: -Installer should also install python script -> COMPLETE
+-The user has to manually code ComputePlugin directory and ExtensionPlugin dir.  
+TODO: -Present message to user (they have to do step 7 manually) -> COMPLETE 
+TODO: -Step 8: Present the dialog, and say it is using port 2004, and if they want to use a different port, then they have to update config.dat sand QiProConfig.py which has the port 
+TODO: Put the readme.txt in the QI-Pro installation directory -> COMPLETE
+
+
+2021.03.09
+I. Scrum:
+Brenda: Working on autosave
+-Need to add messages tostatus bar 
+
+Kevin: Working on archiving 
+-Showed QI-Pro demo mode 
+
+2021.03.10
+I. Scrum:
+
+-First you need a static function taht will operate on your list of parameters 
+-If you have 1000 points to interpolate,then split it up into hundreds
+-Find what the min values are in the SEG-Y files 
+
+2021.03.11
+I. INT 3-D Component:
+
+Juan Reyna 
+Lionel Jeanson 
+Laurent Renard 
+
+-Get Java Geo Toolkit which would open a small viewer for the 3D option 
+-C++ Geo Toolkit does not support 3D
+
+-----
+
+II. Staff meeting:
+
+[8:37 AM] Brenda Maloff
+    ok, so I started looking at it this morning.....I have the calcs getting the proper bin sizes.....the issue comes into calculating which bin that it falls into......the spreadsheet I gave you is the simple case, where the survey is a rectangle, but they are not always as such.....they can be at an angle......so the bin calculation then needs to take the angle into account......
+
+-Get rid of the popup dialogs -> COMPLETE 
+-Get rid of the subcategories -> COMPLETE 
+-If you select only headwave, then it shows up "You haven`t selected any sections!" -> COMPLETE 
+-Kevin doesn`t like the popup for the headwave default directory -> COMPLETE 
+-Have two browse paths for headwave? -> COMPLETE 
+
+"Setup will install HW_Data in the following folder..."
+To:
+"Select HW-Data installation location" -> COMPLETE 
+
+Top message: "Choose options for QI-Pro installation" instead of the top message "Choose the folder in which to install QI-Pro"
+-Set HEADWAVE_ROOT_DIR as a user environment variable instead of a system environment variable -> COMPLETE 
+-Headwave workspace directory has wrong message 
+
+-Get rid of "Is Headwave installed in ...?" popup as well.  Use the same kind of browse dialog that you did for Data and Workspace  -> COMPLETE 
+-Remove popups about port number and plugins, and put them on a post-install page 
+-For plug-ins, we don`t actually need the lib and exp -> COMPLETE 
+-Get Python files from TFS instead of from Z: drive -> COMPLETE 
+          
+
+-----
+
+Kevin:
+-Did get virtual volumes finished 
+-Working on auto-save feature 
+
+...
+
+Kaushal:
+-Sent license to Orlyn 
+-Client care: making videos and a document 
+-Made projects for Headwave 
+
+Consulting:
+Carl:
+-Seventh Gen: met with them to go over the last pieces for classification.  Delivering that with QI-Pro so they will get another 2 months with QI-Pro.  Delivering depth ... converted volumes. 
+-Peyto Project: Met with them this week.  I have the well crossplots to some extends, so now I am waiting for their rock physics.
+-Headwater: Just wrapping up that.
+
+Draga:
+-...
+
+
+2021.03.12
+I. Scrum:
+
+-In Qatar their gas field is 900 Tcf; the computers cannot handle the simulation.
+-El Shahin 300 000 barrel production 
+-Biggest oil well in Saudi Arabia is over 1B barrels  
+ 
+2021.03.17
+I. Scrum:
+
+Brenda:
+-The whole plan is to make data loading easier 
+
+Kevin:
+-Got an email from Laurie, since Aspect Energy is doing a demo 
+
+Roger:
+-HorizonXY is in my branch
+
+-Put the instructions in red
+
+2021.03.15
+I. Scrum:
+
+Kevin: We have a couple new bugs 
+Brenda: Able to connect to Petrel license if Alex turns off his firewall.
+-Looking at the multi-loader 
+Kevin: Been thinking about the Horizon XY code.  Wrote a function called GetTraceData.  
+Roger: Headwave installer--review with Kevin:
+-Didn`t ask where to install QI-Pro when that was the only one selected 
+-Python scripts need to be installed in a SoundQI folder in hwtoolkits; need __init__.py as well.  Just copy the whole folder. 
+-Uncheck FlexLM by default 
+-Change "Headwave Program" to "Headwave Plugin"
+-Remove "Headwave Data" and "Headwave Workspace" and include them with plugin.  The user would never install the "Headwave Plugin" without the Data and workspace directories 
+-Change "set 'File/User preferences'" to "select 'File/User preferences'"
+
+
+2021.03.18
+I. Scrum:
+
+Brenda:
+-I haven't figured out that Crossplot bug yet, still looking at it.  I fixed the problem where it wasn't getting the min/max's.  
+
+Roger:
+-Add screen capture of Headwave preferences 
+
+
+
+II. Staff meeting:
+
+Qi-Pro: 
+Kevin:
+-Busy week getting the Headwave and installer stuff put together 
+-Brenda clicked through the installer without reading all the details, so added an extra page in red to highlight the manual user steps 
+-New system evolving with pre-releases 
+-New plan is to increment the version number, e.g., 4.4.6, then move that up to Z:\Applications\Qi-Pro, then increment the version number to 4.4.7 and turn on the Beta flag, so those will show up in PreRelease.
+
+Brenda:
+-Doing a lot of bug fixes, most are pretty small, so need figure out how to reproduce 
+-Also doing a lot of work on the multi-well, multi-curve loader.
+
+Roger:
+
+Laurie:
+-Geotools offers the functionality, INT Tools is the interface 
+
+Brenda:
+-I still don't have a working connection to Petrel.  Once Alex had turned off his firewall to let me through.
+
+Laurie:
+-How about if we piggy back on the U of C license so we can test our system?
+
+-----
+
+Business & Development:
+Kirk:
+-Had a great call with CalValley.  Trying to bring Carl into a discussion with them.  No concerns really about hte software; it is more really around their data.
+-Cameco: Had a meeting with them.  They are a Decision Space client as well.
+-Birchcliff signed up for the webinar.
+-Vista laid off all of their geophycists 
+-Husky/Cenovus just laid off 1000 
+
+Vincent:
+-Talked to SM energy
+
+-----
+Marketing:
+
+-----
+Seismic Interpretation Services:
+Carl:
+-...
+-Peyto project; going to have a meeting on Monday, well analysis, modeling, and classification 
+
+Draga:
+-Headwater: Have been working on this gyro report, working on the figures for the last section of the report.  Need to revise everyting to see how the sections and subsections are connected.
+
+Kirk: 
+-
+
+
+
+
+
+-----
+
+2021.03.22
+I. Scrum:
+
+-Brenda: Working on Petrel plug-in, asking if Alex can turn off his firewall 
+-Roger: Updated installer for dealing with multiple versions of Headwave installed so that it grabs the latest version.  Also, working on Carl`s bug where Xplot settings are jumping off of the screen when you move mouse over the Xplot window.
+
+-----
+
+		// check if we have to leave a space for a well.
+		for (int iWell = 0; iWell < m_wellCount; iWell++) {
+			int wellTrace = m_listWellTraces[iWell];
+			if ((incrementTr == 1 && (trnum >= wellTrace && trnum < (wellTrace + labelInterval))) ||
+				(incrementTr == -1 && (trnum <= wellTrace && trnum > (wellTrace - labelInterval)))) {
+				j += pDoc->GetColorTrackWidth() + 2;
+			}
+		}
+		
+		
+2021.03.26
+I. Scrum:  
+  
+Brenda:
+-Yesterday, got a  license for Petrel 
+-Writing code to get ride of the Lumina 
+
+2021.03.29
+I. Scrum:  
+Brenda:
+-Working on Petrel plug-in but has lost access to the license again
+-Working on Ocean plug-in but a license costs $4k per month so we will rent it only for 1 month
+-Working on multi-well selector--now just need to add the ability to pick wells from a drop-down
+
+Roger:
+-Working on colour bar templates so now I need to add a colour swatch to the combobox
+
+Kevin:
+-For me there were a few bugs that came up with the Headwave connector like having a space in the text so I need to trim values
+-For the Headwave connector I was using %f but it doesn`t put the exponent on and it has to start with 0 ... so the slope is 0 in Headwave and it doesn`t work
+-Also need to add the NAnd checker
+
+2021.03.23
+I. INTViewer Meeting:
+
+OpenVDS+
+
+See https://interactivenetworktech-my.sharepoint.com/:v:/g/personal/juan_reyna_int_com/ESrsivN9WDtBnnvWUYSgmCEB2rqNlNEiOjMf_yD0egm_4g?email=juan.reyna%40int.com
+
+II. Scrum:
+
+Kevin:
+-Cut a new release: 4.4.7 and send that off to Mexican team to try installing 
+
+Brenda:
+-Working on Pip 
+-Going to try to get the connector working for Petrel 
+
+Kevin:
+-Start looking at Java stuff
+-BTW, Carl said Mancal, has the latest release 4.4.1, with a big dataset, which was really slow, so Carl sent them 4.4.6, and now it is much faster so they are happy.
+
+2021.03.24
+I. OSDU™ Data Platform Mercury Release Launch (USA/Canada, see https://www.youtube.com/watch?v=sMv2yNnXKsw):
+-Open Subsurface Data Universe (OSDU)
+
+https://github.com/Azure/osdu-infrastructure
+https://github.com/google/framework-for-osdu
+
+II. Scrum: 
+
+CDialog vs CView
+
+Inline and Crossline in MainFrame class 
+-Create combobox in C++, not in the IMAC.rc file 
+
+2021.03.30
+I. Scrum:
+
+Kevin:
+-Installing Windows Pro for Laurie but somehow it automatically upgraded to Enterprise 
+
+CTRL + Windows Key + Q gives Microsoft access 
+
+-Updated Kaushal`s project because he had put it into his Desktop folder so had to login as his user.
+-Finished a couple of Carl`s new bugs 
+
+Brenda:
+-Spent the morning working on that edit list control 
+-Spent the afternoon working on Petrel stuff 
+
+Roger:
+
+DC 
+
+See OnPaint for CEditListControl 
+
+Every element has a DC and you get the handle there 
+
+Kevin says I should look at how I draw a white box with a line through it 
+
+In the Xplot frame, we added images in beside the list 
+
+OnNmCustomDraw 
+-> Check where it gets the DC 
+
+Kevin: 
+You can either draw the icon onn the fly or make the icon 
+
+2021.03.31
+I. Scrum:
+
+Roger: 
+-Call run_installers.py from within TeamCity 
+
+Brenda:
+-Getting close withthe PIP files 
+
+Kevin: 
+-Gave Laurie her machine 
+-I think I am clear to start that Java evaluation 
+
+II. QI-Pro - Features and Bugs (see Qi-Pro - Features And Bugs 20210331.m4v):
+SEGY tools: Make 3D SEGY from point dataset 
+-Kevin: This is from Microseismic 
+
+Color wheel: Create or insert colors between classes 
+-Leave where it is 
+
+Seisware connector version warning: 
+...
+
+Addition of Slider in "Cross section window for time slice/horizon slice"
+...
+
+ASCII or EBCIDIC header of classified SEG-Y generated by QI-Pro:
+...
+
+Multiple 2D lines in one QI-Pro project: 
+-Laurie: If we get the international projects we wantt o get then we are going to need this
+
+Deactivate Xplots in Xplot manager window: 
+...
+
+SeisWare - reconnect more efficiently: 
+-Laurie: I don't know what this is 
+-Kevin: Yeah, we weren't to clear on this either 
+
+SeisWare - Set the server location:
+-Set to Low/Low 
+
+Highlight regions as polygons rather than boxes: 
+-Laurie: Change this to high 
+
+Edit User Lines:
+-Laurie: This is related to the map, so we were going to wait until we get INT tools to see if they have it in their map 
+
+Curved Cut-off lines: 
+-Kevin: Use a polygon instead of a line
+
+Crossplot Context Menu: 
+...
+
+Element name on crossplots: 
+-Carl: I support the tooltip option
+
+Polygon - Snap together feature: 
+-Brenda: With it being Java, I don't think we will be able to use bits and pieces
+
+Loading (rock physics) templates as cutoffs as a file: 
+-Translate rock physics templates to cutoffs
+
+Color bar for well data:
+-Kevin: Once Roger gets the color bar tempaltes this would be a natural extension
+
+Display curve order: 
+-Reorder option for how curves are displayed
+
+Specify color or well logs: 
+...
+
+Alphabetize and categorize attributes:
+...
+
+Show tops without logs: 
+...
+
+Xplot window hotkeys in Help files: 
+...
+
+Search button in QI-Pro help file webpage:
+...
+
+Remove the classify by horizon points from the cross section window to speed up the display:
+-Laurie: If we classify zones by horizons that are not in our zone of interest can't we have to option to not display them?  (In the classification window)
+-Kevin: It doesn't change the speed 
+
+Transparency on Xplot template:
+-Brenda: This was low because you can turn them off manually 
+
+Additional window for visualizing attributes seismic in variable density or wiggle display:
+-Kevin: We already have this in CSI 
+
+Highlight points boxes toggle off/on button: 
+...
+
+Attribute type or category drop down: 
+...
+
+Add tool tip for complex settings in QI-Pro: 
+...
+
+Attribute Advisor Updates: 
+...
+
+Tops don`t load without unit: 
+...
+
+Toolbar Icon Size (L/S):
+-Laurie: Leave this as low 
+
+Grid Input: 
+...
+
+Remove the classify by: 
+...
+
+Class management diagram:
+...
+
+Color bar legend sizing: 
+-Carl: I`d bump this one up 
+
+Help - Check for Updates: 
+-Kevin: This will check the FTP site and install a new version 
+-Laurie: I don`t think this is that important--we have higher priorities 
+
+Load a Synthetic: 
+...
+
+Crossplot seismic with well data:
+-Laurie: This is what a lot of users ask for but let us leave it at Low/Low for now 
+
+DecisionSpace on the Cloud: 
+-Laurie: This should get bumped up because we have a login for Open Earth data 
+
+III. Intro to Seismic Interpretation with Carl Reine (se Intro to Seismic Interpretation Carl Reine.m4v):
+What Seismic Is: 
+-Rocks are separated into layers 
+-We have a seismic source which is an explosion, and then a seismic receiver
+-You get a trace, with your wave bouncing back at you 
+-You also have other issues where a truck driving would produce noise 
+-If you have many receivers, then you have a lot of offsets 
+-Another way to look at it is to consider a point down in the earth  
+-Then with all of the shots and receivers you have the same midpoint (this is called a common midpoint gather)
+-This is a prestack gather  
+-We need to figure out how to configure velocities to get to depth 
+-The data gets sent to processors, which do some things to remove some noise  
+-You can correct for time, which is called normal moveout correction (NMO)
+
+Prestack Gathers:
+-This is what your raw data might look like 
+-In the reds, you are seeing peaks 
+-If you are compressing the ground, and you have an increase in velocity (reds)
+-If you decrease the velocity, this is called an expansion (blue)
+-How bright or dim they are, you have how different ...
+-Along this green, your amplitudes at the near offset are not as ... as your far offsets 
+-If you look at the shape of that AVO curve, that tells you a lot about the properties of the earth  
+
+RF is just he amplitude of these reflections, Vp vs Vs  
+
+-A P wave (primary wave) is a compressional 
+-How fast it moves out is your P-wave velocity 
+-Shear wave is the S-wave 
+-The Shear wave, instead of it being a compression and expansion of particles, is particles moving back and forth 
+
+Equation:
+-When we talk about P-impedance  
+
+-Impedance is just a fancy way of saying velocity times density 
+-The reflectivity equation ..., the change in P-impadance, S-impedance, and desntiy ...we can get the properties back, and relate those to geology 
+-Shale which is quite soft is quite slow 
+-A limestone carbonate is very fast  
+-Shales don`t have a lot of space so they make poor reservoise 
+-Sandstones have more pores so they make better reservoirs  
+-Another thing we look at is clay content  
+-If you go behinda coral reef, you have bits of shell, and those combine to make a rock  
+-Calcite mineral has almost no pore space so they would not make a  good reservoir 
+
+Vp/Vs is good at showing if you have a high clay content 
+P-impedance is good for showing if you have a high porosity 
+
+-You look at the Xplot and you see different clusters 
+-High Vp/Vs 
+-High P-impedance is usually stiffer rocks like sandstone 
+
+-We work with the gathers, but most interpreters work with the stack, 
+
+
+2021.04.01
+I. Scrum: 
+
+Brenda: 
+-Checked in code for Petrel plug-in 
+
+Roger:
+Help files: -Horizon XY
+-Edit Class Names with RGB 
+-Adding build step to TeamCity, just need to update buildAgent permissions to NetworkService 
+-Work on color bar templates, this time drawing directly instead of using bitmaps and IMAC.rc file since the user needs to be able to update/add new templates dynamically
+
+Kevin: 
+-Back to writing Java code today 
+
+
+II. Weekly Staff Meeting:
+-
+
+Roger:
+-Previously, the build server and the installer generation scripts were running separately, but there was a dependency so that if the build and the installer scripts were running at the same time it resulted in an older version of QI-Pro being deployed, so now integrating the installer scripts into TeamCity to avoid that. 
+-Working on color bar templates.  Now they load and automatically generate the *.cb files based on Carl`s color bar input files, so now working on the color swatch portion so people can see the color without actually having to open the specific *.cb file.  Ensuring this is dynamic by drawing the color bar swatch in the source code instead of using static *.bmp and *.rc files.
+
+Laurie:
+-It is always good to mention that we can do inversions
+
+2021.04.05
+I. Scrum:
+
+Kevin: 
+-Got Laurie working on her new PC 
+-Laurie found a new 
+
+Roger: 
+-Added last build step to TeamCity for installers
+-Working on Color Bar Templates 
+
+Brenda:
+-It is in the initialization of the Flex stuff that it fails 
+
+2021.04.07
+I. Scrum:
+
+Kevin: I did revert that min/max button that Laurie didn't loke 
+-Then I looked at zone filter and class filter and why I didn't put that into the points density function 
+-Calculating points density: You have the bin, and at every point in the Xplot, you have to calculate the number of points in that bin, but this is slow, so then I made one call to points density fast.
+-Carl asked: Once you move to the next point, why do you have to calculate the ones you have already calculated again?  It is a linked list of nodes, I don`t even remember how I did it.
+
+Roger: 
+-Make combobox wider, and color swatch portion wider 
+-Add button to load extra color bar template files 
+
+II. Intro to Seismic Interpretation with Carl Reine Part 2:
+What Makes a Seismic Reflection and What Changes Occur?
+-On each layer, certain sound bounces back, and certain portion goes deeper.
+-How do we know how much bounces back, and how much goes deeper?
+
+Let R_0 = reflection coefficient
+ρ = density
+V = Velocity
+
+      V'p' * ρ_p - Vpρ_p
+R_0 = --------------------
+      V'p' * ρ_p + Vpρ_p
+	 
+Where V'p' = I_p (p-Impedance)
+
+-Each trace is one spot on the survey
+
+Rock Properties:
+-Rock grains: Made of different minerals, quarts, calcite, limestone, or clay
+-What goes on in between the mineral grains?  Most of the time it is filled with water.
+-The first layer in the ground is soil.  Pore space in soil is normally filled with air.
+-The next layer has pore spaces usually filled with water.
+-Eventually at a deeper layer you will get organic shales which are heavy clay-rich minerals.  This is organic rich which is plant or animal which eventuall. becomes oil.  Peat bogs that get squished can turn into goal.
+-Coral reefs that get squished can turn into oil and gas.  Whether it turns into oil, gas or coal is determined partly by the amount of pressure.
+-Oil which is lighter than water pushes up until it hits a rock layer than it cannot get past.
+-Same thing with gas--gas is going to bubble up.
+-We need to figure out, what is causing these amplitude to change, is it what is in the rock?
+-When companies are drilling wells they are trying to target traps.
+-Oil and water are going to change the rock properties differently
+
+2021.04.08
+I. Staff Meeting:
+
+-Intro to Oswaldo Romero 
+
+Roger:
+-Color bar templates: users can now load new template files into the color bar view.  About to send that off for code review.
+-Update help files 
+-Loading templates as cutoffs, etc.
+
+
+I. Scrum:
+
+Roger: Need to handle exception if the %appdata% ColorBarTemplates directory does not exist 
+Kevin: I found that I just needed to extract the jar files to view the source code 
+-There is a new client, OMV, and they are on Petrel 2019.4 
+-The latest Petrel apps are here:
+
+z:\Applications\QI-Pro\Installers
+
+-We have a 2020.3; we have no 2019
+
+2021.04.12
+I. Scrum:
+Kevin:
+-Documentation says that when you are finished with a bitmap you select it out by selecting a new one.  I had a  pointer called pointer to old bitmap, then delete the one I want to delete, but the problem is that when I select the old one it wasn't initialized.
+-Remember I fixed a flashing bug, and then I didn't like that it was allocating with new and delete so I changed it to value members and that is when the bug showed up.
+
+Roger:
+-Add folder with an arrow pointing in or a big plus symbol, kind of like an import feature, change from "Add New Color Template" to "Import Color Template"
+-Don`t close the window when importing a new color templte; just add an item to the combobox item list
+
+Brenda:
+-Working on INT demo code
+
+II. Troubleshooting Aspect Energy Performance with Oswaldo Romero (see "Aspect Energy Performance With Oswaldo Romero.m4v"):
+
+W:\1_Active\Aspect_Energy\...\Inversions 
+
+2021.04.13
+I. Scrum:
+
+Kevin: Carl is having a problem exporting the 7th gen project 
+-Do the Java demo 
+
+Roger:
+-Regenerate *.cb files when number of classes changes 
+-Maybe RGB is BRG, check the CPen constructor, or it may be the alpha 
+-Also check the case where the swatch is less than the number of classes, then increase the width of the line (try a color table that is 4 colors, so you don`t want something that is 4 pixels wide--try all the cases)
+
+Brenda:
+-I will be working on the Petrel stuff
+
+2021.04.14
+I. Scrum:
+
+Brenda:
+-Created all of the plug-ins, but can`t get ... this morning so I was unable to test them all.  I got 2017 tested.
+
+Roger:
+-Previously in C# I used something called a ServiceLocator, CRuntimeClass because I wanted to use the MFC way 
+-Kevin: consider the main form pointer 
+
+2021.04.15
+I. Scrum:
+Kevin:
+-Carl`s bug, it is slow working on the network at 100 MB, so I copied the files down overnight from the network drive to my hard drive which took 6 hours.  It has nothing to do with the classified, the ComputeEngine is fine.  It has to do with the start time stuff.
+
+Roger:
+-Add backslash '\n' to tokenizing 
+Installers:
+-Update the little screen grab of the user parameters of headwave in the installer but with empty boxes where the drive is located
+-Put a red circle and an arrow to show what needs to change -> COMPLETE
+-Last page where we pop it up in red, Laurie was a bit annoyed.  Kevin said he would just leave it open and enter in Headwave but Laurie wants a different way.  Ask if the user wants to view the readme file on last page.  Add a checkbox to see if they want to view the readme file, and leave it on by default.  Generate a readme file with the custom user values.
+-Laurie ask, "why do I have to install so many times?"  
+-Possibly put config.dat in %appdata% SoundQI but first check in the install directory because if there are multiple version of QI-Pro installed they may not get the right config.dat values.
+
+II. Staff Meeting:
+
+Brenda:
+-Taking a look at the INT libraries, more of the 2D stuff
+-Doing work on Petrel stuff but was not able to get a license since yesterday so have not been able to test the generation of the pip install files
+
+Roger:
+-Headwave installer updates to make it more user friendly
+-Colorbar templates review updates 
+
+Kirk:
+-Sent client emails to Vince to cleanup
+-We will have our 4.5 launch in an email going out to clients
+-Energy 88 out of Australia, Bridgeport, Petronos, Chevron 
+
+
+Vince:
+-Trials: ONB
+-Crown press: a country in the permian basin
+
+Oswaldo:
+-Testing new version: 4.5.1 
+-Crash bug has been fixed 
+-Laurie: Aspect data, I know you are waiting for a fix, so when I added a timeslice it almost ground to a halt, so Brenda is working on that.
+-Kirk: Mateo at Birchcliff needs the most recent version.
+-Kevin: It won`t be the v4.5.1 because of that export bug.  It probably won`t have Brenda`s timeslice fix but it will have the export bug fix.
+
+Carl:
+-The Peyto stuff is done and wrapped up
+-Headwater: I sat down with an employee to make sure it was loading properly
+-7th Gen: We are in the same state; Draga has done some great work calculating... ...we are kind of waiting for the last bit of data to finish that off.  We have the abstract for their project minus 1 figure.
+
+Draga:
+-Bluware has donated their software to the University of Houston
+-Laurie: I have offered our software to them as well but they haven`t gotten back to us so I will need to contact them again.
+
+Laurie:
+-One thing on the marketing front to wrap up
+-We have four guys on our advisory board.  We are getting some good traction on social media so please like their posts. 
+
+2021.04.16
+I. Scrum:
+Kevin: Schlumberger wants to charge you like $100 000 per year.  We want an hourly rate license for use of the software.
+
+Brenda: I can just generate with the new Petrel version and cut it because I don`t have to update the references.
+
+Kevin: Looking at SEG-Y export stuff.  It is like a house of cards almost.  ...you can give it the start time pointer, but if you change the start time in the header it doesn`t classify in the right spot.  
+-The other way to do it would be to invent our own format and load it
+
+Roger: Update installer to have multiple folder paths on the same screen for Headwave Data/Headwave Workspaces/Headwave Program path (see https://nsis-dev.github.io/NSIS-Forums/html/t-312921.html and https://nsis.sourceforge.io/Setting_Default_Location_for_2nd_(Data)_Directory_Page)
+
+2021.04.21
+I. Scrum:
+Kevin: Oswaldo: They want to know about the FlexLM daemon file in the installer.  SQI.exe is the daemon file.
+-Kirk called: big workshop tomorrow, OMV guys, Laurie said she is not very familiar with the petrel connector, so would it be possible to join her 
+-I put the installer for QI-Pro v4.5.2 on the FTP site 
+-Apparently they have a meeting at Geoprocess Autos at 10 AM
+-When you export a classified volume, I put those ... flags to identify a select region
+-Mateo canceled, we had a meeting with him today for Birchcliff
+
+II. Intro to Seismic Interpretation:
+-Clay soils tend to have: Thorium, Unranium, potassium
+-Sand has more space to store the oil; clay is probably where the oil is generated
+
+Deviation survey:
+-Gives you the change in x,y
+-TVD: True Vertical Depth (z-coordinate)
+-MD: Measured Depth 
+-You can convert between MD and TVD by knowing these deviation surveys
+
+Tops:
+-When running your well logs, you only know your measured depths.
+
+...
+
+-In the oil sands, you don`t want to drill wells very deeply
+-In the oil sands, because it is so shallow, they don`t have time to have a vertical section and then go horizontal, so they will start going horizonal immediately
+
+Young Modulus:
+-The ratio of the pressure applied to the amount of deformation--basically it tells you how "squishy" your rock is
+
+Poisson`s Ratio:
+-If you apply a stress to a block, when you compress downwards, it will squeeze out a little bit
+
+-> Watch Carl`s seismic interpretation presentation
+
+-You can use the above to calculate your Vp and Vs
+
+II. Staff meeting:
+
+-----Original Appointment-----
+From: Laurie Weston <laurie@sound-qi.com> 
+Sent: December 7, 2020 11:17 AM
+To: Laurie Weston; Carl Reine; Kevin Lee; Kirk Graham; Vincent Rajic; Draga Talinga; Sandi Bredy; Roger Moore; Brenda Maloff; Oswaldo Romero
+Subject: Staff Meeting
+When: April 22, 2021 1:00 PM-2:00 PM (UTC-07:00) Mountain Time (US & Canada).
+Where: SQI Meeting room
+
+
+STANDARD AGENDA (To be revised as required for each meeting)
+ 
+•	Operations update
+  o	Consulting projects
+  o	QI-Pro update
+•	Sales update
+  o	Canada & International
+  o	US & Mexico
+•	Marketing update
+  o	Tradeshows
+  o	Website
+•	Other
+
+-----
+
+Operations: QI-Pro development:
+Kevin:
+-Release QI-Pro 4.5.2
+-Testing INT demo but have been missing some important components for the 3D until yesterday
+
+Brenda:
+-Cut some pip files for the 4.5.2 release (for Petrel?)
+-Looked at INT demo
+
+Roger:
+-Helping Kevin with reviewing the color bar templates.
+-Performed several installer updates. The last update I am working on involves combining several install pages into a single install page for the Headwave components, but to do that I have to create a custom dialog instead of using their pre-build dialogs.  So I have added this code, but for some reason when I add this custom dialog then other functions are not getting callled.  I have a test setup where the functions are clearly getting called, but with mine that has both the function calls and the custom dialog some functions are not getting called, so I may need to contact support to help with troubleshooting.
+
+Operations: Sales:
+Kirk: 
+...
+
+Oswaldo: Geoprocess autos.  
+-Tomorrow we are going to visit with Mateo
+
+Kirk:
+-CNRL: Got feedback on 3D, with the Headwave connector.  
+-Laurie: Their object is to just give us help with the 3D; they have no intention of buying.
+
+Vincent:
+-Wintershell got back to me... 
+-Aspect Energy, Laurie you`re working on that.
+-Marathon: money is in the bank
+-Ensign: Sent them an agreement for them for 12 months 
+
+Carl:
+-Seventh Gen
+-Waiting on a SeisWare license 
+
+2021.04.23
+I. Scrum:
+
+Roger:
+-Need to make %appdata% ColorbarTemplates 
+-Order of operations problem when %appdata% SoundQI is not present, it copies *.txt template files over but doesn`t have time to make *.cb files from that until they reload project
+
+2021.04.26
+I. Scrum:
+
+Kevin:
+-Setup Release branch 
+-Mateo over at Birchcliff txfer`d his data over and it has this funny spike in it ... deviation
+-Then he exports the horizons and they didn`t show up because they come over in units of "non-Petrel"
+-The problem is that Kevin does not want to change the way it works because Suncore is using now and he doesn`t want to break it for them.  Export is fine, it is just the import.
+
+Roger:
+-Kevin: Color bar templates, and you need something else to work on 
+
+Brenda:
+...
+
+Kevin:
+-Reviewing task list in hubspot
+-Roger, please work on this: Class Histogram hides behind application when cursor goes over... and then it disappears; it jumps behind a different application window.  Brenda: it probably does not have the proper parent.
+-Roger: Map icon is too small--ask Kirk, it may be something to do with his display settings.  Can ask Carl too.
+
+-----
+
+2021.04.27
+I. Scrum:
+
+Kevin:
+-Laurie got hacked b/c email got sent from her to Oswaldo to buy a bunch of gift cards 
+
+Brenda:
+-Got it so curves can be redrawn in a color 
+-Now I`ve got it so you can select a different color bar for the facies dialog 
+
+2021.04.28
+I. Scrum:
+-Projection distance in section window
+-Loading templates as cutoffs
+-Color wheel- Delete or insert new colors between classes.  Then the classified volume is going to have to be recalculated (i.e., ComputeEngine).  Would have to go to the classes after and shuffle it down.  Also add ability to delete.  "Create a New Color Set" really just extends this color set.  Change this button to "Edit Color Set" and then create a dialog to do it.  Right-click on "Class Colors" legend and allow user to choose "Delete" or "Insert" also could add a "Move Up" or "Move Down"
+-Change "Create a New Color Set" to "Extend a New Color Set"
+
+2021.04.30
+I. Scrum:
+
+Brenda:
+-Put color bar templates into edit list control 
+-Want to meet to discuss INT Viewer to discuss their high level classes and how to use them.  Later, I found out that they have a manipulator class.  I need that high level stuff on how these pieces fit together.
+
+Kevin:
+-At Divestco we had a full time test person whose job was to write and run test cases all day
+-Then before a release they freeze the code, and send the tests to all of the developers who each execute all of the tests for a day or two
+
+II. Staff meeting:
+
+Roger:
+-Merged color bar templates over to the mainline for QI-Pro
+-Helping Carl with a map view minimize icon problem, also started on color wheel insert/delete classes.
+->TODO: Send Kevin installer updates for code review
+
+Laurie:
+-Want to get a little more structured before we release a new version 
+-Daughter is doing programming for her computer major, music minor and when on to describe only happy paths
+-Want to possibly add a 3rd party typical user to test our software before it is released
+
+Sales/Marketing:
+Kirk:
+Laurie: OMV training has been pushed out but we are in pretty constant contact with them
+
+Oswaldo: 
+...
+
+Laurie: Several issues came up during the CNRL demo, wells all stacking up in one end
+Kevin: Yes, lost of deviations on that projection line.  
+
+Laurie:
+-That has been on our road map, to deliver a rock physics template library 
+
+Brenda:
+-We are now delivering standard color bar templates, so maybe we should do the same thing with rock physics templates 
+
+2021.04.30
+I. Meeting with INT Viewer Team:
+-Brenda: It is challenging looking through all of the source files to find what you require.  I need assistance with how to use mouse manipulator class, for example.  In your layers you are giving everything in world coordinates, but everything else is in ... coordinates.
+-Laurent: We can start from scratch and build an app.
+
+II. Scrum:
+Kevin: Birchcliff: 2 problems
+-
+
+-Put "this is release branch build" in a readme.txt file
+
+2021.05.03
+I. Scrum:
+
+Brenda:
+-If we can get a license to Petrel then I will make a list of everything I want to test.
+
+Roger:
+-Switch to get version for Release_Branch from there, not mainline.
+
+Kevin:
+-Working on Mateo`s bug, asking him to check that horizon file.
+-Petrel writes it out in subsea, but it flips the sign.  It must be a double negation... that`s the way that I read the logic.
+-It is simple to flip the sign every time we get a horizon file from Petrel, but ...also, this is only in time mode, not in depth mode.
+-The only thing I can think of is that they are writing out in subsea so they are flipping...
+-Need to give them another Mateo button
+Brenda: it almost seems on import, for the horizons
+
+2021.05.05
+I. Scrum:
+Kevin: Fixed a bug and cut a release for the Petrel stuff.
+-Laurie showed me some problems with Headwave, that I think I can fix 
+-OMV is having some problems, so it seems like whenever we start that... with Petrel, then it cannot find our FlexLM license.
+-There is one installation on a server so they have a single place that everyone in the company can run their version of QI-Pro.
+
+Brenda: I have it check in the registry, instead of looking in the installation directory for the flex license. 
+
+Kevin: But since everyone runs a single installation from their machine, we might need to individually install an environment variable on all of their machines.
+-Can you add an environment variable to the installer?  Point it to the same folder as where QI-Pro is installed?
+-Create an environment variable SQI_LICENSE_FILE and point that to the folder where QI-Pro exe is installed.  QI-Pro and the license file are usually installed into the same directory.
+-The FlexLM installer just copies the files
+-We already have this in QI-Pro: FLEX_ENVIRONMENT_VARIABLE
+
+Brenda: I think I kept that code in QI-Pro, but I think I got rid of the current directory code
+-...yeah, I am not really seeing the environment variable code
+
+Kevin: We are talking about every user at OMV that tries to use QI-Pro, so they start to get this FlexLM error, so I know what they are going to do...
+-We don`t really have an installer for the PIP
+
+Brenda: yeah, they install that through Schlumberger
+-Okay I will put in the environment variable stuff
+
+Kevin: Okay, if they have an LM_LICENSE_FILE
+
+Brenda: Today I will do those pips, then I will fix Laurie`s problem....then I will thread those timeslice issues.
+
+2021.05.06
+I. Scrum:
+Kevin: After 6 AM the fellow from OMV sent me a message.  Ten minutes after that Laurie beeped me, asking if I could help OMV.  Normally, Mateo, will have Petrel installed on their desktop, so you give them a license for the plug-in, a license for QI-Pro.  But here is what they have, they have one installation in the cloud, where they have 70 seats of Petrel 
+-Brenda: The license for Petrel is probably at least $100 000.
+-Kevin: I solved the problem by giving them 70 licenses, in demo mode.
+
+Brenda: Threading the slice but that does not improve performance much
+
+Kevin: I have been fixing all of those Headwave bugs.  
+-You know what, I was testing the installer, and I clobbered the QiProPlugin.py
+-If I get rid of all the green in QI-Pro their is still green in Headwave
+-The problem is that some of these are mixed start times 
+-This stack and the angle stack both start at zero, but this is cascaded from this first crossplot that starts at 500.  It is something to do with the starttime.
+-Geoprocess Ados is having problems finding the config 
+ 
+II. Discussions on Improving Color Bar Templates:
+
+TODO:
+-Check if linesToSkip is not equal to zero
+-When someone picks a new color bar template *.txt file, have that item be selected in the combobox
+
+III. Staff Meeting:
+STANDARD AGENDA (To be revised as required for each meeting)
+ 
+•	Operations update
+    o	Consulting projects
+    o	QI-Pro update
+•	Sales update
+    o	Canada & International
+    o	US & Mexico
+•	Marketing update
+    o	Tradeshows
+    o	Website
+•	Other
+
+-----
+
+Operations update: QI-Pro:
+Kevin: INT Viewer: We had a programming meeting with them.  They do not support VDS, or SEG-Y for 3-D, in the sense of feeding the 3-D rendering software.  
+-Also they don`t support opacity; we would have to spend money for them to developer this.
+-Laurie: Without VDS, how do we make it interactive?
+-Kevin: I did some updates for Headwave, except for that one last bug, it is kind of a tricky one
+-Then a coupld of demos, I think OMV went well.
+-Geoprocess Ados: Was supposed to meet at 3 PM but he had internet problems
+-At OMV they have 70 licenses for Petrel, so I talked to brenda, so when you start Petrel it won`t consume one of our QI-Pro licenses.
+-Discussed with Oswaldo and Roger about color bars
+
+Brenda:
+-Fixing a bug for Draga, it had to do if you had a volume that had an inline or crossline that wasn`t one....
+-Then I cut all the pips for Petreal
+-Looking at making time slices go a little faster; did some threading on time slices but it didn`t really help it go that much faster.
+
+Roger:
+-Added Release-Build branch to Continuous Integration Server (TeamCity) so we can push out bug fixes to production a lot faster.
+-Reviewed how color bar templates work, got feedback from Oswaldo on how to improve and clarify functionality.
+-Added Insert/Delete/Move Up/Move down for color bar viewer classes.
+
+Sales update: Kirk:
+-Suncor PO, looks like it will be in our hands this week
+-Reached out to Mosum`s funding, and that has been approved
+-Ark/7th Gen: Carl has that one, tomorrow
+
+2021.05.07
+I. Scrum:
+Kevin: I have found a defect with that config.dat file.  When you install Headwave you can assign it wherever you want, to the D:\ drive, say.  But then if you install QI-Pro without Headwave, but it doesn`t put the config.dat in %appdata%.
+-> Only put config.dat in %appdata%, and the Headwave installer should overwrite config.dat if it is already there.  The other QI-Pro installers should just check if the config.dat exists, and if it there, don`t overwrite it.
+Then the code will always find it in %appdata%
+
+Roger:
+TODO:
+-Color Bar Templates: When importing, change the file filter to be *.txt; *.cb
+-On import color bar template *.txt, automatically select that one
+-Remove "Import Color Bar Template" button and put it as the first item in the combobox list, "Add new Color Bar Template"
+-Don`t bother saving the decimated values as *.cb files 
+-Change save as color bar with the color bars in %appdata%\project name.  So only have in this directory the color bars saved by the user.  Load these user-saved ones as "Color Bar Name.cb"
+-The .txt files are just a list of RGB values, but the *.cb files have RGB plus the class names
+-Put "User defined - color bar file name": make it one character, like a mu
+-Put combobox in xplotsettings: here don`t load the custom user-defined color bar *.cb files 
+-Need to retain the names (say if the user adds a new class name), unless, you restore *.cb file
+-Don`t put import on the dropdown, just change the extension to *.cb, *.txt on the Open Color Bar
+
+Kevin: Today I have a meeting with Mateo, then another meeting with Geoprocess Ados
+
+Brenda: I threaded that TimeSlice generation, which wasn`t faster, so instead I optimized the draw code so it is faster.  Kevin: I think you should still pute that TimeSlice generation in a background thread.
+
+2021.05.10
+I. Scrum:
+-Brenda: INT Viewer: Whether they have that capacity function, and whether or not they support VDS 
+-Kevin: We can draw a 3-D volume with INT, but we would have to redraw everything you move the mouse.  It is not like Headwave that updates quickly.  I see the way Headwave does it, they draw it in blocks, in granularity, where they get smaller and smaller in focus and then it stops.
+-Brenda: To tell you the truth, the stuff that we need to do, to do it through them, it wouldn`t be fast.
+-Kevin: We can`t hold the whole thing in memory, either.  That is kind of why the Headwave thing works, it is not holding it in memory, it is computing it.
+
+II. INT GeoToolkit functionality review:
+
+Brenda: The INT code is quite high level so we cannot get down to the lower layer (with more granular control)
+Laurie: We need to be able to read in a VDS and display it within seconds
+-The two things I am looking to get from this is: get a more beautiful map with layers.  The second thing I want to show is the well log display.  
+Brenda: Are you looking for 2-D or 3-D?
+Laurie: Both
+Brenda: All we would be doing (with the 2-D?) is rewriting what we already have so we wouldn`t be getting anything extra, we wouldn`t be getting anything
+-We would be getting some gridding software; I don`t think they have contours.  Writing the contour algorithm is not hard to do.
+Laurie: We are buying not for the map tools.  We are buying it for the 3-D.
+-It was shocking to me in that you don`t think they have opacity tools, because every other company has opacity tools
+Kevin: It is two things: the changing of the volume, non-static version...and Laurent was pretty clear, we only can support opacity for up to 7 layers, but they are working on it.
+Brenda: There was one we used at Seisware called Mercury, so there are other toolkits that might be a better fit for us.
+Laurie: The advantage of INT Viewer is that they can read VDS files, and for 3-D images we cannot use SEG-Y files.  The objective is to get an interactive 3-D body that we can show opacity.  INT has all of the 3-D files that everybody expects, and they have a partnership with Bluware.  ...so it seems like a good starting point from my point of view.
+Carl: You have to understand that Laurie and I are not programmers...is it clearly insurmountable, so should we drop it or not.
+Kevin: We have been looking at it, and they have demos...
+Laurie: I am already seeing through the red box, so it has transparency.
+Kevin: I was thinking that we could connect to it through some kind of network protocol. We need the VDS format, because it is a block format.  If we are rending VDS files, we don`t want to render the whole volume each time you move the mouse.
+Brenda: If you are going to do the whole volume, you cannot render every single sample...it is just not going to render fast.  You want to do those calculations so at that point you know what you are rendering.
+Kevin: I have never seen Petrel`s 3-D with opacity.
+Laurie: It is very similar to Headwave`s.
+Carl: The first step is for us to get VDS into QI-Pro, and the second step is...
+Kevin: The other thing is that they have functions for reading and consuming VDS`s, and rendering 3-Ds, so we would have to write the stuff in the middle...which we did with Headwave, which took a long time.
+Brenda: VDS does sound like it is a standard bricked format.  Mercury had their own brick format.
+Laurie: If we know we have to migrate to the cloud within 18 months to 2 years, what should we do?  
+Brenda: Consider what kind of cloud services we want to offer.  If we go with Azure, then we would want to work with C#, not Java.  Java would not be a good choice if we went with Microsoft.
+...
+Laurie: I am looking for justification to make a decision.  If it is no, then there must be a good, insurmountable reason.
+Brenda: INT does not do SEG-Y conversion at all.  They have this pipeline function, they consume VDS, but if you want to be able to show a SEG-Y then we would have to write some code to feed it into a pipeline and feed it to INT.
+-VDS: Calculating a timeslice would be much faster.
+Kevin: For us right now inlines are fast, xlines are slow, and time slices are slow.
+
+2021.05.11
+I. Scrum:
+Kevin: The QI-Pro/Petrel license shouldn`t look for the QI-Pro license, or the Petrel license; it should just look for the QI-Pro/Petrel plug-in license...so that is why it is checking out 2 licenses
+Brenda: Okay, I guess that is why I misunderstood that...
+
+Kevin: First of all, Laurie was pretty upset yesterday, as we saw.
+Brenda: I don`t think that INT Viewer is the right toolkit for us.
+Kevin: Laurie does not want to hear why something cannot work.  She wants to hear why it can work.
+Brenda: If you look at OpenInventor, they have a seismic volume, and they are rendering it opaque...and they have all of these wells beautifully, so why would we go with a company that does not have this functionality.  Not only that, but it is C++, so it can mesh with our code; we can probably have it in the same executable.
+-They are the OSDU as well
+Kevin: I agree, and I don`t think that INT is there yet.
+-What came out of his email is that they don`t fully support VDS yet.
+-Then there is this OMV problem, where we had this meeting at 7 AM.  There was a licensing problem, so they ate up the 20 licenses pretty quickly.  If they go into Petrel, that ties up a license.
+Brenda: If I am checking out both a QI-Pro and a Petrel each time, that would explain why they are using up their licenses.
+
+Roger:
+Check into mainline
+
+2021.05.12
+I. Scrum:
+Brenda: Added threading for timeslices in the map view window
+
+
+II. QI-Pro Product meeting:
+Color Bar Templates:
+-Should not have to save it to the dropdown %appdata% directory, should just save it wherever you want, and it should automatically also save to the %appdata% directory
+TODO: Have a color bar templates meeting with Roger`s updates 
+-Brenda/Oswaldo: Discussing MapView
+-Headwave doesn`t work with crossplots and zone filter.
+
+-----
+
+2021.05.13
+I. Scrum:
+Kevin: The problem with OMV is back, we thought we had a solution with the guy, he has tried everything, he says, the Horizons don`t show up.
+Brenda: We don`t have his volume, do we.
+Kevin: For me, if I don`t get to distracted, I am going to work on Headweave.  Now I have that other one where it does that crazy classification.  Then I have that other classify bug on my pending list.
+
+II. Staff Meeting:
+
+
+-----Original Appointment-----
+From: Laurie Weston <laurie@sound-qi.com> 
+Sent: December 7, 2020 11:17 AM
+To: Laurie Weston; Carl Reine; Kevin Lee; Kirk Graham; Vincent Rajic; Draga Talinga; Sandi Bredy; Roger Moore; Brenda Maloff; Oswaldo Romero
+Subject: Staff Meeting
+When: May 13, 2021 1:00 PM-2:00 PM (UTC-07:00) Mountain Time (US & Canada).
+Where: SQI Meeting room
+
+
+STANDARD AGENDA (To be revised as required for each meeting)
+ 
+•	Operations update
+    o	Consulting projects
+    o	QI-Pro update
+•	Sales update
+    o	Canada & International
+    o	US & Mexico
+•	Marketing update
+    o	Tradeshows
+    o	Website
+•	Other
+
+
+Carl: 
+...
+
+Draga:
+...
+
+Kirk:
+-Bridgeport got a classification quote; and we put in some opportunities into 2022/2023
+-Borland: Support call with them; they have already renewed as well.
+-Pemex: Oswaldo has been having a huge impact with Pemex, and Geoprocess Ados.
+-Having a called with Andy from Sasol
+-Birchcliff: Check this graph in Hubspot.
+
+Vincent:
+-Having a meeting with Kinder Morgan on their renewal
+-Kevin is working with Mateo on the license
+-SM: maybe we can roll out some sort of temporary license to Tony and his team
+
+Oswaldo:
+-OMV: We have a user who had a problem writing data from Petrel into QI-Pro, so we had a workaround that Kevin put in
+
+Kevin:
+-I put it into debug and cannot duplicate it.  I don`t think it is the same issue because Mateo was in depth mode..
+-We sent him a QI-Pro/Seisware version, but then maybe they updated or they got a different version.
+
+Oswaldo:
+-...to see if we can give it to Aspect Energy
+
+Kevin:
+-Seisware licenses: connected with seisware, where we got their licenses and I sent them our license
+-INT Viewer software, I looked at it in more detail this week; we are recommending not to rush into it too much; the VDS isn`t totally supported.
+-It starts so QI-Pro checks out a license, then it loads the plug-in, so it checks out another QI-Pro license
+-We had a meeting with Sterling; I explained how it works, it is not just writing out the volumes, because you have to read all of the data in, and then write it out, and it was reading it in over the network.
+-Then I had to help my internal client, Laurie, with Headwave, but unfortunately we didn`t get it working in time for your meeting.
+
+Brenda:
+-Working with the Petrel plug-in.
+-Working on issues with the big data sets to make things go faster.
+
+Roger: Added drag and drop functionality to the color bar, in addition to the move up/move down/insert/delete
+-Updating color bar templates based on Oswald`s feedback 
+-Updated the continuous integration build server
+-Updated QI-Pro to only read config.dat from %appdata% to follow DRY principle
+-Researching automating backups for QIPro_Licenses databases
+-Updated script to automate getting the latest python files for Headwave installer
+
+Kirk (marketing update):
+
+I. Scrum:
+Kevin:They have a decimated horizon file, and what she did this time, is created a zone filter, classified by zone, and then she just took one horizon, and classified +/- 5ms, so I thought that was a pretty clever idea.
+-I learned something else yesterday, when you start workingon a bug, and then you put it into exclude, and then you do the merge, and go back to the code then it is hard to remember what was your code, and what was Brenda`s and Roger`s
+-Now there are more Headwave bugs that keep popping up
+-Previous company name was called Canadian Discovery
+
+Brenda:
+-When I was at Schlumberger, they brough in a new sales process, and they wanted it to be a sales-driven development.  So the sales guys are going to tell us what features we are going to build.  What ended up happening, is that the sales guys didn`t want to put their ass on the line saying and given feature would generate any money.
+
+Kevin:
+-At Veritas they wanted to get into marine processing.  The CEO spent millions on equipment, and we said, "shouldn`t you have a project first?" You can`t get a project unless you buy the equipment.
+
+Brenda:
+-I am working on the threading, and then I thought we could put the decimation in to make the loading of it go a lot faster.
+
+2021.05.17
+I. Scrum:
+Brenda: have just a little more work
+
+Roger: Almost done color bar templates, starting on database backup.  Then I think I will probably delete the old folder.
+
+Kevin: I resurrected my zone filter and class filter, for the density calculation, and just wading through code.  Have you looked at the density node table?
+
+When you are in the the crossplot parameters, density, and third attribute,and you click density...so basically, for each point on the graph, you have to count all of the bins that are in the square box...so it was loops inside loops, which took a long time, so you don`t have to look at all the points all the time.
+
+2021.05.18
+I. Scrum:
+Kevin: The problem with density mode is that I just did a nested for loop, and for every point on the crossplot, I look through every other point on the crospslot (see the square box).  This square box is Density Bin Size X and Density Bin Size Y in the Crossplot settings.  Now instead I am sorting them in one direction, by the X coordinate, so now I get into the X-value range and only have to compare the Y`s.  So Carl focussed on it, and wondered if there was a better way, and this is what we came up with.
+-See ComputeDensityNodeTable function in IMACDoc.cpp.  The size of the matrix is 1/2 of the bin.  Then I assign a linked list of points to each node.  Then I know that every ... it at least the distance of one bin...so you still have to compare those 8 bins around the centre bin.
+-It has to count those 8 nodes around the centre node (see CountNodeBinPoints)
+Headwave: The problem with Headwave is you run this command, called convert segy_to_vds.py.  
+
+Roger: Color Bar Templates:
+-Test installer
+
+Brenda:
+-Having issues with these threads.  The thread blocks, and then it hits the timeout.
+
+2021.05.19
+I. Scrum: Color Bar Templates:
+Roger: 
+-"Seismic Attribute" means "Third Attribute": When you scan it maps the attributes to the color bar. It only does it for a given crossplot, not all the other windows.  It should only affect the Third Attribute if you change the colors, and nothing else.  
+-Grey out the "Color Map:" label 
+-Can strip out all of the Third Attribute mode source code to simplify things 
+-Give them the color bar combobox in "Point Density" and in "Seismic Attribute"
+-Wait to actually change the colors until they 
+-Will have to change the serialization of the crossplot, to save the color bar combobox name (see code for well stuff, IMACView, the drawing of the wells, how it takes the color bar name, and gets the list of wells).
+-Have a distinction between color bar template files and the user-defined color bar files, like add a red dot or something (instead of mu), so instead maybe have mu - colorbar, and make sure the names line up.  Maybe add a custom icon, like a painters pallet.  Or change the background color instead.
+-Store user-defined color bar files *.cb into project directory instead of in %appdata% 
+-Do the sort in the utilities class, and then change the background color for the user-defined *.cb files.  Maybe put the user-defined ones at the top of the list
+ 
+Brenda: 
+-Map stuff is working, was juggling some code, and then was testing it at the end of the day.
+
+Kevin:
+-Class filter and point density mode: Need to add a hit count on the break point.
+-Headwave: Remember the story about the lag time?  It turns out the lag time is in the trace header...change the lag time for each trace, so I think that is the reason...the start time, but we use the ... which is the lag time, so I asked him if there is a way to flip this...so all I have to do is change one byte in the SEG-Y file...VDS converter...but then its dead, because it is indexing somewhere...that is probably why we have this Headwave crashing bug.
+-My next project is Open VDS
+Brenda: That is good, because it will make the timeslices go really fast
+Kevin: But it depends on if the inlines will be fast or slow 
+
+2021.05.20
+I. Scrum:
+Kevin: Fixed the Headwave issue; all I have to do is change the SEG-Y files...I just have to zoom to the right location and change the two bytes....the byte 109-110 is the actual start time.  We always have used bytes 105-106, which has the sign flipped.
+
+Roger:
+-How do the data members in CCrossPlotSettingsDlg get serialized?
+-> xplotparms is serialized, which is not in the dialog
+-How do I enable the CColorCombo CCrossPlotSettingsDlg for point density?
+-> Solution: Use OR:
+
+	GetDlgItem(IDC_STATIC_COLOR_MAX2)->EnableWindow(bAttr || bDensity);
+	GetDlgItem(IDC_COLORMAP_COMBO)->EnableWindow(bAttr || bDensity);
+
+Brenda: Have been working on the decimation.  Dealing with heap corruption and crashing and stuff.
+-The stuff I changed is how I generate the timeslice 
+
+II. Staff Meeting:
+
+
+
+-----Original Appointment-----
+From: Laurie Weston <laurie@sound-qi.com> 
+Sent: December 7, 2020 11:17 AM
+To: Laurie Weston; Carl Reine; Kevin Lee; Kirk Graham; Vincent Rajic; Draga Talinga; Sandi Bredy; Roger Moore; Brenda Maloff; Oswaldo Romero
+Subject: Staff Meeting
+When: May 20, 2021 1:00 PM-2:00 PM (UTC-07:00) Mountain Time (US & Canada).
+Where: SQI Meeting room
+
+
+STANDARD AGENDA (To be revised as required for each meeting)
+ 
+•	Operations update
+o	Consulting projects
+o	QI-Pro update
+•	Sales update
+o	Canada & International
+o	US & Mexico
+•	Marketing update
+o	Tradeshows
+o	Website
+•	Other
+
+________________________________________________________________________________ 
+Join Microsoft Teams Meeting 
+Learn more about Teams | Meeting options 
+________________________________________________________________________________ 
+
+Sales:
+Kirk:
+-...moving forward faster than expected for a company like Petronos.
+-New version for Pioneer, new version for Suncor.
+-...and Spur, wanted to track down where they went.
+Laurie: Have you heard of a company called Saturn?  ...put together a Geothermal specific demonstration.
+...you brought up the tailings ponds, Kirk, so we want to see other types of objective relating to environmental and other data types...
+
+Vincent:
+-OMV trial is ongoing.
+-Murphy: there is another potential trial.
+-Also, have a presentation with Shell, Dennis
+
+Consulting: 
+Carl:
+-Mancal: New projects are going ahead.
+-Laurie: ...any talk of him wanting to get QI-Pro into Crescent Point Energy?
+-Sounds like the Bridgeport model is going to go ahead.
+-Crownquest: Vince mentioned that already
+
+Draga:
+-Finishing up with the demo project, put together powerpoint 
+-Blackfoot ...volumes, and put them into driver project, so we have ... different seisware volumes.  Note that once we get seisware volumes in QI-Pro then we cannot link that to Headwave.
+
+Operations:
+Kevin:
+-Seisware format is little-endian, so Headwave falls over when we add that.
+Carl: Big-endian, little-endian, are options that you can select in seisware.
+Laurie: I did kick off the Seisare SDK and license for 40 days starting with May 25th, so we want to intensively focus on that plug-in during that time period.
+-...class filters with density mode option, ..., came up with a solution for that, so I did check it in and merge it with the master branch.
+-The bug in the classifying volume with Headwave where the ... volume didn`t match our volume, so found it had to do with the start time, so found that we weren`t indexing properly.  Jonathan gave me a solution on how to index the volumes properly.
+-...thought I had to rewrite the whole volume, but found I actually only need to re-write the first trace header.
+-...we got the kudos from Birchcliffe...this was a little utility that I wrote in segytools.  All it does is take a ... file, inline, crossline, then it takes that and creates a SEG-Y file.
+
+Brenda:
+-Have been working on timeslices, put in the multi-threaded stuff, also put in the decimation.  Carl made a comment that if you can get it to work on Seventh Gen...
+
+Roger:
+-Completed the QI Pro Licenses database backup tool so just waiting on a code review for that.
+
+Roger: Color Bar Tempaltes: A few design changes based on feedback from the team:
+-"Seismic Attribute" means "Third Attribute": When you scan it maps the attributes to the color bar. It only does it for a given crossplot, not all the other windows.  It should only affect the Third Attribute if you change the colors, and nothing else. -> COMPLETE
+-Grey out the "Color Map:" label -> COMPLETE
+-Can strip out all of the Third Attribute mode source code to simplify things -> COMPLETE
+-Give them the color bar combobox in "Point Density" and in "Seismic Attribute" 
+-Wait to actually change the colors until they press OK -> COMPLETE
+-Will have to change the serialization of the crossplot, to save the color bar combobox name (see code for well stuff, IMACView, the drawing of the wells, how it takes the color bar name, and gets the list of wells).
+-Have a distinction between color bar template files and the user-defined color bar files, like add a red dot or something (instead of mu), so instead maybe have mu - colorbar, and make sure the names line up.  Maybe add a custom icon, like a painters pallet.  Or change the background color instead.
+-Store user-defined color bar files *.cb into project directory instead of in %appdata% 
+-Do the sort in the utilities class, and then change the background color for the user-defined *.cb files.  Maybe put the user-defined ones at the top of the list
+-Project the wells onto a line...standard deviation for the vertical wells.
+
+Client Support:
+Oswaldo:
+...
+
+2021.05.21
+I. Scrum: 
+Brenda:
+-Map View dialog has code from Kowther that brings window to the top 
+Kevin: There is a function equivalent to compute engine 
+
+Roger: 
+-Working on custom color bar for wells.  Brenda explained here how that works.
+
+Kevin:
+-Got code in for auto-detect in
+-What I do now is look at all the SEG-Y files, and get the lag time, and if it is not zero, then I look at the start time header word...then I am assuming that the VDS is junk.  But Laurie and Oswaldo were a little concerned if I change the input file.
+Brenda: We could just write out own VDS 
+Kevin: But the issue with that is that they have a lot of proprietary code in their VDS format.  For the time being, I am just going to change that header word in the SEG-Y
+
+2021.05.21
+I. Scrum: 
+Brenda:
+-Map View dialog has code from Kowther that brings window to the top 
+Kevin: There is a function equivalent to compute engine 
+
+Roger: 
+-Working on custom color bar for wells.  Brenda explained here how that works.
+
+Kevin:
+-Got code in for auto-detect in
+-What I do now is look at all the SEG-Y files, and get the lag time, and if it is not zero, then I look at the start time header word...then I am assuming that the VDS is junk.  But Laurie and Oswaldo were a little concerned if I change the input file.
+Brenda: We could just write out own VDS 
+Kevin: But the issue with that is that they have a lot of proprietary code in their VDS format.  For the time being, I am just going to change that header word in the SEG-Y
+
+2021.05.25
+I. Scrum:
+Kevin: Going to check-in my changes to fix the Headwave bugs, and then merge that into Release 
+-Starting to look at VDS this morning
+
+Brenda: Merging my threading stuff into the dev mainline.
+-Looking into why hovering over the second crossplot makes the map go backwards 
+
+------
+
+Update installers:
+-Check that a get latest is being performed on the release branch for Python 
+-Rename QI-Pro Headwave, Seisware installers 
+-QiProHeadwaveSetup-v4.5.4.zip
+
+2021.05.26
+I. Scrum:
+Kevin: Got dongle from Schlumberger with license for Petrel.
+-Roger, how familiar are you with a local cloud?  See https://docs.min.io/ 
+-Headwave didn`t work for Laurie, even though the installer worked.  Chad rebuilt her machine, but he didn`t install the NVidia drivers.
+
+2021.05.31
+I. Display of Log Curves:
+Lets talk about the options that we want for the display of log curves. Some of the points that we might want to think about prior to the meeting are
+
+Fills (to the left of the curve, to the right of the curve), using a palette or a solid color
+Lines (colors, width, solid/dash)
+Track widths
+Left and Right Scales (min/max values)
+Logarithmic scaling
+Grid lines
+Anything else that we might want to do
+ 
+
+ 
+
+ 
+
+________________________________________________________________________________
+
+Microsoft Teams meeting
+
+Join on your computer or mobile app
+
+Click here to join the meeting
+
+Learn More | Meeting options
+
+________________________________________________________________________________
+
+ 
+-----
+
+Notes:
+Laurie:
+-We have Petrel now, we know what Hampson Russel does, ... 
+-What we have focused on in this software is doing things that they can`t do anywhere else 
+
+
+Carl (24:40ff):
+-We will need some sort of facies log in order to ...
+
+Brenda: 
+-If we stuff all three of those dialogs into one...
+-We can use tabs, but I don`t think there are a lot of tabs in QI-Pro now (27:00ff)
+-What about Geolog?  
+
+Laurie: 
+-We could ask our clients, what do you prefer, icons or tabs? (30:45ff)
+
+Brenda: 
+-You should not put more than 7 items +/- 2 (for UI design principles, 33:00ff) 
+
+Laurie:
+-I want foot pedals and a joystick on this software so I can just drive it (39:30ff)
+
+
+-----
+
+2021.05.31
+I. Scrum:
+Kevin: Making progress on VDS.  Somehow VDS saves the header mapping which is helpful. 
+
+Brenda: Was testing with that Petrel project they gave me.  ...so I had to fix the directional surveys.  There are a couple wells, but they are in there more than once...next, I will start looking at the well logs.  And then I will get to the horizons.
+
+2021.06.02
+I. Scrum:
+
+Kevin: Working on VDS stuff but the CMake built into Visual Studio is the wrong version.
+
+Brenda: Found an issue where the timeslice was not being displayed properly and that is because the map is using a different number than what is use don the classified section, so changed that and changed the drawing so it would work...to see why my horizons were not being displayed.
+
+-----
+
+2021.06.03
+I. Scrum:
+Kevin: Finally got the OpenVDS to build, it comes with 41 projects 
+Brenda: ...got come tooltips working, in the connector.
+
+2021.06.08
+I. Scrum:
+-Kevin intalled Headwave on Laurie`s computer, and it did not go smoothly. After a few reboots, the license didn`t go in smoothly.  ...and then I went back to virtual volumes, where the function is supposed to stop the process but it doesn`t stop the process...got a call from the Hugh guy that it is supposed to stop the process. 
+
+Brenda: I found that we are looking horizons up by name.  The attributes have a unique name, so we could make it so that horizons also have a unique name. 
+
+II. Product Review Meeting:
+
+-----Original Appointment-----
+From: Kevin Lee <kevin@sound-qi.com> 
+Sent: May 5, 2021 11:53 AM
+To: Kevin Lee; Laurie Weston; Brenda Maloff; Roger Moore; Oswaldo Romero; Carl Reine
+Subject: QI-Pro product meeting
+When: June 8, 2021 10:00 AM-11:00 AM (UTC-07:00) Mountain Time (US & Canada).
+Where: Microsoft Teams Meeting
+
+
+High Priority:
+-BDS has the capability of multiple resolutions. 
+-Zoom and reset options Xplot window 
+
+Medium Priority:
+-ASCII or EBCIDIC header of classified SEG-Y generated by QI-Pro 
+-Horizon Loading - ms and s option.   Add a converter to multiply or divide by 1000.  Brenda: it was bringing in the s ones wrong, so I fixed that. 
+-Collapse constants in VV equations: -> Laurie: High priority, because it crashes the program
+-Vertical cutoffs ...those lines could be out of range and then they don`t show up.
+
+
+2021.06.09
+I. Scrum: 
+Brenda: Yesterday working on the well stuff, so wells were not coming in.  I have a little more work to do to get the deviated logs to display.
+Kevin: I had put a flag in there if it was interpolated.
+Brenda: It has been invaluable having a license, but watching Andy, I actually learned how to use Petrel a bit better, so now I can get my log curves displayed within the seismic in Petrel. 
+
+Roger: 
+
+Kevin: 
+
+-----
+
+Review of Color Bar Templates with Kevin:
+-Remove ColorBarTemplates directory creation in run_installers.py
+-CColorBarView is not reloading *.cb files other than ClassColors.cb 
+-Put *.cb files in "Horn River Demo\Projects" with a subdirectory folder of the project name and put the *.cb files in there under QI-Pro_data 
+-Needs to read the *.cb files from "Horn River Demo\Projects" every time CColorBarView closes and re-opens. 
+-Save the ColorBarTemplates file number so every time they re-open the window it picks the one they had before, e.g., Lithology 
+-If they change one, say Greyscale, then automatically create a Greyscale.cb file, so there will be a Greyscale in yellow.  This happens the moment you edit the CColorBarView color bar. 
+-Put the code back in that reads the *.cb files from "Horn River Demo\Projects" 
+-Don`t put files into %appdata% when the user adds a file, instead put it into "Horn River Demo\Projects." 
+-Overwrite ClassColors.cb file every time when you open the project, not when you open CColorBarView.  Instead, when you open CColorBarView it should read the *.cb files.
+BUG: -When you create a new project, the CColorBarView combobox is empty.
+
+2021.06.10
+I. Scrum:
+Kevin: If there is a memory failure, then I want it to stop processing.  Then we also have a conversion of SEG-Y to VDS, so it is not checking out a license for that.
+
+2021.06.14
+I. Scrum: 
+Brenda: Working on Petrel plug-in, the wells are drawing properly.  Next, I need to look into the exports.
+Kevin: When you get to exports, you might have to flip that ... map to the standard one before you write it out.. 
+-For me, last Friday, started doing the work I am supposed to be doing, and then at 10 o`clock, bzzt, so I had to go downtown to check the systems.  
+
+2021.06.15
+I. Scrum:
+Brenda: I am going to load up blackfoot.
+Kevin: I know it is just using the default byte locations.  Can you try the Grand Rapids project?
+Brenda: I will try to export Grand Rapids (to Petrel), and if that works, will you be happy?
+-Also I want to test changing the start and end time on the export.
+-Also I am going to put the plug-in on the Ocean store 
+
+Kevin: For me, yesterday morning, Laurie called 10 min before this meeting, she had a crashing bug on Headwave, and it was not related to the stuff I was working on before.  It is not even getting to the GPU code; it is crashing right in the setup, something wierd about her data files.  So what am I doing to do about that?  Spinning my wheels all day on it yesterday.  It has something to do with either the size of the files or the start time.
+
+II. Horizon and Contour Display Options Design Meeting:
+
+-----Original Appointment-----
+From: Brenda Maloff <brenda@sound-qi.com> 
+Sent: May 20, 2021 11:26 AM
+To: Brenda Maloff; Kevin Lee; Roger Moore; Laurie Weston; Carl Reine; Oswaldo Romero
+Subject: Horizon and Contour Display Options Design Meeting
+When: June 15, 2021 10:00 AM-11:00 AM (UTC-07:00) Mountain Time (US & Canada).
+Where: Microsoft Teams Meeting
+
+Lets get together and talk about how we want horizons to appear. Do we want to be able to show contours for them? Do we need transparency to show both the timeslice and the horizon? I’m sure there are a lot of other questions as well, which we can discuss in the meeting. 
+

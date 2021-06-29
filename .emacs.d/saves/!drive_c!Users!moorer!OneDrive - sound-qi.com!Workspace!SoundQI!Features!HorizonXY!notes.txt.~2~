@@ -1,0 +1,67 @@
+Pipeline: Feature Requests and Defects
+Priority: High
+Name: Horizon by XY option
+Description: Horizons are entered by inline/crossline. Add an option to define horizons by XY.  When entering Horizons only ask for either inline/crossline or XY, not both.
+Software Component: Horizons
+Rank: 3 - Med
+Teams Video Link:
+
+--------------------------------------------------------------------------------
+
+
+From: Kevin Lee <kevin@sound-qi.com> 
+Sent: February 18, 2021 6:01 PM
+To: Roger Moore <roger@sound-qi.com>
+Subject: Horizon loading by x and y
+
+Roger,
+Attached is a horizon file without inline and crossline columns. It only has  X, Y and data columns.  The project is to successfully load this format.
+
+This is from the Horn River demo, so once you have the code written and successfully load this file I should exactly overlay the corresponding horizon file that is loaded with inline and crosslines.
+
+Here are the step to load the file:
+
+-	Open the horn river demo
+-	Press the   horizon button
+-	Press “load free format”  
+-	Select horizon_XY.txt, it’s attached to this message
+-	Follow instructions on dialog:
+o	Select first data record and press the “Mark First Data Record” button.
+o	
+o	 
+o	Select title record and press “mark title record”
+o	 
+o	Press “ok and you’ll get this error…
+o	 
+
+
+
+
+
+                Things to do:
+-	Allow loading of horizon data by either X and Y pairs, or by inline and crossline pairs.  All four are not required but may be defined.  If all four are defined or just inline and crossline then there is no change necessary to the loading logic other than removing the errors. Look at the file HrzFileDlg.cpp
+-	The text file get’s loaded here, it should load with minimal changes without the inline and crosslines
+-	 
+-	
+-	If only x and y are defined as in the above example you’ll have to find the corresponding nearest inline and crossline to the x,y pair. So you’ll have to write a method to patch in the missing inline and crosslines.
+-	Call int CIMACDoc::GetSegyToUse() to find the segy index to use for looking up the coordinates
+-	Call CSegy* CIMACDoc::GetSegyInPtr(int n) to get a pointer to the segy object
+-	With the pointer to the segy get it’s segyindexpointer as so: CSegyIndex *p = segy->GetSegyIndexPtr()
+-	There is a method in the CSegyIndex class that finds the nearest inline and crossline:
+void CSegyIndex::FindNearestTrace(double xcoord, double ycoord, DWORD &rInline, DWORD &rXline)
+
+
+
+That should be all you need.  Let me know if you have question or want to discuss.
+
+Kevin.
+
+l
+
+
+--------------------------------------------------------------------------------
+
+2021.01.19
+I. Researching and implementing solution:
+
+

@@ -1,0 +1,3067 @@
+
+Priority: High
+Name: Horizon by XY option
+Description: Horizons are entered by inline/crossline. Add an option to define horizons by XY.  When entering Horizons only ask for either inline/crossline or XY, not both.
+Software Component: Horizons
+Rank: 3 - Med
+Teams Video Link:
+
+Sample data: horizon_XY.txt
+
+--------------------------------------------------------------------------------
+
+Lwr_Keg_RiverXY
+Mid_Dev_CarbXY
+MuskwaXY
+
+--------------------------------------------------------------------------------
+
+From: Kevin Lee <kevin@sound-qi.com> 
+Sent: February 18, 2021 6:01 PM
+To: Roger Moore <roger@sound-qi.com>
+Subject: Horizon loading by x and y
+
+Roger,
+Attached is a horizon file without inline and crossline columns. It only has  X, Y and data columns.  The project is to successfully load this format.
+
+This is from the Horn River demo, so once you have the code written and successfully load this file I should exactly overlay the corresponding horizon file that is loaded with inline and crosslines.
+
+Here are the step to load the file:
+
+-	Open the horn river demo
+-	Press the   horizon button
+-	Press “load free format”  
+-	Select horizon_XY.txt, it’s attached to this message
+-	Follow instructions on dialog:
+o	Select first data record and press the “Mark First Data Record” button.
+o	
+o	 
+o	Select title record and press “mark title record”
+o	 
+o	Press “ok and you’ll get this error…
+o	 
+
+
+
+
+
+                Things to do:
+-	Allow loading of horizon data by either X and Y pairs, or by inline and crossline pairs.  All four are not required but may be defined.  If all four are defined or just inline and crossline then there is no change necessary to the loading logic other than removing the errors. Look at the file HrzFileDlg.cpp
+-	The text file get’s loaded here, it should load with minimal changes without the inline and crosslines
+-	 
+-	
+-	If only x and y are defined as in the above example you’ll have to find the corresponding nearest inline and crossline to the x,y pair. So you’ll have to write a method to patch in the missing inline and crosslines.
+-	Call int CIMACDoc::GetSegyToUse() to find the segy index to use for looking up the coordinates
+-	Call CSegy* CIMACDoc::GetSegyInPtr(int n) to get a pointer to the segy object
+-	With the pointer to the segy get it’s segyindexpointer as so: CSegyIndex *p = segy->GetSegyIndexPtr()
+-	There is a method in the CSegyIndex class that finds the nearest inline and crossline:
+void CSegyIndex::FindNearestTrace(double xcoord, double ycoord, DWORD &rInline, DWORD &rXline)
+
+
+
+That should be all you need.  Let me know if you have question or want to discuss.
+
+Kevin.
+
+l
+
+
+--------------------------------------------------------------------------------
+
+
+From: Kevin Lee <kevin@sound-qi.com> 
+Sent: March 1, 2021 4:10 PM
+To: Roger Moore <roger@sound-qi.com>; Brenda Maloff <brenda@sound-qi.com>
+Subject: RE: code check-in from Friday for Horizon XY
+
+In my experience optimizing for parallel computations on loops led to bugs and wrong answers.  Generally we didn’t use that level of optimization in seismic processing.
+
+My comments this morning were based on the premise that the function was looking for an exact xy coordinate match.  I was wrong, looks like the function is doing the sqrt(x*x+y*y), which is good, you can use that function after all, or a modified version of it.
+
+Thinking about the index, I suppose that might not work too well since we have to support horizon files that are sorted in any order.  For example crossline/inline or descending vs ascending.
+
+We have to get more creative in inventing an algorithm to find the nearest point. 
+
+The bin size can be found by looking at one inline and one crossline take the point at each end and divide by the number of traces, keep in mind there could be missing traces so you’d have to use the inline or crossline number to compute the number of traces.
+
+Using the bin size you can stop the search as soon as you find a trace that falls nearer that that distance.
+
+Try it out.
+
+
+Kevin Lee, P.Geo.
+Software Development Manager
+ 
+Sound QI Solutions Ltd.
+2130, 125 9 Ave. SE
+Calgary, AB  T2G 0P6
+Canada
+ 
+T 403-702-2560
+E kevin@sound-qi.com
+www.sound-qi.com
+
+
+
+From: Roger Moore <roger@sound-qi.com> 
+Sent: Monday, March 1, 2021 2:48 PM
+To: Brenda Maloff <brenda@sound-qi.com>; Kevin Lee <kevin@sound-qi.com>
+Subject: RE: code check-in from Friday for Horizon XY
+
+Please note that I put the try catch in because it was crashing, but then later I found out it was because I was deleting a pDoc pointer when I didn’t need to.  Anyways, I have tried to optimize, but it is not working for me.
+
+Here I have tried to increment the trace number so we don’t keep going back to 0, but that means I had to remove the OpenMP part.  Not sure why yet, but when I do that I get the incorrect answer.  Previously, the answer using OpenMP took on average about 24 minutes to calculate on my machine but at least it was correct:
+
+void CHorizon::GetInlineXlineFromXY()
+{
+         CIMACDoc* pDoc = CIMACDoc::GetIMACDocPtr();
+         int segyToUse = pDoc->GetSegyToUse();
+         int fileCount = pDoc->GetFileCount();
+
+         for (int i = 0; i < fileCount; i++) {
+                 CSegy* pSegy = pDoc->GetSegyInPtr(i);
+                 CString attrName = pDoc->GetAttr(i);
+
+                 // skip loading if this attribute doesn`t appear on any xplot.
+                 if (!pDoc->IsAttributeInUse(attrName) && i != segyToUse) {
+                          // check if the attribute is needed for a virtual volume
+                          if (!pDoc->IsAttributeInVirtualVolumeInUse(attrName)) {
+                                   continue;
+                          }
+                 }
+
+                 DWORD nearIndex = 0, updatedNearIndex = 0;
+
+// #pragma omp parallel for               
+                 for (int j = 0; j < GetNRecs(); j++) {
+                          DWORD inLine, xLine;
+                          CSegyIndex* pSegyIndexPtr = pSegy->GetSegyIndexPtr();
+                          updatedNearIndex = SetInlineXlineFromXY(pSegyIndexPtr, j, &inLine, &xLine, nearIndex);
+                          nearIndex = updatedNearIndex - 5;
+                 }
+         }
+}
+
+
+DWORD CHorizon::SetInlineXlineFromXY(CSegyIndex* pSegyIndexPtr, int nRec, DWORD* pInline, DWORD* pXline, DWORD nearIndex)
+{
+         DWORD updatedNearIndex = pSegyIndexPtr->FindNearestTrace(m_pX[nRec], m_pY[nRec], *pInline, *pXline, nearIndex);
+         m_pInline[nRec] = *pInline;
+         m_pXline[nRec] = *pXline;
+ 
+         return updatedNearIndex;
+}
+
+DWORD CSegyIndex::FindNearestTrace(double xcoord, double ycoord, DWORD& rInline, DWORD& rXline, DWORD nearIndex)
+{
+         double dx, dy;
+         double dist, nearDist;
+         DWORD i;
+         dx = xcoord - GetXCoord(0);
+         dy = ycoord - GetYCoord(0);
+         nearDist = pow((dx * dx + dy * dy), 0.5);
+         DWORD nTrace = GetTraceCount();
+ 
+         if (nearIndex < nTrace) {
+                 rInline = GetInline(nearIndex);
+                 rXline = GetCrossline(nearIndex);
+                 DWORD startIndex = nearIndex;
+ 
+                 for (i = startIndex; i < nTrace; i++) {
+                          dx = xcoord - GetXCoord(i);
+                          dy = ycoord - GetYCoord(i);
+                          dist = pow((dx * dx + dy * dy), 0.5);
+                          if (dist < nearDist) {
+                                   nearDist = dist;
+                                   nearIndex = i;
+                                   rInline = GetInline(nearIndex);
+                                   rXline = GetCrossline(nearIndex);
+                          }
+                 }
+ 
+                 return nearIndex;
+         }
+ 
+         return 0;
+}
+
+
+What am I missing?  Do you have any suggestions? Maybe I need to start working with bins instead as Brenda suggested?
+
+
+
+From: Kevin Lee <kevin@sound-qi.com> 
+Sent: March 1, 2021 12:20 PM
+To: Roger Moore <roger@sound-qi.com>
+Cc: Brenda Maloff <brenda@sound-qi.com>
+Subject: RE: code check-in from Friday for Horizon XY
+
+Looks good .  I didn’t run the load by xy option. I think you’re still working on it.
+
+Do the try / catch blocks you put in actually work?  I found that MFC was catching errors so my try blocks wouldn’t trigger.  Maybe that’s only in the view class.
+
+From: Roger Moore <roger@sound-qi.com> 
+Sent: Monday, March 1, 2021 9:57 AM
+To: Kevin Lee <kevin@sound-qi.com>
+Cc: Brenda Maloff <brenda@sound-qi.com>
+Subject: code check-in from Friday for Horizon XY
+
+Kevin,  please find the code here:
+
+Changeset 1022: -Removed TestProjectionEquation because it is now in the unit testing project - Repos
+
+Feel free to let me know if you have any further questions, concerns or issues.
+
+All the best,
+
+Roger
+
+--------------------------------------------------------------------------------
+
+2021.01.19
+I. Researching and implementing solution:
+...
+
+2021.01.23
+I. Researching and implementing solution:
+
+// Read the Segy data into memory for one segy line.
+int CIMACDoc::LoadData()
+{
+	int i;
+	int fileCount = GetFileCount();
+	if (fileCount == 0) return 0;
+
+#ifdef DEBUG
+    clock_t start, finish, intervalStart;
+	start = clock();
+#endif
+
+	BOOL bNewLoad = LoadProjectIndexes();
+	if  (bNewLoad)  {
+		CSegyIndex *pSegyIndex[NFILE];
+
+		for (int i=0; i<fileCount; i++) {
+			pSegyIndex[i] = GetSegyInPtr(i)->GetSegyIndexPtr();
+		}
+		CrossCheckIndexes(AfxGetMainWnd()->GetSafeHwnd(), pSegyIndex, fileCount);
+	}
+
+	// check if the requested line exists and is in range.
+	if (GetInlineXlineMode() != eUSERLINE) {
+		CSegyIndex *pSegyIndex = GetSegyInPtr(0)->GetSegyIndexPtr();
+		if ( !pSegyIndex->LineExists(GetDisplayLine(), GetInlineXlineMode()) ) {
+			CString txt, line;
+			line = GetInlineXlineMode() == eINLINE ? "inline" : "crossline";
+			txt.Format("There has been an error: The %s %d was not found in the file. The display inline and crossline will be reset.", line, GetDisplayLine());
+			AfxMessageBox(txt);
+
+			ResetDisplayLines();
+		}
+	}
+	
+	CModelessInfoDlg infoDlg;
+	infoDlg.ShowMessage("Loading data...");
+
+	// find the segy that has the latest start time, we1ll use it for output.
+	int segyToUseForOutput = GetSegyToUse();
+
+	// If the line has changed then load appropriate data
+	if (GetInlineXlineMode() != eUSERLINE) {
+		for (i = 0; i < fileCount; i++) {
+			CSegy *pSegy = GetSegyInPtr(i);
+			if (pSegy->GetTraceCount() == 0 ||
+				GetDisplayLine() != pSegy->GetCurrentLineNumber() ||
+				GetInlineXlineMode() != pSegy->GetInlineXlineMode())
+			{
+				CString attrName = GetAttr(i);
+
+				// skip loading if this attribute doesn`t appear on any xplot.
+				if (!IsAttributeInUse(attrName) && i != segyToUseForOutput) {
+					// check if the attribute is needed for a virtual volume
+					if (!IsAttributeInVirtualVolumeInUse(attrName)) {
+						continue;
+					}
+				}
+#ifdef DEBUG
+                intervalStart = clock();
+#endif
+				infoDlg.AddString(attrName);
+				pSegy->Reset();
+				int ntrace = pSegy->Create(GetDisplayLine(), GetInlineXlineMode(), pSegy->GetSegyIndexPtr()->GetSampleCount());
+				if (pSegy->LoadIndexedLine(GetFile(i), GetDisplayLine(), GetInlineXlineMode()) != ntrace) {
+					CString msg;
+					msg.Format("problem loading line %d from file %s", GetDisplayLine(), GetFile(i));
+					AfxMessageBox(msg);
+					return -1;
+				}
+#ifdef DEBUG
+				TRACE("LoadData File=%s time=%f\n", GetFile(i), (double)(clock() - intervalStart) / CLOCKS_PER_SEC);
+#endif
+			}
+		}
+
+	} else {
+		// load user line
+
+		CPointArray* pData = GetCurrentUserLinePtr();
+		if (pData == NULL) {
+			AfxMessageBox("No Userline has been selected");
+			return -1;
+		}
+
+		for (i=0; i<fileCount; i++) {
+			CSegy* pSegy = GetSegyInPtr(i);
+			if (!pSegy->isUserLineLoaded(pData)) {
+
+				CString attrName = GetAttr(i);
+
+				// skip loading if this attribute doesn`t appear on any xplot.
+				if (!IsAttributeInUse(attrName) && i != segyToUseForOutput) {
+					// check if the attribute is needed for a virtual volume
+					if (!IsAttributeInVirtualVolumeInUse(attrName)) {
+						continue;
+					}
+				}
+
+				infoDlg.AddString(attrName);
+				pSegy->Reset();
+				int ntrace = (int) pData->GetCount();
+				pSegy->Create(ntrace, pSegy->GetSegyIndexPtr()->GetSampleCount());
+				if (pSegy->LoadIndexedLine(GetFile(i), 0, GetInlineXlineMode(), pData) < 0) {
+					return -1;
+				}
+			}
+		}
+	}
+    // ...
+}
+
+--------------------------------------------------------------------------------
+
+// Load a free format text horizon file.
+int CHorizon::LoadTxtFile(CString fname, int headerCount, int wordCount, CStringArray *arrTitles)
+{
+#define NCHAR 2048
+	FILE *pf;
+	int i, j;
+	char pBuf[NCHAR];
+	CString msg;
+	char *token;
+	char delimiters[] = " ,\t\n";
+
+	float nullValue = GetNullValue();
+	DestroyData();
+	SetNullValue(nullValue);
+
+	clock_t start, pass1, pass2, finish;
+	start = clock();
+
+	m_nWords  = wordCount - 4;
+	m_nHeader = headerCount;
+
+	if (fname.IsEmpty()) return -1;
+
+	if (wordCount > arrTitles->GetCount()) {
+		msg.Format("Not enough horizons names defined for file %s", fname);
+		AfxMessageBox(msg);
+		return -1;
+	}
+
+	// get the horizon names and column indexes
+	if ( m_nWords > 0 ) m_arrNames.SetSize(m_nWords);
+	int inlineCol = -1, xlineCol  = -1;
+	int xCoordCol = -1, yCoordCol = -1;
+	int ix = 0;
+	for (int i=0; i < wordCount; i++) {
+		CString horName = arrTitles->GetAt(i);
+		if (horName.CompareNoCase("inline") == 0) 
+			inlineCol = i;
+		else if (horName.CompareNoCase("crossline") == 0 || horName.CompareNoCase("xline") == 0) 
+			xlineCol  = i;
+		else if (horName.CompareNoCase("x") == 0) 
+			xCoordCol = i;
+		else if (horName.CompareNoCase("y") == 0) 
+			yCoordCol = i;
+		else if (arrTitles->GetAt(i) == IGNORECOLUMN) 
+			m_nWords--; // subtract from word count
+		else if (ix < m_nWords ) 
+			m_arrNames[ix++] = horName;
+	}
+
+	if (xCoordCol == -1 || yCoordCol == -1) {
+		AfxMessageBox("no coordinates found");
+		DestroyData();
+		return -1;
+	}
+
+	if (inlineCol == -1 || xlineCol == -1) {
+		AfxMessageBox("Inline and Crossline columns not found");
+		DestroyData();
+		return -1;
+	}
+
+	if (m_nWords <= 0) {
+		msg.Format("No horizons found in file:\n %s", fname);
+		AfxMessageBox(msg);
+		DestroyData();
+		return -1;
+	}
+
+	if ((pf=fopen(fname, "r"))==NULL) {		
+		msg.Format("Cannot open horizon file %s", fname);
+		AfxMessageBox(msg);
+		return -1;
+	}
+
+
+	// skip the header
+	BOOL bError=FALSE;
+	for (int i=0; i<m_nHeader; i++) {
+		if (fgets (pBuf, NCHAR, pf)==NULL) {
+			if (ferror(pf)) {
+				msg.Format("Error reading file %s", fname);
+				bError = TRUE;
+			}
+		}
+		if (feof(pf)) {
+			msg.Format("unexpected end of file reading file %s", fname);
+			bError = TRUE;
+		}
+
+		if (bError) {
+			AfxMessageBox(msg);
+			fclose(pf);
+			DestroyData();
+			return -1;
+		}
+	}
+
+	// loop once through the file, we need to know:
+	// - the number of horizons in each record
+	// - the total number of records in the file
+	m_nRecs = 0;
+	while (!feof(pf)) {
+		if (fgets (pBuf, NCHAR, pf)==NULL) {
+			if (ferror(pf)) {
+				msg.Format("Error reading file %s", fname);
+				AfxMessageBox(msg);
+				fclose(pf);
+				DestroyData();
+				return -1;
+			}
+			continue;
+		}
+		m_nRecs++;
+
+		// Count the number of items in each record, check that every record is the same.
+		j=0;
+		token=strtok(pBuf, delimiters);
+		while (token) {
+			j++;
+			token=strtok(NULL, delimiters);
+		}
+
+		if (j != wordCount) {
+			msg.Format("Loading horizon: Bad record found. Record number %d only has %d words. Expecting %d.", m_nRecs, j, m_nWords);
+			AfxMessageBox(msg);
+			fclose(pf);
+			DestroyData();
+			return -1;
+		}
+	}
+
+	// allocate according to what we found above.
+	AllocateHorizonArrays();
+
+	pass1 = clock();
+
+	// reset the file pointer and read the header
+	rewind(pf);
+	for (int i=0; i<m_nHeader; i++) {
+		fgets (pBuf, NCHAR, pf);
+	}
+
+	// read the data, store in memory.
+	for (i=0; i<m_nRecs; i++) {
+		fgets(pBuf, NCHAR, pf);
+		char *pStart;
+		pStart = pBuf;
+		int ix = 0;
+
+
+		char* pch;
+		pch = strtok(pStart, delimiters);
+		j = 0;
+		while (pch != NULL || j < wordCount)
+		{
+			if (j == inlineCol) {
+				m_pInline[i] = (int)strtod(pch, NULL);
+			}
+			else if (j == xlineCol) {
+				m_pXline[i] = (int)strtod(pch, NULL);
+			}
+			else if (j == xCoordCol) {
+				m_pX[i] = (int)strtod(pch, NULL);
+			}
+			else if (j == yCoordCol) {
+				m_pY[i] = (int)strtod(pch, NULL);
+			}
+			else {
+				if (arrTitles->GetAt(j) != IGNORECOLUMN) {
+					m_pHorizon[ix][i] = (float)strtod(pch, NULL);
+					if (m_pHorizon[ix][i] == m_nullValue) {
+						m_pHorizon[ix][i] = NULL_HORIZON_VALUE;
+					}
+					ix++;
+				}
+			}
+			pch = strtok(NULL, delimiters);
+			j++;
+		}
+	}
+
+	fclose(pf);
+
+	pass2 = clock();
+
+	FindLimits();
+
+
+	finish = clock();
+	double duration1 = (double)(pass1 - start) / CLOCKS_PER_SEC;
+	double duration2 = (double)(pass2 - pass1) / CLOCKS_PER_SEC;
+	double durationTotal = (double)(finish - start) / CLOCKS_PER_SEC;
+	TRACE("LoadTxtFile pass1=%f pass2 = %f Total time=%f\n", duration1, duration2, durationTotal);
+
+	return m_nRecs;
+}
+
+-----
+
+pLocalHor->GetRecordCount()
+418248
+
+                infoDlg.AddString(filename);
+                CHorizon *pNewHor = new CHorizon;
+		pNewHor->SetNullValue(nullValue);
+		pNewHor->LoadTxtFile(filename, headerCount, wordCount, arrTitles);
+
+...
+
+		else if (horName.CompareNoCase("x") == 0) 
+			xCoordCol = i;
+
+xCoordCol = 0
+
+Unhandled exception at 0x00007FF7102C19C1 in QI-Pro.exe: 0xC0000005: Access violation writing location 0x0000000000000000.
+
+-----
+
+int CHorizon::LoadTxtFile(CString fname, int headerCount, int wordCount, CStringArray *arrTitles)
+{
+    // ...
+		while (pch != NULL || j < wordCount)
+		{
+			if (j == inlineCol) {
+				m_pInline[i] = (int)strtod(pch, NULL);
+			}
+			else if (j == xlineCol) {
+				m_pXline[i] = (int)strtod(pch, NULL);
+			}
+			else if (j == xCoordCol) {
+				m_pX[i] = (int)strtod(pch, NULL);
+			}
+			else if (j == yCoordCol) {
+				m_pY[i] = (int)strtod(pch, NULL);
+			}
+			else {
+				if (arrTitles->GetAt(j) != IGNORECOLUMN) {
+					m_pHorizon[ix][i] = (float)strtod(pch, NULL);
+					if (m_pHorizon[ix][i] == m_nullValue) {
+						m_pHorizon[ix][i] = NULL_HORIZON_VALUE;
+					}
+					ix++;
+				}
+			}
+			pch = strtok(NULL, delimiters);
+			j++;
+		}
+    // ...
+}    
+
+j = 2
+
+...
+
+-Crash on this line:
+
+	"m_pHorizon[ix][i] = (float)strtod(pch, NULL);"
+
+"Unhandled exception at 0x00007FF7102C19C1 in QI-Pro.exe: 0xC0000005: Access violation writing location 0x0000000000000000."
+
+Where:
+j = 3
+ix = 1
+i = 0
+pch = 0x000000d9069a61ae "986.29852"
+
+arrTitles->GetAt(j)
+Function CStringArray::GetAt has no address, possibly due to compiler optimizations.
+
+j = 2:
+m_pHorizon[ix][i]
+1024.36633
+
+-----
+
+void CHorizon::AllocateHorizonArrays()
+{
+	if (m_nRecs > 0) {
+		m_pX = new double[m_nRecs];
+		m_pY = new double[m_nRecs];
+		m_pInline = new int[m_nRecs];
+		m_pXline  = new int[m_nRecs];
+
+		if (m_nWords > 0 && m_arrNames.GetSize() < m_nWords ) m_arrNames.SetSize(m_nWords);
+
+		for (int i=0; i<m_nWords; i++) {
+			m_pHorizon[i] = new float[m_nRecs];
+		}
+	}
+}
+
+Where:
+m_nWords = 1
+m_nRecs = 418248
+
+-----
+
+	// allocate according to what we found above.
+	m_nWords = horizonNameCount;
+
+Where:
+
+	while (token) {
+		strToken = token;
+
+		// remove the newline if it exists
+		int newlineIndex = strToken.Find("\n");
+		if (newlineIndex > 0) {
+			strToken = strToken.Left(newlineIndex);
+		}
+
+		if (strToken.CompareNoCase("Inline") == 0) {
+			inCol = ix;
+		}
+		else if (strToken.CompareNoCase("Xline") == 0 || strToken.CompareNoCase("Crossline") == 0) {
+			xCol = ix;
+		}
+		else if (strToken.CompareNoCase("X") == 0) {
+			bXcol = TRUE;
+		}
+		else if (strToken.CompareNoCase("Y") == 0) {
+			bYcol = TRUE;
+		}
+		else {
+			arrHeaderWords.SetAtGrow(horizonNameCount++, strToken);
+		}
+
+		token = strtok(NULL, ",");
+		ix++;
+		headerWordCount = ix;
+	}
+
+int horizonNameCount = 0;
+
+But in:
+
+int CHorizon::LoadTxtFile(CString fname, int headerCount, int wordCount, CStringArray *arrTitles)
+{
+    // ...
+	m_nWords  = wordCount - 4;
+    
+    // ...
+
+	// get the horizon names and column indexes
+	if ( m_nWords > 0 ) m_arrNames.SetSize(m_nWords);
+    // ...    
+}    
+
+m_nRecs = 418248
+
+
+// given the inline,xline pair set istart to it`s index. return 0 on success or -1 if not found. 
+int CHorizon::FindIndex(int inLine, int xLine, int &istart)
+{
+	if (istart >= m_nRecs) return -1;
+	if (istart < 0) istart = 0;
+	int ix = istart;
+	int icount = 0;
+	while (m_pInline[ix] != inLine || m_pXline[ix] != xLine) {
+		if (++ix == m_nRecs) ix = 0;
+		if (++icount == m_nRecs) return -1;
+	}
+	istart = ix;
+	return 0;
+}
+
+Which is called from:
+
+// Check the limits with > operator, if a larger area is needed use Create then append.
+void CHorizon::operator += (const CHorizon& rHorizon)
+{
+	int i, j, ix;
+	if (rHorizon.m_nRecs == 0 || rHorizon.m_nWords == 0) return; 
+
+	// add some space for the new horizons, copy in the horizon names
+	for (i=0; i<rHorizon.m_nWords; i++) {
+		float *pData = new float[m_nRecs];
+		for (j=0; j<m_nRecs; j++) pData[j] = NULL_HORIZON_VALUE;
+
+		m_arrNames.Add(rHorizon.m_arrNames[i]);
+		m_pHorizon[i+m_nWords]    = pData;
+		m_displayMode[i+m_nWords] = rHorizon.m_displayMode[i];
+		m_lineWidth[i+m_nWords]   = rHorizon.m_lineWidth[i];
+		m_color[i+m_nWords]       = rHorizon.m_color[i];
+	}
+
+	// copy the data to the new index locations
+	for (i=0, ix=0; i<rHorizon.m_nRecs; i++) {
+		if (FindIndex(rHorizon.m_pInline[i], rHorizon.m_pXline[i], ix) == 0) {
+			// copy in the x,y`s if they are not defined
+			if (m_pX[ix] < 0) m_pX[ix] = rHorizon.m_pX[i];
+			if (m_pY[ix] < 0) m_pY[ix] = rHorizon.m_pY[i];
+			// copy the horizon data
+			for (j=0; j<rHorizon.m_nWords; j++) {
+				float *pData = m_pHorizon[j+m_nWords];
+				float *pSrc  = rHorizon.m_pHorizon[j];
+				pData[ix] = pSrc[i];
+			}
+		}
+	}
+
+	m_nWords += rHorizon.m_nWords;
+}
+
+Which is called from:
+
+			// if at least one file is already loaded then we have to merge the horizon data
+			} else {
+                infoDlg.AddString(filename);
+                CHorizon *pNewHor = new CHorizon;
+				pNewHor->SetNullValue(nullValue);
+				pNewHor->LoadTxtFile(filename, headerCount, wordCount, arrTitles);
+				if ( *pLocalHor > *pNewHor ) { // this is cool. Use the overloaded operators.
+					*pLocalHor += *pNewHor;
+				} else {					
+					CHorizon *pMergedHor = new CHorizon;
+					pMergedHor->Create(*pLocalHor);
+					*pMergedHor += *pLocalHor;
+					*pMergedHor += *pNewHor;
+					delete pLocalHor;
+					delete pNewHor;
+					m_pLocalHor = pMergedHor;
+				}
+			}
+
+-----                        
+
+void CHorizon::Create(CHorizon &rHorizon)
+{
+	m_inLineMin = rHorizon.m_inLineMin;
+	m_inLineMax = rHorizon.m_inLineMax;
+	m_xLineMin  = rHorizon.m_xLineMin;
+	m_xLineMax  = rHorizon.m_xLineMax;;
+	
+	m_nRecs = rHorizon.m_nRecs;
+	
+	AllocateHorizonArrays();
+	
+	for (int i=0; i<m_nRecs; i++) {
+		m_pInline[i] = rHorizon.m_pInline[i];
+		m_pXline[i]  = rHorizon.m_pXline[i];
+		m_pX[i] = rHorizon.m_pX[i];
+		m_pY[i] = rHorizon.m_pY[i];
+	}
+}
+
+m_pInline[i]
+5053
+m_pXline[i]
+1153
+m_pX[i]
+616883.18999999994
+m_pY[i]
+6620608.5000000000                        
+
+m_nRecs = 418248
+
+Hangs on this line:
+
+"*pMergedHor += *pNewHor;"
+
+Which runs here:
+
+// given the inline,xline pair set istart to it`s index. return 0 on success or -1 if not found. 
+int CHorizon::FindIndex(int inLine, int xLine, int &istart)
+{
+	if (istart >= m_nRecs) return -1;
+	if (istart < 0) istart = 0;
+	int ix = istart;
+	int icount = 0;
+	while (m_pInline[ix] != inLine || m_pXline[ix] != xLine) {
+		if (++ix == m_nRecs) ix = 0;
+		if (++icount == m_nRecs) return -1;
+	}
+	istart = ix;
+	return 0;
+}
+
+Which is called from:
+
+// Append the horizon. Only the portion that has common inline,xline will be appended.
+// Check the limits with > operator, if a larger area is needed use Create then append.
+void CHorizon::operator += (const CHorizon& rHorizon)
+{
+	int i, j, ix;
+	if (rHorizon.m_nRecs == 0 || rHorizon.m_nWords == 0) return; 
+
+	// add some space for the new horizons, copy in the horizon names
+	for (i=0; i<rHorizon.m_nWords; i++) {
+		float *pData = new float[m_nRecs];
+		for (j=0; j<m_nRecs; j++) pData[j] = NULL_HORIZON_VALUE;
+
+		m_arrNames.Add(rHorizon.m_arrNames[i]);
+		m_pHorizon[i+m_nWords]    = pData;
+		m_displayMode[i+m_nWords] = rHorizon.m_displayMode[i];
+		m_lineWidth[i+m_nWords]   = rHorizon.m_lineWidth[i];
+		m_color[i+m_nWords]       = rHorizon.m_color[i];
+	}
+
+	// copy the data to the new index locations
+	for (i=0, ix=0; i<rHorizon.m_nRecs; i++) {
+		if (FindIndex(rHorizon.m_pInline[i], rHorizon.m_pXline[i], ix) == 0) {
+			// copy in the x,y`s if they are not defined
+			if (m_pX[ix] < 0) m_pX[ix] = rHorizon.m_pX[i];
+			if (m_pY[ix] < 0) m_pY[ix] = rHorizon.m_pY[i];
+			// copy the horizon data
+			for (j=0; j<rHorizon.m_nWords; j++) {
+				float *pData = m_pHorizon[j+m_nWords];
+				float *pSrc  = rHorizon.m_pHorizon[j];
+				pData[ix] = pSrc[i];
+			}
+		}
+	}
+
+	m_nWords += rHorizon.m_nWords;
+}
+
+Recall:
+
+-	If only x and y are defined as in the above example you’ll have to find the corresponding nearest inline and crossline to the x,y pair. So you’ll have to write a method to patch in the missing inline and crosslines.
+-	Call int CIMACDoc::GetSegyToUse() to find the segy index to use for looking up the coordinates
+-	Call CSegy* CIMACDoc::GetSegyInPtr(int n) to get a pointer to the segy object
+-	With the pointer to the segy get it’s segyindexpointer as so: CSegyIndex *p = segy->GetSegyIndexPtr()
+-	There is a method in the CSegyIndex class that finds the nearest inline and crossline:
+void CSegyIndex::FindNearestTrace(double xcoord, double ycoord, DWORD &rInline, DWORD &rXline)
+
+Consider IMACDoc::LoadData():
+
+	// find the segy that has the latest start time, we'll use it for output.
+	int segyToUseForOutput = GetSegyToUse();
+
+	// If the line has changed then load appropriate data
+	if (GetInlineXlineMode() != eUSERLINE) {
+		for (i = 0; i < fileCount; i++) {
+			CSegy *pSegy = GetSegyInPtr(i);
+			if (pSegy->GetTraceCount() == 0 ||
+				GetDisplayLine() != pSegy->GetCurrentLineNumber() ||
+				GetInlineXlineMode() != pSegy->GetInlineXlineMode())
+			{
+				CString attrName = GetAttr(i);
+
+				// skip loading if this attribute doesn't appear on any xplot.
+				if (!IsAttributeInUse(attrName) && i != segyToUseForOutput) {
+					// check if the attribute is needed for a virtual volume
+					if (!IsAttributeInVirtualVolumeInUse(attrName)) {
+						continue;
+					}
+				}
+#ifdef DEBUG
+                intervalStart = clock();
+#endif
+				infoDlg.AddString(attrName);
+				pSegy->Reset();
+				int ntrace = pSegy->Create(GetDisplayLine(), GetInlineXlineMode(), pSegy->GetSegyIndexPtr()->GetSampleCount());
+				if (pSegy->LoadIndexedLine(GetFile(i), GetDisplayLine(), GetInlineXlineMode()) != ntrace) {
+					CString msg;
+					msg.Format("problem loading line %d from file %s", GetDisplayLine(), GetFile(i));
+					AfxMessageBox(msg);
+					return -1;
+				}
+#ifdef DEBUG
+				TRACE("LoadData File=%s time=%f\n", GetFile(i), (double)(clock() - intervalStart) / CLOCKS_PER_SEC);
+#endif
+			}
+		}
+
+	}
+
+-----
+
+void CHorizon::Create(CHorizon &rHorizon)
+{
+	m_inLineMin = rHorizon.m_inLineMin;
+	m_inLineMax = rHorizon.m_inLineMax;
+	m_xLineMin  = rHorizon.m_xLineMin;
+	m_xLineMax  = rHorizon.m_xLineMax;;
+	
+	m_nRecs = rHorizon.m_nRecs;
+	
+	AllocateHorizonArrays();
+	
+	for (int i=0; i<m_nRecs; i++) {
+		m_pInline[i] = rHorizon.m_pInline[i];
+		m_pXline[i]  = rHorizon.m_pXline[i];
+		m_pX[i] = rHorizon.m_pX[i];
+		m_pY[i] = rHorizon.m_pY[i];
+	}
+}
+
+m_pInline[i]
+5053
+m_pXline[i]
+1153
+m_pX[i]
+616883.18999999994
+m_pY[i]
+6620608.5000000000
+
+-----
+
+	WellList *pWellList = pDoc->GetWellListPtr();
+	if (pSegyIndex->IsIndexLoaded()) {
+		POSITION pos = pWellList->GetHeadPosition();
+		while (pos) {
+			CWell *pWell = pWellList->GetNext(pos);
+			
+			if (pWell->xcoord != -1.0 && pWell->ycoord != -1.0) {
+				pSegyIndex->FindNearestTrace(pWell->xcoord, pWell->ycoord, pWell->m_inline, pWell->m_xline);
+			}
+		}
+	}
+
+		CSeisParms *seisParms = m_seisParmsList.GetAt(m_seisParmsList.FindIndex(m_viewIndex));
+		CSegy *pSegy = seisParms->pSegy;
+		CString filename = seisParms->GetFileName();
+		int dbgCurrentLineNumber = pSegy->GetCurrentLineNumber();
+		int dgbInlnexlineMode = pSegy->GetInlineXlineMode();
+		if (pSegy->GetCurrentLineNumber() != m_plotParmData.m_dispLine ||
+			pSegy->GetInlineXlineMode()   !=  m_plotParmData.m_inlineXlineMode ||
+			bUpdateLineSelectSliders)
+		{
+			if (!m_segyIndex.IsIndexLoaded()) {
+				m_segyIndex.LoadIndex(filename, &m_headerMap, AfxGetMainWnd()->GetSafeHwnd());
+
+				WellList *pWellList = GetWellListPtr();
+				if (m_segyIndex.IsIndexLoaded()) {
+					POSITION pos = pWellList->GetHeadPosition();
+					while (pos) {
+						CWell *pWell = pWellList->GetNext(pos);
+			
+						if (pWell->xcoord != -1.0 && pWell->ycoord != -1.0) {
+							m_segyIndex.FindNearestTrace(pWell->xcoord, pWell->ycoord, pWell->m_inline, pWell->m_xline);
+						}
+					}
+				}
+			}
+
+-----
+
+CMapView::OnPaint():
+                    
+	CSegy *pSegy = pDoc->GetFirstLoadedSegyPtr();
+	if (pSegy == NULL) return;
+
+	CSegyIndex *pIndex = pSegy->GetSegyIndexPtr();
+	if (pIndex == NULL) return;
+	if (pIndex->GetTraceCount() == 0) return;        
+
+        // ...
+
+	DWORD inLine, xLine;
+        // ...
+	pIndex->FindNearestTrace(x1, y1, inLine, xLine);                    
+
+i
+16322
+
+2021.01.24
+I. Researching and implementing solution:
+
+void CSegyIndex::FindNearestTrace(double xcoord, double ycoord, DWORD &rInline, DWORD &rXline)
+{
+	double dx, dy;
+	double dist, nearDist;
+	DWORD i, nearIndex;
+	dx = xcoord - GetXCoord(0);
+	dy = ycoord - GetYCoord(0);
+	nearDist = pow((dx*dx + dy*dy),0.5);
+	nearIndex = 0;
+	rInline = GetInline(nearIndex);
+	rXline  = GetCrossline(nearIndex);
+	for (i=0; i<GetTraceCount(); i++) {
+		dx = xcoord - GetXCoord(i);
+		dy = ycoord - GetYCoord(i);
+		dist = pow ((dx*dx + dy*dy), 0.5);
+		if (dist < nearDist) {
+			nearDist = dist;
+			nearIndex = i;
+			rInline = GetInline(nearIndex);
+			rXline  = GetCrossline(nearIndex);
+		}
+	}
+}
+
+1)
+                    
+GetTraceCount()
+69394
+
+i
+16322                    
+
+localHorizon.GetNRecs()
+418248
+
+2)
+
+FindNearestTrace():
+index = 69392
+i = 69392
+
+3)
+
+FindNearestTrace():
+i = 41589
+
+SetInlineXlineFromXY(...):
+index = 331203
+
+4)
+
+FindNearestTrace():
+i = 67850
+
+SetInlineXlineFromXY(...):
+index = 54705
+
+
+--------------------------------------------------------------------------------
+
+#pragma omp parallel for
+for(i=0;i<N;i++){
+    int ival; //this variable must be declared inside the loop to be private for each thread
+    ival = sample(arr[i]);
+//    printf("%d %d \n",ival,arr[i]);
+    omp_set_lock(&histogram_locks[ival]);
+    histogram[ival]++;
+    omp_unset_lock(&histogram_locks[ival]);
+}
+
+--------------------------------------------------------------------------------
+
+m_nRecs = 418248
+
+1)
+
+FindNearestTrace(...):
+i
+36959
+
+SetInlineXlineFromXY(...):
+index
+333942
+
+2)
+
+j = 139578
+
+i = 0
+
+GetTraceCount()
+69394
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	C3005	'collapse': unexpected token encountered on OpenMP 'parallel for' directive	IMAC	c:\sound-qi_source\soundqi-branch\rm_branch\imac\imacdoc.cpp	5786	
+
+i = 9
+fileCount = 13
+
+	for (int i = 0; i < fileCount; i++) {
+		CSegy* pSegy = GetSegyInPtr(i);
+		CString attrName = GetAttr(i);
+		// ...
+	}
+
+2021.01.25
+I. Researching and implementing solution:
+		
+FindNearestTrace: 
+-Once for every trace 
+69394
+
+//SetInlineXlineFromXY:
+//-Once for every rec:
+//418248
+
+GetInlineXlineFromXY:
+-Once for every rec:
+418248
+-Once for every file:
+fileCount = 13
+
+--------------------------------------------------------------------------------
+
+hrzFileDlg.GetFileMetrics(&headerCount, &wordCount, &arrTitles);
+
+headerCount = 1
+wordCount = 5
+arrTitles
+0x00000050fad29148 {m_pData=0x000001f2db762f20 "X" m_nSize=5 m_nMaxSize=5 ...}
+    [CStringArray]: {m_pData=0x000001f2db762f20 "X" m_nSize=5 m_nMaxSize=5 ...}
+    CObject: {...}
+    m_pData: 0x000001f2db762f20 "X"
+    m_nSize: 5
+    m_nMaxSize: 5
+    m_nGrowBy: 0
+
+nullValue = -999.250000
+
+-----
+
+	// get the horizon names and column indexes
+	if (m_nWords > 0) m_arrNames.SetSize(m_nWords);
+	int inlineCol = -1, xlineCol = -1;
+	int xCoordCol = -1, yCoordCol = -1;
+	int ix = 0;
+	for (int i = 0; i < wordCount; i++) {
+		CString horName = arrTitles->GetAt(i);
+		if (horName.CompareNoCase("inline") == 0)
+			inlineCol = i;
+		else if (horName.CompareNoCase("crossline") == 0 || horName.CompareNoCase("xline") == 0)
+			xlineCol = i;
+		else if (horName.CompareNoCase("x") == 0)
+			xCoordCol = i;
+		else if (horName.CompareNoCase("y") == 0)
+			yCoordCol = i;
+		else if (arrTitles->GetAt(i) == IGNORECOLUMN)
+			m_nWords--; // subtract from word count
+		else if (ix < m_nWords)
+			m_arrNames[ix++] = horName;
+	}
+
+        
+-----
+
+	// loop once through the file, we need to know:
+	// - the number of horizons in each record
+	// - the total number of records in the file
+	m_nRecs = 0;
+	while (!feof(pf)) {
+		if (fgets(pBuf, NCHAR, pf) == NULL) {
+			if (ferror(pf)) {
+				msg.Format("Error reading file %s", fname);
+				AfxMessageBox(msg);
+				fclose(pf);
+				DestroyData();
+				return -1;
+			}
+			continue;
+		}
+		m_nRecs++;
+
+		// Count the number of items in each record, check that every record is the same.
+		j = 0;
+		token = strtok(pBuf, delimiters);
+		while (token) {
+			j++;
+			token = strtok(NULL, delimiters);
+		}
+
+		if (j != wordCount) {
+			msg.Format("Loading horizon: Bad record found. Record number %d only has %d words. Expecting %d.", m_nRecs, j, m_nWords);
+			AfxMessageBox(msg);
+			fclose(pf);
+			DestroyData();
+			return -1;
+		}
+	}
+
+-After:
+
+"token = strtok(NULL, delimiters);"
+
+j = 1
+token = 0x00000050fad2605a "6620608.5"
+
+m_nRecs = 1
+
+-----
+
+j = 3
+token = 0x00000050fad26064 "1024.3663"
+
+After loop exits:
+m_nRecs = 418248
+
+-----
+
+	try {
+		// read the data, store in memory.
+		for (i = 0; i < m_nRecs; i++) {
+			fgets(pBuf, NCHAR, pf);
+			char* pStart;
+			pStart = pBuf;
+			int ix = 0;
+
+
+			char* pch;
+			pch = strtok(pStart, delimiters);
+			j = 0;
+			while (pch != NULL || j < wordCount)
+			{
+				if (j == inlineCol) {
+					m_pInline[i] = (int)strtod(pch, NULL);
+				}
+				else if (j == xlineCol) {
+					m_pXline[i] = (int)strtod(pch, NULL);
+				}
+				else if (j == xCoordCol) {
+					m_pX[i] = (int)strtod(pch, NULL);
+				}
+				else if (j == yCoordCol) {
+					m_pY[i] = (int)strtod(pch, NULL);
+				}
+				else {
+					if (arrTitles->GetAt(j) != IGNORECOLUMN) {
+						m_pHorizon[ix][i] = (float)strtod(pch, NULL);
+						if (m_pHorizon[ix][i] == m_nullValue) {
+							m_pHorizon[ix][i] = NULL_HORIZON_VALUE;
+						}
+						ix++;
+					}
+				}
+				pch = strtok(NULL, delimiters);
+				j++;
+			}
+		}
+	}
+	catch (std::exception& ex) {
+		CString exceptionMessage = ex.what();
+		AfxMessageBox("Error reading file: " + exceptionMessage);
+	}
+
+i = 0
+pch = 0x00000050fad26050 "616883.19"
+
+-----
+
+	int      GetHorizonCount()   { return m_nWords; }
+	int      GetRecordCount()    { return m_nRecs; }
+
+void CHrzParmDlg::PopulateControls()
+{
+	CHorizon *pHor = m_pLocalHor;
+	m_inlineMin = pHor->GetInlineMin();
+	m_inlineMax = pHor->GetInlineMax();
+	m_xlineMin  = pHor->GetXlineMin();
+	m_xlineMax  = pHor->GetXlineMax();
+
+	m_hrzList.DeleteAllItems();
+	
+	CString txt;
+	int nHor = pHor->GetHorizonCount();
+	for (int i=0; i<nHor; i++) {
+		m_hrzList.InsertItem(i, pHor->GetName(i));
+		txt = pHor->GetDisplayMode(i)? "Yes": "No";
+		m_hrzList.SetItem(i, 2, LVIF_TEXT, txt, 0,0,0,0);
+		txt.Format("%d", pHor->GetLineWidth(i));
+		m_hrzList.SetItem(i, 3, LVIF_TEXT, txt, 0,0,0,0);
+		COLORREF horColor = pHor->GetLineColor(i);
+		if (horColor == NOCOLOR) horColor = m_hrzList.GetSubitemColor(1, i);  // use default color
+		m_hrzList.SetSubitemColor(1, i, horColor);
+	}
+	UpdateData(FALSE);
+}
+
+
+// given the inline,xline pair set istart to it`s index. return 0 on success or -1 if not found. 
+int CHorizon::FindIndex(int inLine, int xLine, int &istart)
+{
+	if (istart >= m_nRecs) return -1;
+	if (istart < 0) istart = 0;
+	int ix = istart;
+	int icount = 0;
+	while (m_pInline[ix] != inLine || m_pXline[ix] != xLine) {
+		if (++ix == m_nRecs) ix = 0;
+		if (++icount == m_nRecs) return -1;
+	}
+	istart = ix;
+	return 0;
+}
+
+void CHorizon::operator += (const CHorizon& rHorizon)
+{
+	int i, j, ix;
+	if (rHorizon.m_nRecs == 0 || rHorizon.m_nWords == 0) return; 
+
+	// add some space for the new horizons, copy in the horizon names
+	for (i=0; i<rHorizon.m_nWords; i++) {
+		float *pData = new float[m_nRecs];
+		for (j=0; j<m_nRecs; j++) pData[j] = NULL_HORIZON_VALUE;
+
+		m_arrNames.Add(rHorizon.m_arrNames[i]);
+		m_pHorizon[i+m_nWords]    = pData;
+		m_displayMode[i+m_nWords] = rHorizon.m_displayMode[i];
+		m_lineWidth[i+m_nWords]   = rHorizon.m_lineWidth[i];
+		m_color[i+m_nWords]       = rHorizon.m_color[i];
+	}
+
+	// copy the data to the new index locations
+	for (i=0, ix=0; i<rHorizon.m_nRecs; i++) {
+		if (FindIndex(rHorizon.m_pInline[i], rHorizon.m_pXline[i], ix) == 0) {
+			// copy in the x,y`s if they are not defined
+			if (m_pX[ix] < 0) m_pX[ix] = rHorizon.m_pX[i];
+			if (m_pY[ix] < 0) m_pY[ix] = rHorizon.m_pY[i];
+			// copy the horizon data
+			for (j=0; j<rHorizon.m_nWords; j++) {
+				float *pData = m_pHorizon[j+m_nWords];
+				float *pSrc  = rHorizon.m_pHorizon[j];
+				pData[ix] = pSrc[i];
+			}
+		}
+	}
+
+	m_nWords += rHorizon.m_nWords;
+}
+
+-----
+
+Optimize FindIndex or operator+=?
+
+// given the inline,xline pair set istart to it`s index. return 0 on success or -1 if not found. 
+int CHorizon::FindIndex(int inLine, int xLine, int &istart)
+{
+	if (istart >= m_nRecs) return -1;
+	if (istart < 0) istart = 0;
+	int ix = istart;
+	int icount = 0;
+	while (m_pInline[ix] != inLine || m_pXline[ix] != xLine) {
+		if (++ix == m_nRecs) ix = 0;
+		if (++icount == m_nRecs) return -1;
+	}
+	istart = ix;
+	return 0;
+}
+
+// Append the horizon. Only the portion that has common inline,xline will be appended.
+// Check the limits with > operator, if a larger area is needed use Create then append.
+void CHorizon::operator += (const CHorizon& rHorizon)
+{
+	int i, j, ix;
+	if (rHorizon.m_nRecs == 0 || rHorizon.m_nWords == 0) return; 
+
+	// add some space for the new horizons, copy in the horizon names
+	for (i=0; i<rHorizon.m_nWords; i++) {
+		float *pData = new float[m_nRecs];
+		for (j=0; j<m_nRecs; j++) pData[j] = NULL_HORIZON_VALUE;
+
+		m_arrNames.Add(rHorizon.m_arrNames[i]);
+		m_pHorizon[i+m_nWords]    = pData;
+		m_displayMode[i+m_nWords] = rHorizon.m_displayMode[i];
+		m_lineWidth[i+m_nWords]   = rHorizon.m_lineWidth[i];
+		m_color[i+m_nWords]       = rHorizon.m_color[i];
+	}
+
+	// copy the data to the new index locations
+	for (i=0, ix=0; i<rHorizon.m_nRecs; i++) {
+		if (FindIndex(rHorizon.m_pInline[i], rHorizon.m_pXline[i], ix) == 0) {
+			// copy in the x,y`s if they are not defined
+			if (m_pX[ix] < 0) m_pX[ix] = rHorizon.m_pX[i];
+			if (m_pY[ix] < 0) m_pY[ix] = rHorizon.m_pY[i];
+			// copy the horizon data
+			for (j=0; j<rHorizon.m_nWords; j++) {
+				float *pData = m_pHorizon[j+m_nWords];
+				float *pSrc  = rHorizon.m_pHorizon[j];
+				pData[ix] = pSrc[i];
+			}
+		}
+	}
+
+	m_nWords += rHorizon.m_nWords;
+}
+
+
+2021.01.26
+I. Researching and implementing solution:
+
+	for (int i=0; i<m_nRecs; i++) {
+		//TODO: Write all of these m_pInline and m_pXline values to a file to compare
+		m_pInline[i] = rHorizon.m_pInline[i];
+		TRACE("m_pInline[i] = %u\n", m_pXline[i]);
+		m_pXline[i]  = rHorizon.m_pXline[i];
+		TRACE("m_pXline[i] = %u\n", m_pXline[i]);
+		m_pX[i] = rHorizon.m_pX[i];
+		TRACE("m_pX[i] = %d\n", m_pX[i]);
+		m_pY[i] = rHorizon.m_pY[i];
+		TRACE("m_pInline[i], m_pXline[i], m_pX[i], m_pY[i] = %d	%d	%u	%u\n", m_pInline[i], m_pXline[i], m_pX[i], m_pY[i]);
+		TRACE("\n");
+	}
+
+-----
+
+CHrzPropertyDlg::CHrzPropertyDlg(CWnd* pParent /*=nullptr*/)
+	: CDialogEx(IDD_HORIZON_PROPERTIES, pParent)
+{
+	m_pHorizon = NULL;
+	m_pointCount.Empty();
+	m_inlineMin.Empty();
+	m_inlineMax.Empty();
+	m_xlineMin.Empty();
+	m_xlineMax.Empty();
+}
+
+BOOL CHrzPropertyDlg::OnInitDialog()
+{
+	CDialogEx::OnInitDialog();
+
+	CRect rItem;
+	m_propertyList.GetClientRect(rItem);
+	m_propertyList.InsertColumn(0, "Name", LVCFMT_LEFT, rItem.Width() * 30 / 100);
+	m_propertyList.InsertColumn(1, "Count", LVCFMT_LEFT, rItem.Width() * 10 / 100);
+	m_propertyList.InsertColumn(2, "Inline Min", LVCFMT_LEFT, rItem.Width() * 10 / 100);
+	m_propertyList.InsertColumn(3, "Inline Max", LVCFMT_LEFT, rItem.Width() * 10 / 100);
+	m_propertyList.InsertColumn(4, "Xline Min", LVCFMT_LEFT, rItem.Width() * 10 / 100);
+	m_propertyList.InsertColumn(5, "Xline Max", LVCFMT_LEFT, rItem.Width() * 10 / 100);
+	m_propertyList.InsertColumn(6, "Data Min", LVCFMT_LEFT, rItem.Width() * 10 / 100);
+	m_propertyList.InsertColumn(7, "Data Max", LVCFMT_LEFT, rItem.Width() * 10 / 100);
+
+	PopulateControls();
+	ModifyStyle(0, WS_THICKFRAME);
+	return TRUE;
+}
+
+void CHrzPropertyDlg::PopulateControls()
+{
+	CHorizon *pHor = m_pHorizon;
+	m_pointCount.Format("%d", pHor->GetRecordCount());
+	m_inlineMin.Format("%d",pHor->GetInlineMin());
+	m_inlineMax.Format("%d", pHor->GetInlineMax());
+	m_xlineMin.Format("%d", pHor->GetXlineMin());
+	m_xlineMax.Format("%d", pHor->GetXlineMax());
+
+	CString txt;
+	m_propertyList.DeleteAllItems();
+	for (int i = 0; i < pHor->GetHorizonCount(); i++) {
+		int dataCount, inlineMin, inlineMax, xlineMin, xlineMax;
+		float dataMin, dataMax;
+		pHor->GetHorizonProperties(i, dataCount, inlineMin, inlineMax, xlineMin, xlineMax, dataMin, dataMax);
+		m_propertyList.InsertItem(i, pHor->GetName(i).Trim());
+		txt.Format("%d", dataCount);
+		m_propertyList.SetItem(i, 1, LVIF_TEXT, txt, 0, 0, 0, 0);
+		txt.Format("%d", inlineMin);
+		m_propertyList.SetItem(i, 2, LVIF_TEXT, txt, 0, 0, 0, 0);
+		txt.Format("%d", inlineMax);
+		m_propertyList.SetItem(i, 3, LVIF_TEXT, txt, 0, 0, 0, 0);
+		txt.Format("%d", xlineMin);
+		m_propertyList.SetItem(i, 4, LVIF_TEXT, txt, 0, 0, 0, 0);
+		txt.Format("%d", xlineMax);
+		m_propertyList.SetItem(i, 5, LVIF_TEXT, txt, 0, 0, 0, 0);
+		txt.Format("%.1f", dataMin);
+		m_propertyList.SetItem(i, 6, LVIF_TEXT, txt, 0, 0, 0, 0);
+		txt.Format("%.1f", dataMax);
+		m_propertyList.SetItem(i, 7, LVIF_TEXT, txt, 0, 0, 0, 0);
+	}
+
+	UpdateData(FALSE);
+}
+
+// Get the maximum dimensions
+void CHorizon::GetBounds(CHorizon *pHor, int &inlineMin, int &inlineMax, int &xlineMin, int &xlineMax)
+{
+	inlineMin = __min(m_inLineMin, pHor->m_inLineMin);
+	inlineMax = __max(m_inLineMax, pHor->m_inLineMax);
+	xlineMin  = __min(m_xLineMin, pHor->m_xLineMin);
+	xlineMax  = __max(m_xLineMax, pHor->m_xLineMax);
+}
+
+// Get the properties for one horizon.
+void CHorizon::GetHorizonProperties(int horizonIndex, int &dataCount, 
+	int &inlineMin, int &inlineMax, int &xlineMin, int &xlineMax, float &dataMin, float &dataMax)
+{
+	float *pData = GetHorizonDataPtr(horizonIndex);
+	int *pInline = GetInlinePtr();
+	int *pXline = GetXlinePtr();
+	dataMin = NULL_HORIZON_VALUE;
+	dataMax = NULL_HORIZON_VALUE;
+	inlineMin = inlineMax = xlineMin = xlineMax = -1;
+	dataCount = 0;
+	for (int j = 0; j < GetRecordCount(); j++) {
+		if (pData[j] != NULL_HORIZON_VALUE) {
+			dataCount++;
+			if (dataMin == NULL_HORIZON_VALUE || pData[j] < dataMin) dataMin = pData[j];
+			if (dataMax == NULL_HORIZON_VALUE || pData[j] > dataMax) dataMax = pData[j];
+			if (inlineMin == -1 || pInline[j] < inlineMin) inlineMin = pInline[j];
+			if (inlineMax == -1 || pInline[j] > inlineMax) inlineMax = pInline[j];
+			if (xlineMin == -1 || pXline[j] < xlineMin) xlineMin = pXline[j];
+			if (xlineMax == -1 || pXline[j] > xlineMax) xlineMax = pXline[j];
+		}
+	}
+}
+
+CIMACDoc *pDoc = CIMACDoc::GetIMACDocPtr();
+
+m_pDoc->GetInlineXlineFromXY(*pLocalHor);
+
+void CIMACDoc::GetInlineXlineFromXY(CHorizon& localHorizon)
+{
+	int segyToUse = GetSegyToUse();
+	int fileCount = GetFileCount();
+	
+	for (int i = 0; i < fileCount; i++) {
+		CSegy* pSegy = GetSegyInPtr(i);
+		CString attrName = GetAttr(i);
+
+		// skip loading if this attribute doesn`t appear on any xplot.
+		if (!IsAttributeInUse(attrName) && i != segyToUse) {
+			// check if the attribute is needed for a virtual volume
+			if (!IsAttributeInVirtualVolumeInUse(attrName)) {
+				continue;
+			}
+		}
+
+#pragma omp parallel for
+		for (int j = 0; j < localHorizon.GetNRecs(); j++) {
+			DWORD inLine, xLine;
+			CSegyIndex* pSegyIndexPtr = pSegy->GetSegyIndexPtr();
+			localHorizon.SetInlineXlineFromXY(pSegyIndexPtr, j, &inLine, &xLine);
+		}
+	}
+}
+
+            
+	// Convert X/Y Coordinates to Inline/Xline
+    void GetInlineXlineFromXY(CHorizon& localHorizon);
+
+    
+-----
+
+QI-Pro.exe has triggered a breakpoint.
+
+/////////////////////////////////////////////////////////////////////////////
+// CChildFrame diagnostics
+
+#ifdef _DEBUG
+void CChildFrame::AssertValid() const
+{
+	CMDIChildWndEx::AssertValid();
+}
+
+void CMainFrame::OnSize(UINT nType, int cx, int cy)
+{
+	CMDIFrameWndEx::OnSize(nType, cx, cy);
+}
+
+	// Horizons may have been deleted. Delete any Zones or Timeslice depending on them.
+	pDoc->ValidateZones();
+	pDoc->ValidateTimeslice();
+
+-----
+
+void CHorizon::DestroyData()
+{
+	if (m_pX) delete m_pX;
+	if (m_pY) delete m_pY;
+	if (m_pInline) delete m_pInline;
+	if (m_pXline)  delete m_pXline;
+
+	for (int i=0; i<m_nWords; i++) {
+		if (m_pHorizon[i]) delete m_pHorizon[i];
+	}
+	InitData();	
+}
+
+Exception thrown: read access violation.
+**this** was 0xFFFFFFFFFFFFFFEF.
+
+void CHrzParmDlg::OnOK()
+{
+
+	GetControlData();
+
+	CHorizon *m_pDocHor = m_pDoc->GetHorizonDataPtr();
+	m_pDocHor->DestroyData();
+	delete m_pDocHor;
+
+    int horizonCount = m_pLocalHor->GetHorizonCount();
+    if (horizonCount == 0) {
+        m_pLocalHor->DestroyData();
+    }
+
+	m_pDoc->SetHorizonDataPtr(m_pLocalHor);
+
+	CDialogEx::OnOK();
+}
+
+void CIMACApp::OnHrzParms()
+{
+	CIMACDoc *pDoc = GetDocument();
+	if (pDoc == NULL) return;
+
+	CHrzParmDlg dlg;
+	dlg.m_pDoc = pDoc;
+	dlg.DoModal();	
+
+	// Horizons may have been deleted. Delete any Zones or Timeslice depending on them.
+	pDoc->ValidateZones();
+	pDoc->ValidateTimeslice();
+        // ...
+}    
+
+		CLogfile *pLogfile = pDoc->GetLogfilePtr();
+		pLogfile->OpenLogfile(projectPath);
+		pLogfile->WriteLogfile("CAA_QIPro::Compute", "Starting..");
+
+                pLogfile->CloseLogfile();                
+
+                
+// ...
+}
+
+DWORD
+
+Exception thrown at 0x00007FF6CF0B5DE8 in QI-Pro.exe: 0xC0000005: Access violation reading location 0x000001C8AF63EDE0.
+
+2021.02.02
+I. Researching and implementing solution:
+
+m_binCounts
+
+                // draw the text under the box
+                message.Format("x=%s\ny=%s\n%4.2f", aaEllipse.m_attributeX, aaEllipse.m_attributeY, aaEllipse.m_binCounts);
+                rect.top = rect.bottom;
+                rect.bottom = rect.top + CELL_MARGIN;
+                pMemDC->DrawText(message, rect, DT_BOTTOM | DT_LEFT);
+
+bool CAAView::IsAttributeOverlap(CAAEllipse& p_aaEllipse)
+{
+    return p_aaEllipse.m_binCounts >= 1.0;
+}                
+
+-----
+
+AI_QIPRo.cpp:
+
+			logMessage.Format("  normalize...");
+			pLogfile->WriteLogfile("CAA_QIPro::Compute", logMessage);
+
+            // normalize to be on the same scale
+            for (int i = 0; i < region1Count; i++) {
+                float newElement = (std1 == 0) ? 0 : ((pAttr1Region1Data->GetAt(i) - mean1) / std1);
+                attr1Region1Normalized.SetAtGrow(i, newElement);
+                newElement = (std2 == 0) ? 0 : ((pAttr2Region1Data->GetAt(i) - mean2) / std2);
+                attr2Region1Normalized.SetAtGrow(i, newElement);
+            }
+            for (int i = 0; i < region2Count; i++) {
+                float newElement = (std1 == 0) ? 0 : ((pAttr1Region2Data->GetAt(i) - mean1) / std1);
+                attr1Region2Normalized.SetAtGrow(i, newElement);
+                newElement = (std2 == 0) ? 0 : ((pAttr2Region2Data->GetAt(i) - mean2) / std2);
+                attr2Region2Normalized.SetAtGrow(i, newElement);
+            }
+
+			logMessage.Format("  bin edges...");
+			pLogfile->WriteLogfile("CAA_QIPro::Compute", logMessage);
+
+            // define bin edges
+            float min, max, xmin, xmax, ymin, ymax;
+            CCppUtil::MinMax(&attr1Region1Normalized, region1Count, &xmin, &xmax);
+            CCppUtil::MinMax(&attr1Region2Normalized, region2Count, &min, &max);
+            xmin = (min < xmin) ? min : xmin;
+            xmax = (max > xmax) ? max : xmax;
+
+			logMessage.Format("  min max...");
+			pLogfile->WriteLogfile("CAA_QIPro::Compute", logMessage);
+
+            CCppUtil::MinMax(&attr2Region1Normalized, region1Count, &ymin, &ymax);
+            CCppUtil::MinMax(&attr2Region2Normalized, region2Count, &min, &max);
+            ymin = (min < ymin) ? min : ymin;
+            ymax = (max > ymax) ? max : ymax;
+
+            double xEdges[LinSpaceSize];
+            double yEdges[LinSpaceSize];
+            double xBin[LinSpaceSize];
+            double yBin[LinSpaceSize];
+
+			logMessage.Format("  LinSpace...");
+			pLogfile->WriteLogfile("CAA_QIPro::Compute", logMessage);
+
+            CCppUtil::LinSpace(xEdges, xmin, xmax, LinSpaceSize);
+            CCppUtil::LinSpace(yEdges, ymin, ymax, LinSpaceSize);
+
+			logMessage.Format("  bin centers...");
+			pLogfile->WriteLogfile("CAA_QIPro::Compute", logMessage);
+
+            // Calculate bin centers
+            for (int i = 0; i < LinSpaceSize-1; i++) {
+                xBin[i] = (double) ((xEdges[i] + xEdges[i + 1]) / 2.0);
+                yBin[i] = (double) ((yEdges[i] + yEdges[i + 1]) / 2.0);
+            }
+
+			logMessage.Format("  ellipse fit...");
+			pLogfile->WriteLogfile("CAA_QIPro::Compute", logMessage);
+
+                        
+--------------------------------------------------------------------------------
+
+// given two ellipses on a xy coordinate system, this function returns the area of overlap
+int CAA_QIPro::InEllipse(double *xBin, double *yBin, int binSize, AAEllipse AAellipse1, AAEllipse AAellipse2)
+{
+	CString logMessage;
+	CLogfile *pLogfile = pDoc->GetLogfilePtr();
+	logMessage.Format("    InEllipse enter.");
+	pLogfile->WriteLogfile("CAA_QIPro::InEllipse", logMessage);
+
+    CEllipse Cellipse1(AAellipse1.centerX, AAellipse1.centerY, AAellipse1.majorAxis, AAellipse1.minorAxis, AAellipse1.phi);
+    CEllipse Cellipse2(AAellipse2.centerX, AAellipse2.centerY, AAellipse2.majorAxis, AAellipse2.minorAxis, AAellipse2.phi);
+
+    int binCount = 0;
+    for (int i = 0; i < binSize; i++) {
+        float pointX = (float)xBin[i];
+            for (int j = 0; j < binSize; j++) {
+                float pointY = (float)yBin[j];
+                if (Cellipse1.PtInEllipse(pointX, pointY) && Cellipse2.PtInEllipse(pointX, pointY)) {
+                    binCount++;
+            }
+        }
+
+    }
+	logMessage.Format("    InEllipse done. Bincount=%d", binCount);
+	pLogfile->WriteLogfile("CAA_QIPro::InEllipse", logMessage);
+
+    return binCount;
+}
+
+// create the sorted index array. It will be used on output to write in sorted order.
+void CAA_QIPro::SortByBincount()
+{
+    m_sortIndex = new int[m_parameterCount];
+    double *bincountData = new double[m_parameterCount];
+    for (int i = 0; i < m_parameterCount; i++) {
+        m_sortIndex[i] = i;
+        bincountData[i] = m_parameterArray.GetAt(i).binCount;
+    }
+
+    QuickSort2ArgInplace(bincountData, m_sortIndex, m_parameterCount);
+    delete [] bincountData;
+}
+
+int CAA_QIPro::Compute()
+{
+    // check if input parameters have been set
+    if (pDoc == NULL) {
+        return -2;
+    }
+	CString logMessage;
+	CLogfile *pLogfile = pDoc->GetLogfilePtr();
+
+	int regionCount = pDoc->GetAARegionCount();
+    CAARegionArray *pRegion1Array = pDoc->GetAARegion1ArrayPtr();
+    CAARegionArray *pRegion2Array = pDoc->GetAARegion2ArrayPtr();
+	logMessage.Format("Region Count: %d", regionCount);
+	pLogfile->WriteLogfile("CAA_QIPro::Compute", logMessage);
+
+    for (int jj = 0; jj < regionCount; jj++) {
+        CAARegion *pAttr1Region1 = pRegion1Array->GetAt(jj);
+        CAARegion *pAttr1Region2 = pRegion2Array->GetAt(jj);
+		
+		// for now check for null ptrs and return.  TODO: figure out why the pointers are null
+		if (pAttr1Region1 == NULL || pAttr1Region2 == NULL) {
+			AfxMessageBox("Please check regions and try again");
+			return 0;
+		}
+        
+		ASSERT(pAttr1Region1->GetName() == pAttr1Region2->GetName());
+
+		logMessage.Format("Region %d %s", jj, pAttr1Region1->GetName());
+		pLogfile->WriteLogfile("CAA_QIPro::Compute", logMessage);
+
+        for (int kk = 0; kk < regionCount; kk++) {
+            CAARegion *pAttr2Region1 = pRegion1Array->GetAt(kk);
+            CAARegion *pAttr2Region2 = pRegion2Array->GetAt(kk);
+
+			// for now check for null ptrs and return.  TODO: figure out why the pointers are null
+			if (pAttr2Region1 == NULL || pAttr2Region2 == NULL) {
+				AfxMessageBox("Please check regions and try again");
+				return 0;
+			}
+
+			ASSERT(pAttr2Region1->GetName() == pAttr2Region2->GetName());
+
+			logMessage.Format("  Region %d %s", jj, pAttr2Region1->GetName());
+			pLogfile->WriteLogfile("CAA_QIPro::Compute", logMessage);
+
+            AAParms parameters;
+            parameters.isIdentity = (jj == kk); //this is cross plotting it with itself
+            parameters.isTransposed = (kk > jj); //this is the transpose of one that as already been generated
+
+            AAEllipse ellipse1;
+            AAEllipse ellipse2;
+            parameters.attribute1 = pAttr1Region1->GetName();
+            parameters.attribute2 = pAttr2Region1->GetName();
+
+            CFloatArray *pAttr1Region1Data = pAttr1Region1->GetDataPointer();
+            CFloatArray *pAttr1Region2Data = pAttr1Region2->GetDataPointer();
+            CFloatArray *pAttr2Region1Data = pAttr2Region1->GetDataPointer();
+            CFloatArray *pAttr2Region2Data = pAttr2Region2->GetDataPointer();
+            int region1Count = pAttr1Region1->GetPointCount();
+            int region2Count = pAttr1Region2->GetPointCount();
+
+			logMessage.Format("  mean and std deviation...");
+			pLogfile->WriteLogfile("CAA_QIPro::Compute", logMessage);
+
+            // Calculate mean and standard deviation for each attribute
+            float mean1 = CCppUtil::Mean2Arg(pAttr1Region1Data, region1Count, pAttr1Region2Data, region2Count);
+            float mean2 = CCppUtil::Mean2Arg(pAttr2Region1Data, region1Count, pAttr2Region2Data, region2Count);
+            float std1 = CCppUtil::StandardDeviation2Arg(pAttr1Region1Data, region1Count, pAttr1Region2Data, region2Count);
+            float std2 = CCppUtil::StandardDeviation2Arg(pAttr2Region1Data, region1Count, pAttr2Region2Data, region2Count);
+            ellipse1.mean = mean1;
+            ellipse2.mean = mean2;
+            ellipse1.std = std1;
+            ellipse2.std = std2;
+
+			logMessage.Format("  normalize...");
+			pLogfile->WriteLogfile("CAA_QIPro::Compute", logMessage);
+
+            // normalize to be on the same scale
+            for (int i = 0; i < region1Count; i++) {
+                float newElement = (std1 == 0) ? 0 : ((pAttr1Region1Data->GetAt(i) - mean1) / std1);
+                attr1Region1Normalized.SetAtGrow(i, newElement);
+                newElement = (std2 == 0) ? 0 : ((pAttr2Region1Data->GetAt(i) - mean2) / std2);
+                attr2Region1Normalized.SetAtGrow(i, newElement);
+            }
+            for (int i = 0; i < region2Count; i++) {
+                float newElement = (std1 == 0) ? 0 : ((pAttr1Region2Data->GetAt(i) - mean1) / std1);
+                attr1Region2Normalized.SetAtGrow(i, newElement);
+                newElement = (std2 == 0) ? 0 : ((pAttr2Region2Data->GetAt(i) - mean2) / std2);
+                attr2Region2Normalized.SetAtGrow(i, newElement);
+            }
+
+			logMessage.Format("  bin edges...");
+			pLogfile->WriteLogfile("CAA_QIPro::Compute", logMessage);
+
+            // define bin edges
+            float min, max, xmin, xmax, ymin, ymax;
+            CCppUtil::MinMax(&attr1Region1Normalized, region1Count, &xmin, &xmax);
+            CCppUtil::MinMax(&attr1Region2Normalized, region2Count, &min, &max);
+            xmin = (min < xmin) ? min : xmin;
+            xmax = (max > xmax) ? max : xmax;
+
+			logMessage.Format("  min max...");
+			pLogfile->WriteLogfile("CAA_QIPro::Compute", logMessage);
+
+            CCppUtil::MinMax(&attr2Region1Normalized, region1Count, &ymin, &ymax);
+            CCppUtil::MinMax(&attr2Region2Normalized, region2Count, &min, &max);
+            ymin = (min < ymin) ? min : ymin;
+            ymax = (max > ymax) ? max : ymax;
+
+            double xEdges[LinSpaceSize];
+            double yEdges[LinSpaceSize];
+            double xBin[LinSpaceSize];
+            double yBin[LinSpaceSize];
+
+			logMessage.Format("  LinSpace...");
+			pLogfile->WriteLogfile("CAA_QIPro::Compute", logMessage);
+
+            CCppUtil::LinSpace(xEdges, xmin, xmax, LinSpaceSize);
+            CCppUtil::LinSpace(yEdges, ymin, ymax, LinSpaceSize);
+
+			logMessage.Format("  bin centers...");
+			pLogfile->WriteLogfile("CAA_QIPro::Compute", logMessage);
+
+            // Calculate bin centers
+            for (int i = 0; i < LinSpaceSize-1; i++) {
+                xBin[i] = (double) ((xEdges[i] + xEdges[i + 1]) / 2.0);
+                yBin[i] = (double) ((yEdges[i] + yEdges[i + 1]) / 2.0);
+            }
+
+			logMessage.Format("  ellipse fit...");
+			pLogfile->WriteLogfile("CAA_QIPro::Compute", logMessage);
+
+            // Fit ellipse to the data
+            double ellipse1X[LinSpaceSize];
+            double ellipse1Y[LinSpaceSize];
+            double ellipse2X[LinSpaceSize];
+            double ellipse2Y[LinSpaceSize];
+            EllipseFit(&attr1Region1Normalized, &attr2Region1Normalized, region1Count, ellipse1X, ellipse1Y, &ellipse1);
+            EllipseFit(&attr1Region2Normalized, &attr2Region2Normalized, region2Count, ellipse2X, ellipse2Y, &ellipse2);
+			double binCount = InEllipse(xBin, yBin, LinSpaceSize-1, ellipse1, ellipse2);
+            parameters.binCount = binCount;
+            parameters.ellipse1 = ellipse1;
+            parameters.ellipse2 = ellipse2;
+            m_parameterArray.SetAtGrow(m_parameterCount++, parameters);
+        }
+    }
+    
+	pLogfile->WriteLogfile("CAA_QIPro::Compute", "EuclideanDistance()..");
+    EuclideanDistance();
+	
+	pLogfile->WriteLogfile("CAA_QIPro::Compute", "SortByBincount()..");
+	SortByBincount();
+	
+	pLogfile->WriteLogfile("CAA_QIPro::Compute", "SaveEllipseData()..");
+	SaveEllipseData();
+	
+	
+
+    return 0;
+}
+
+-----
+
+CrossplotSettingsDlg.cpp:
+
+    DDX_Text(pDX, IDC_EDIT_BINX, m_binXsize);
+    DDX_Text(pDX, IDC_EDIT_BINY, m_binYsize);
+
+	if(bDensity) {
+		if(m_binXsize == 0) {
+			// use a reasonable default
+			m_binXsize = (m_xMax - m_xMin) / 25.0f;
+		}
+		if(m_binYsize == 0) {
+			// use a reasonable default
+			m_binYsize = (m_yMax - m_yMin) / 25.0f;
+		}
+	}
+
+	GetDlgItem(IDC_STATIC_BIN_X)->EnableWindow(bDensity);
+	GetDlgItem(IDC_STATIC_BIN_Y)->EnableWindow(bDensity);        
+
+UpdateCrossplot:
+	// Check if the crossplot density mode has to be updated
+	if (oldParms.m_strXAttr != newParms.m_strXAttr ||
+		oldParms.m_strYAttr != newParms.m_strYAttr ||
+		oldParms.m_binXsize != newParms.m_binXsize ||
+		oldParms.m_binYsize != newParms.m_binYsize)
+	{
+		newParms.SetDensityModeUpdateFlag(TRUE);
+	}
+
+
+CCrossplotView::DoOnDraw:
+
+	// draw the reference bin at the mouse cursor.
+	if (pXpParms->m_nScatterMode==eDENSITY && m_showBin) {
+		pDC->SelectObject(&m_grayPen);
+		m_binX = pXpParms->m_binXsize;
+		m_binY = pXpParms->m_binYsize;
+		a=m_binX/(pXpParms->m_fXMax-pXpParms->m_fXMin);
+		tmpx=(int)(a*(float)(x2-x1));
+		a=m_binY/(pXpParms->m_fYMax-pXpParms->m_fYMin);
+		tmpy=(int)(a*(float)(y2-y1));
+		int ix=m_mx-(tmpx/2);
+		int iy=m_my-(tmpy/2);
+		pDC->MoveTo(ix, iy);
+		pDC->LineTo(ix+tmpx, iy);
+		pDC->LineTo(ix+tmpx, iy+tmpy);
+		pDC->LineTo(ix, iy+tmpy);
+		pDC->LineTo(ix, iy);
+	}
+
+-----
+
+	// draw the reference bin at the mouse cursor.
+	if (pXpParms->m_nScatterMode==eDENSITY && m_showBin) {
+		pDC->SelectObject(&m_grayPen);
+		m_binX = pXpParms->m_binXsize;
+		m_binY = pXpParms->m_binYsize;
+		a=m_binX/(pXpParms->m_fXMax-pXpParms->m_fXMin);
+		tmpx=(int)(a*(float)(x2-x1));
+		a=m_binY/(pXpParms->m_fYMax-pXpParms->m_fYMin);
+		tmpy=(int)(a*(float)(y2-y1));
+		int ix=m_mx-(tmpx/2);
+		int iy=m_my-(tmpy/2);
+		pDC->MoveTo(ix, iy);
+		pDC->LineTo(ix+tmpx, iy);
+		pDC->LineTo(ix+tmpx, iy+tmpy);
+		pDC->LineTo(ix, iy+tmpy);
+		pDC->LineTo(ix, iy);
+	}
+
+-----
+        
+	// Create the matrix, allocate an extra cell in each direction. Cell size is half a bin size.
+	// The Matrix nodes contain a list to all the points in that cell as well as the count.
+	int nbinx = (int)((maxx - minx) / halfBinX) + 3;
+	int nbiny = (int)((maxy - miny) / halfBinY) + 3;
+	int matrixCount = nbinx * nbiny;
+	if (matrixCount > *pMatrix_size){
+		if (*pMatrix) delete *pMatrix;
+		*pMatrix = new MATRIX_NODE[matrixCount];
+		*pMatrix_size = matrixCount;
+	}
+	memset(*pMatrix, 0, sizeof(MATRIX_NODE)*matrixCount);
+	MATRIX_NODE *matrix = *pMatrix;
+
+Where:
+	// initalize min max
+	float *pX = pSegyX->GetTraceDataPtr(0, startTime);
+	float *pY = pSegyY->GetTraceDataPtr(0, startTime);
+	float minx = pX[0];
+	float maxx = pX[0];
+	float miny = pY[0];
+	float maxy = pY[0];
+
+        // ...
+
+	DENSITY_NODE *pNode = arrNodes;
+	for (int j = 0; j < traceCount; j++) {
+		float *pX = pSegyX->GetTraceDataPtr(j, startTime);
+		float *pY = pSegyY->GetTraceDataPtr(j, startTime);
+		// load up the zone arrays for this trace
+		for (int izone = 0; izone<zoneCount; izone++) {
+			viewZoneArray->GetAt(izone).SetRange(pSegyX->GetInline(j), pSegyX->GetCrossline(j), pHorizon);
+		}
+
+		for (int k = 0; k < nsamps; k++) {
+
+			// check if point is within a selected zone
+			BOOL bZoneCheck = (zoneCount == 0);
+			for (int izone = 0; izone<zoneCount; izone++) {
+				bZoneCheck = viewZoneArray->GetAt(izone).CheckRange(k);
+				if (bZoneCheck) break;
+			}
+			if (bZoneCheck) {
+				densityTable[denIndex] = 0;
+				pNode->ignore = FALSE;
+			} else {
+				densityTable[denIndex] = -1;  // flag indicates that sample not in a zone.
+				pNode->ignore = TRUE;
+			}
+
+			// initalize node
+			pNode->x = pX[k];
+			if (pNode->x < minx) minx = pNode->x;
+			if (pNode->x > maxx) maxx = pNode->x;
+			pNode->y = pY[k];
+			if (pNode->y < miny) miny = pNode->y;
+			if (pNode->y > maxy) maxy = pNode->y;
+			pNode->ignore = (densityTable[denIndex] == -1);
+			pNode->pNext = NULL;
+			pNode++;
+		}
+	}        
+
+-----
+
+void CIMACDoc::CountBinPoints(int nbin, int istart, int iend, float *pBinX, float *pBinY, int *densityTable, float halfBinX, float halfBinY)
+{
+	// find the inital position of the x window
+	float binXlow = pBinX[istart] - halfBinX;
+	float binXhi = pBinX[istart] + halfBinX;
+	float binYlow = pBinY[istart] - halfBinY;
+	float binYhi = pBinY[istart] + halfBinY;
+	int ixMin = istart;
+	int ixMax = istart;
+	while (ixMin > 0 && pBinX[ixMin] >= binXlow) ixMin--;
+	while (ixMax < nbin - 1 && pBinX[ixMax] <= binXhi) ixMax++;
+	if (ixMin < nbin - 1 && ixMin < istart) ixMin++;
+	if (ixMax > 0 && ixMax > istart) ixMax--;
+
+	for (int i = istart; i <= iend; i++) {
+		// adjust the X window for each sample
+		float binXlow = pBinX[i] - halfBinX;
+		float binXhi = pBinX[i] + halfBinX;
+		float binYlow = pBinY[i] - halfBinY;
+		float binYhi = pBinY[i] + halfBinY;
+
+		while (ixMin < nbin - 1 && pBinX[ixMin] < binXlow) ixMin++;
+		if (ixMin > nbin - 1) ixMin = nbin - 1;
+
+		while (ixMax < nbin  && pBinX[ixMax] < binXhi) ixMax++;
+		if (ixMax >= nbin) ixMax = nbin - 1;
+
+		// Search the X window counting samples that fall inside the Y bounds
+		for (int j = ixMin; j <= ixMax; j++) {
+			if (densityTable[i] == -1) continue;
+			if (pBinY[j] >= binYlow && pBinY[j] <= binYhi && densityTable[j] > -1) densityTable[i]++;
+		}
+
+	}
+}
+
+-----
+
+
+int CIMACDoc::ComputeDensityTableFast(int viewInstance, CSegy *pSegyX, CSegy *pSegyY, int startTime, int endTime, 
+	int **pDensityTable, CViewZoneArray *viewZoneArray)
+{
+	clock_t start, sortTime, finish;
+	start = clock();
+	
+	CModelessInfoDlg infoDlg;
+
+	int *densityTable;
+	int *sortedTable;
+	DWORD *sortOrder;
+	float *pBinX;
+	float *pBinY;
+	CXplotParms *pXpParms;
+	pXpParms = GetXplotParms(viewInstance);
+
+	if(pXpParms->m_binXsize == 0) {
+		// use a reasonable default
+		pXpParms->m_binXsize = (pXpParms->m_fXMax - pXpParms->m_fXMin) / 10.0f;
+	}
+	if(pXpParms->m_binYsize == 0) {
+		// use a reasonable default
+		pXpParms->m_binYsize = (pXpParms->m_fYMax - pXpParms->m_fYMin) / 10.0f;
+	}
+
+	float binXsize = pXpParms->m_binXsize;
+	float binYsize = pXpParms->m_binYsize;
+	float halfBinX = binXsize/2;
+	float halfBinY = binYsize/2;
+
+	// Allocate the memory
+	int si = GetSI();			// note: si in MICRO seconds. 
+	int nsamps = Time2Index((endTime - startTime), si) + 1; 
+	int nbin = pSegyX->GetTraceCount() * nsamps;
+	densityTable = new int[nbin];
+	sortedTable = new int[nbin];
+	sortOrder = new DWORD[nbin];
+	pBinX = new float[nbin];
+	pBinY = new float[nbin];
+	if (densityTable==NULL ||sortedTable==NULL || sortOrder==NULL || pBinX==NULL || pBinY==NULL) {
+		AfxMessageBox("Error allocating mamory for Density Table");
+		pXpParms->m_nScatterMode = eCLASS;
+		return -1;
+	}
+
+	// Get the thread info, tell the user.
+	int nThreads = m_numberOfProcessors;
+	int nchunk = nbin / nThreads;
+	CString txt;
+	txt.Format("Calculating points density.\n\n");				  infoDlg.ShowMessage(txt);
+	txt.Format("          Number of points  = %d\n", nbin);		  infoDlg.AddString(txt);
+	txt.Format("          Number of threads = %d\n", nThreads);   infoDlg.AddString(txt);
+	txt.Format("          Points per thread = %d\n\n", nchunk);   infoDlg.AddString(txt);
+	txt.Format("          X Bin Size = %5.2f\n", binXsize);       infoDlg.AddString(txt);
+	txt.Format("          Y Bin Size = %5.2f\n\n", binYsize);     infoDlg.AddString(txt);
+	txt.Format("Calculating...");
+	infoDlg.AddString(txt);
+
+	// get the data
+	CHorizon *pHorizon = GetHorizonDataPtr();
+	int denIndex = 0;
+	int zoneCount = (int) viewZoneArray->GetCount();
+	for (int j=0; j<pSegyX->GetTraceCount(); j++) {
+		float *pX = pSegyX->GetTraceDataPtr(j, startTime);
+		float *pY = pSegyY->GetTraceDataPtr(j, startTime);
+
+		// load up the zone arrays for this trace
+		for (int izone=0; izone<zoneCount; izone++) {
+			viewZoneArray->GetAt(izone).SetRange(pSegyX->GetInline(j), pSegyX->GetCrossline(j), pHorizon);
+		}
+
+		for (int k=0; k<nsamps; k++) {
+			pBinX[denIndex] = pX[k];
+			pBinY[denIndex] = pY[k];
+
+			// check if point is within a selected zone
+			BOOL bZoneCheck = (zoneCount == 0);
+			for (int izone=0; izone<zoneCount; izone++) {
+				bZoneCheck = viewZoneArray->GetAt(izone).CheckRange(k);
+				if(	bZoneCheck ) break;
+			}
+			if (bZoneCheck) {
+				densityTable[denIndex] = 0;
+			} else {
+				densityTable[denIndex] = -1;  // flag indicates that sample not in a zone.
+			}
+			sortOrder[denIndex] = denIndex;
+			denIndex++;
+		}
+	}
+
+	// sort the X data, Y will follow. Keep track of sort order.
+	QuickSort4ArgInplace(pBinX, pBinY, densityTable, sortOrder, nbin);
+
+	sortTime = clock();
+
+	// count the points that fall within each bin. Use threads for this.
+	for (int i=0; i<nThreads; i++) {
+		taskparm[i].nbin = nbin;
+		taskparm[i].istart = i * nchunk;
+		taskparm[i].iend = ((i+1) * nchunk)-1;
+		taskparm[i].pBinX = pBinX;
+		taskparm[i].pBinY = pBinY;
+		taskparm[i].densityTable = densityTable;
+		taskparm[i].halfBinX = halfBinX;
+		taskparm[i].halfBinY = halfBinY;
+	}
+	taskparm[nThreads-1].iend = nbin-1;
+
+	// start the threads
+	for (int i=0; i<nThreads; i++) {
+		pThreads[i] = AfxBeginThread(DensityTableThreadTask, &taskparm[i], THREAD_PRIORITY_NORMAL, 1024, CREATE_SUSPENDED);
+		if (pThreads[i] == NULL) {
+			AfxMessageBox("failed to start thread");
+		} else {
+			handles[i] = pThreads[i]->m_hThread;
+			// we need to start the threads this way due to a bug in WaitForMultipleObjects
+			pThreads[i]->m_bAutoDelete = FALSE;
+			pThreads[i]->ResumeThread();
+		}
+	}
+
+	DWORD istat = WaitForMultipleObjects(nThreads, handles, TRUE, INFINITE);
+	if (istat != WAIT_OBJECT_0) {
+			AfxMessageBox("Error waiting for threads");
+	}
+
+	//delete the thread objects
+	for (int i=0; i<nThreads; i++) {
+		delete(pThreads[i]);
+	}
+
+	// we have to unscramble the data so it makes sense for the display.
+	UnSort(densityTable, sortedTable, sortOrder, nbin);
+	*pDensityTable = sortedTable;
+
+	delete [] densityTable;
+	delete [] sortOrder;
+	delete [] pBinX;
+	delete [] pBinY;
+
+	finish = clock();
+	double duration1 = (double) (sortTime-start) / CLOCKS_PER_SEC;
+	double duration2 = (double) (finish-start) / CLOCKS_PER_SEC;
+	TRACE("Density table. Sort %3.2f seconds. Threads %2.1f seconds.", duration1, duration2);
+
+	infoDlg.DestroyWindow();
+
+	return 0; 
+}
+
+-----
+
+IMACDoc:
+
+
+int  CIMACDoc::CountNodeList_NE(DENSITY_NODE *pNode, DENSITY_NODE *pList, float binx, float biny)
+{
+	int count = 0;
+	float min = pNode->x - binx;
+	float max = pNode->y + biny;
+	while (pList != NULL){
+		if (pList->x > min  && pList->y < max)
+			count++;
+		pList = (DENSITY_NODE *)pList->pNext;
+	}
+	return count;
+}
+int  CIMACDoc::CountNodeList_N(DENSITY_NODE *pNode, DENSITY_NODE *pList, float binx, float biny)
+{
+	int count = 0;
+	float max = pNode->y + biny;
+	while (pList != NULL){
+		if (pList->y < max)
+			count++;
+		pList = (DENSITY_NODE *)pList->pNext;
+	}
+	return count;
+}
+int  CIMACDoc::CountNodeList_NW(DENSITY_NODE *pNode, DENSITY_NODE *pList, float binx, float biny)
+{
+	int count = 0;
+	float maxx = pNode->x + binx;
+	float maxy = pNode->y + biny;
+	while (pList != NULL){
+		if (pList->x < maxx && pList->y < maxy)
+			count++;
+		pList = (DENSITY_NODE *)pList->pNext;
+	}
+	return count;
+}
+int  CIMACDoc::CountNodeList_E(DENSITY_NODE *pNode, DENSITY_NODE *pList, float binx, float biny)
+{
+	int count = 0;
+	float min = pNode->x - binx;
+	while (pList != NULL){
+		if (pList->x > min)
+			count++;
+		pList = (DENSITY_NODE *)pList->pNext;
+	}
+	return count;
+}
+
+#else
+void CIMACDoc::CountBinPoints(int nbin, int istart, int iend, float *pBinX, float *pBinY, int *densityTable, float halfBinX, float halfBinY)
+{
+	for (int i = istart; i <= iend; i++) {
+		// define the bin for this sample
+		float binXlow = pBinX[i] - halfBinX;
+		float binXhi = pBinX[i] + halfBinX;
+		float binYlow = pBinY[i] - halfBinY;
+		float binYhi = pBinY[i] + halfBinY;
+		// find the start and end index in the X array
+		int ixMin = i;
+		int ixMax = i;
+		while (ixMin > 0 && pBinX[ixMin] >= binXlow) ixMin--;
+		while (ixMax < nbin - 1 && pBinX[ixMax] <= binXhi) ixMax++;
+		if (ixMin >= 0 && ixMin < i) ixMin++;
+		if (ixMax <= nbin - 1 && ixMax > i) ixMax--;
+		// now look for samples that fall inside the Y bounds
+		for (int j = ixMin; j <= ixMax; j++) {
+			if (densityTable[i] == -1) continue;
+			if (pBinY[j] >= binYlow && pBinY[j] <= binYhi && densityTable[j] > -1) densityTable[i]++;
+		}
+
+	}
+}
+#endif
+
+void CIMACDoc::CountNodeBinPoints(DENSITY_NODE *arrNodes, MATRIX_NODE *matrix, int iStart, int iEnd, int *densityTable, int nbinx, float halfBinX, float halfBinY)
+{
+	for (int i = iStart; i <= iEnd; i++){
+		if (densityTable[i] == -1) continue;
+		if (arrNodes[i].ignore) continue;
+		int nodeIndex = arrNodes[i].index;
+		int nPoint = matrix[nodeIndex].count;
+
+		int ixSearch = nodeIndex - nbinx - 1;
+		nPoint += CountNodeList_SE(&arrNodes[i], (DENSITY_NODE *)matrix[ixSearch].ptr, halfBinX, halfBinY);
+		nPoint += CountNodeList_S(&arrNodes[i], (DENSITY_NODE *)matrix[++ixSearch].ptr, halfBinX, halfBinY);
+		nPoint += CountNodeList_SW(&arrNodes[i], (DENSITY_NODE *)matrix[++ixSearch].ptr, halfBinX, halfBinY);
+		ixSearch = nodeIndex - 1;
+		nPoint += CountNodeList_E(&arrNodes[i], (DENSITY_NODE *)matrix[ixSearch].ptr, halfBinX, halfBinY);
+		nPoint += CountNodeList_W(&arrNodes[i], (DENSITY_NODE *)matrix[ixSearch + 2].ptr, halfBinX, halfBinY);
+		ixSearch = nodeIndex + nbinx - 1;
+		nPoint += CountNodeList_NE(&arrNodes[i], (DENSITY_NODE *)matrix[ixSearch].ptr, halfBinX, halfBinY);
+		nPoint += CountNodeList_N(&arrNodes[i], (DENSITY_NODE *)matrix[++ixSearch].ptr, halfBinX, halfBinY);
+		nPoint += CountNodeList_NW(&arrNodes[i], (DENSITY_NODE *)matrix[++ixSearch].ptr, halfBinX, halfBinY);
+
+		densityTable[i] = nPoint;
+
+	}
+}
+
+UINT __cdecl CIMACDoc::DensityNodeThreadTask(LPVOID pParm)
+{
+	NODE_DENSITY_PARM *pData = (NODE_DENSITY_PARM *)pParm;
+	DENSITY_NODE *arrNodes = (DENSITY_NODE *)pData->arrNodes;
+	MATRIX_NODE *matrix = (MATRIX_NODE *)pData->matrix;
+	int *densityTable = pData->densityTable;
+	int istart = pData->istart;
+	int iend = pData->iend;
+	int nbinx = pData->nbinx;
+	float halfBinX = pData->halfBinX;
+	float halfBinY = pData->halfBinY;
+	CIMACDoc::CountNodeBinPoints(arrNodes, matrix, istart, iend, densityTable, nbinx, halfBinX, halfBinY);
+	return 0;
+}
+
+-----
+
+class CXplotParms : public CObject
+{
+public:
+	CXplotParms();
+	virtual ~CXplotParms();
+	void CXplotParms::operator =(CXplotParms& rXplotParms);
+	void ResetXplotVariables();
+	virtual void Serialize( CArchive& ar ); 
+	BOOL IsXplotActive();
+	CString GetXAttr() { return m_strXAttr; }
+	CString GetYAttr() { return m_strYAttr; }
+	CString GetColorAttr() { return m_strColorAttr; }
+
+	int GetCutoffCount() {return (int) m_cutoffParmsList.GetCount();}
+	bool IsThirdAttributeMode() { return m_nScatterMode == eATTR; }
+
+	CCutoffParmsList m_cutoffParmsList;
+	CCutoffParms * CutoffParmsGetAt(DWORD i);
+	void CutoffParmsAddTail(CCutoffParms *pCutoff);
+	void CutoffParmsSetAt(DWORD i, CCutoffParms *pCutoff);
+	void CutoffParmsRemoveAll();
+	void CutoffParmsRemoveAt(DWORD i);
+	DWORD CutoffParmsGetCount();
+	BOOL GetCSIXMode() { return m_csiXstate; }
+	BOOL GetCSIYMode() { return m_csiYstate; }
+	void SetCSIXMode(BOOL flg) { m_csiXstate = flg; }
+	void SetCSIYMode(BOOL flg) { m_csiYstate = flg; }
+
+	void ComputeDensityTable(CIMACDoc* pDoc, int viewInstance, int startTime, int endTime, CViewZoneArray& selectedZones);
+	int* GetDensityTable() { return m_densityTable; }
+
+private:
+	void Initialize();
+	void ResetDensityTable();
+
+public:
+	int m_version;
+	CString m_title;
+	CString m_strXAttr;
+	CString m_strYAttr;
+	CString m_strColorAttr;
+	int   x1, y1, x2, y2;		// pixel coordinates of the axis
+	float m_fXMin, m_fXMax;		// values of the X axis endpoints
+	float m_fYMin, m_fYMax;		// values of the Y axis endpoints
+	// annotation parameters
+	float m_xLabelInterval;
+	float m_yLabelInterval;
+	float m_xTickInterval;
+	float m_yTickInterval;
+	//scatter parameters
+	int	  m_dotSize;
+	int	  m_nScatter;
+	int   m_nScatterMode;
+	float m_binXsize;
+	float m_binYsize;
+	int   m_colorBarMin;
+	int   m_colorBarMax;
+	BOOL  m_bFineTuneMode;
+	BOOL  m_bFirstWinPlacement;
+	CRect m_rcParentWin;
+
+	CString m_strImageFile;
+	BOOL m_bDisableImage;
+	BOOL m_bGroupMove;
+
+	BOOL	m_csiXstate;
+	BOOL	m_csiYstate;
+
+	CRect rcWinFrame;	// the window coordinates of the frame, used for resizing
+	CRect rcWinClient;  // the coords of the client area
+	CSegy *pSegyX;		// a temporary variable, used in the computation phase.
+	int   segyXindex;	// a temporary variable corresponding to the above pointer.
+	CSegy *pSegyY;		// a temporary variable, used in the computation phase.
+	int   segyYindex;	// a temporary variable corresponding to the above pointer.
+
+	BOOL m_bDeleteUndoStack;
+	BOOL m_bNewAxisFlag;
+
+	BOOL m_densityModeUpdateFlag;
+	void SetDensityModeUpdateFlag (BOOL flag) { m_densityModeUpdateFlag=flag;}
+	BOOL GetDensityModeUpdateFlag () { return m_densityModeUpdateFlag; }
+
+	//The selected states of the items on the parameter panel
+	CBOOLArray m_classSelectState;
+	CBOOLArray m_zoneSelectState;
+	BOOL	   m_activeButton;
+	BOOL	   m_allButton;
+
+	float	   m_attrColorBarMin;
+	float	   m_attrColorBarMax;
+
+	// density table - do not serialize
+	int* m_densityTable;
+	DENSITY_NODE* m_arrNodes;
+	MATRIX_NODE* m_matrix;
+	int m_densityTable_size;
+	int m_arrNodes_size;
+	int m_matrix_size;
+};
+
+-----
+
+void CCrossPlotView::DoOnDraw(CDC* pDCin) 
+{
+    // ...
+}    
+
+-> This is called when loading project or when clicking a crossplot:
+
+    if (nID >= ID_VIEW_XPLOTS && nID <= ID_VIEW_XPLOTS + NXPLOT)
+    {
+        ((CCrossPlotView*)(pNewFrameWnd->GetActiveView()))->SetViewInstance(nID - ID_VIEW_XPLOTS - 1);
+    }
+
+-----
+
+This is called when in a crossplot dialog I click "Class or Points Density Mode":
+
+pXpParms->ComputeDensityTable(pDoc, m_viewInstance, startTime, endTime, selectedZones);
+
+2021.02.03
+I. Researching and implementing solution:
+
+Brenda Maloff    1 hour ago 
+                CSegy* pSegy = pDoc->GetSegyInPtr(i);
+ 
+                double xCoordMin = 0, xCoordMax = 0, yCoordMin = 0, yCoordMax = 0;
+                pSegy->GetSegyIndexPtr()->GetCoordMinMax(xCoordMin, xCoordMax, yCoordMin, yCoordMax);
+ 
+                DWORD lineMin;
+                DWORD lineMax;
+                DWORD xLineMin;
+                DWORD xLineMax;
+                pSegy->GetSegyIndexPtr()->GetLineMinMax(lineMin, lineMax, xLineMin, xLineMax);
+
+"So that is how you get the inline/xline min/max and the x and y coord min/max"
+
+Brenda Maloff    1 hour ago 
+"to calculate the bin size you"
+
+Brenda Maloff    1 hour ago 
+    double binSizeX = (xMax - xMin) / ((inLineMax - inLineMin) / pDoc->GetInLineInc());
+    double binSizeY = (yMax - yMin) / ((xLineMax - xLineMin) / pDoc->GetXLineInc());
+
+
+Brenda Maloff    1 hour ago 
+"now I might have this mixed up, with the inlines being the y instead of the x direction.....but I`m sure you can test this out yourself......because if you take your x/y coordinate for your horizon and then take the difference from the min x/y point, and then divided by the bin size if you get you the number of inlines or xlines from the min inline/xline point......and then do your find trace and the two calculations should equal......if that makes sense"
+
+Brenda Maloff    1 hour ago 
+"you can also get the first two traces and see if the difference between the x or the y value is 0.....because that will be the xline direction......so if the x values differ, then x is the xline direction and the y values differ then y is the xline direction"
+
+Brenda Maloff    1 hour ago 
+"and I should tell you that GetInLineInc and GetXLineInc dont exist in your branch.....I'm adding them right now, they are just 1 by default"
+
+-----
+
+		// Get nearest bins
+		double xCoordMin = 0, xCoordMax = 0, yCoordMin = 0, yCoordMax = 0;
+
+		CSegyIndex* pIndex = pSegy->GetSegyIndexPtr();
+		pIndex->GetCoordMinMax(xCoordMin, xCoordMax, yCoordMin, yCoordMax);
+		DWORD lineMin;
+		DWORD lineMax;
+		DWORD xLineMin;
+		DWORD xLineMax;
+		pIndex->GetLineMinMax(lineMin, lineMax, xLineMin, xLineMax);
+		double binSizeX = (xCoordMax - xCoordMin) / (pIndex->GetCrosslineCount());
+		double binSizeY = (yCoordMax - yCoordMin) / (pIndex->GetInlineCount());
+		
+		
+// #pragma omp parallel for		
+		for (int traceIndex = 0; traceIndex < GetNRecs(); traceIndex++) {
+			//DWORD inLine, xLine;
+			//CSegyIndex* pSegyIndexPtr = pSegy->GetSegyIndexPtr();
+			//FindInlineXlineFromXY(pSegyIndexPtr, nTrace, &inLine, &xLine);
+			double tracexCoord = m_pX[traceIndex];
+			double traceyCoord = m_pY[traceIndex];
+
+			for (DWORD j = xCoordMin; j <= xCoordMax - binSizeX; j += binSizeX) {
+				for (DWORD k = yCoordMin; k <= yCoordMax - binSizeY; k += binSizeY) {
+					if (tracexCoord >= j && tracexCoord <= (j + binSizeX))
+					{
+						if (traceyCoord >= k && traceyCoord <= (k + binSizeY))
+						{
+							m_pInline[traceIndex] = tracexCoord;
+							m_pXline[traceIndex] = traceyCoord;
+						}
+					}
+				}
+			}
+		}
+
+At line "m_pInline[traceIndex] = tracexCoord;":
+traceIndex = 237457
+tracexCoord = 628142.00000000000
+traceyCoord = 6623182.0000000000
+
+-----
+
+Exception thrown at 0x00007FF733146188 in QI-Pro.exe: 0xC0000005: Access violation reading location 0x000001F689912390.
+
+DWORD  GetInline(int n) { return m_pInline[n]; }
+
+Where:
+
+n = 320976
+binSizeX = 30.865900383141764
+binSizeY = 30.829710144927535
+
+2021.02.04
+I. Researching and implementing solution:
+
+traceIndex = 313540
+
+GetNRecs()
+418248
+
+GetNRecs()
+418248
+
+m_inlineCount
+276
+m_xlineCount
+261
+m_ntrace
+69394
+
+2021.02.05
+I. Researching and implementing solution:
+
+c:\sound-qi_source\soundqi-branch\rm_branch\common\horizon.cpp(201) : atlTraceGeneral - <Inline>        <Xline>         <X>             <Y>             <traceNo> 
+
+2021.02.08
+I. Researching and implementing solution:
+
+		double binSizeX, binSizeY;
+		if (inLine == inLine3) {
+			binSizeX = (maxX - minX) / (pIndex->GetCrosslineTraceCount() - 1);
+			binSizeY = (maxY - minY) / (pIndex->GetInlineTraceCount() - 1);
+		}
+		else {
+			binSizeX = (maxX - minX) / (pIndex->GetInlineTraceCount() - 1);
+			binSizeY = (maxY - minY) / (pIndex->GetCrosslineTraceCount() - 1);
+		}
+
+binSizeX = 29.294545454545453
+binSizeY = 32.726923076923079
+
+		for (DWORD traceIndex = 0; traceIndex < pIndex->GetTraceCount(); traceIndex++) {
+			double tracexCoord = m_pX[traceIndex];
+			double traceyCoord = m_pY[traceIndex];
+                        // ...
+                }
+
+tracexCoord = 616883.00000000000
+traceyCoord = 6620608.0000000000
+
+-----
+
+-> See 2020_03_03_BrendaExplainsInlineXlineBinsTracesRecs.m4v
+-Inline/Xline don`t necessarily start at 0.
+-Functions in SegyIndex, given this trace number, give me the inline, or given this trace number, give me the xline.
+-Given an inline/xline, you can always figure it out, given the count. SEG-Y files always go inline, then xline.  
+-xlines are columns, inlines are rows, so it is always inline first, then xline 
+-You always have 1 less bin 
+-nRec is the number of traces
+
+2021.02.09
+I. Researching and implementing solution:
+
+		// Get nearest bins
+		double xCoordMin = 0, xCoordMax = 0, yCoordMin = 0, yCoordMax = 0;
+
+		CSegyIndex* pIndex = pSegy->GetSegyIndexPtr();
+		double minX, minY, maxX, maxY;
+		pIndex->GetCoordMinMax(minX, maxX, minY, maxY);
+		DWORD inLine, xLine, inLine2, xLine2, inLine3, xLine3;
+		pIndex->FindNearestTrace(minX, minY, inLine, xLine);
+		pIndex->FindNearestTrace(maxX, maxX, inLine2, xLine2);
+		pIndex->FindNearestTrace(maxX, minY, inLine3, xLine3);
+
+		double binSizeX, binSizeY;
+		if (inLine == inLine3) {
+			binSizeX = (maxX - minX) / (pIndex->GetCrosslineTraceCount() - 1);
+			binSizeY = (maxY - minY) / (pIndex->GetInlineTraceCount() - 1);
+		}
+		else {
+			binSizeX = (maxX - minX) / (pIndex->GetInlineTraceCount() - 1);
+			binSizeY = (maxY - minY) / (pIndex->GetCrosslineTraceCount() - 1);
+		}
+		double binX = 0;
+		double binY = 0;
+		
+		myfile = fopen("find_nearest_trace.log", "a+");
+
+		for (DWORD traceIndex = 0; traceIndex < pIndex->GetTraceCount(); traceIndex++) {
+			binX = (m_pX[traceIndex] - minX) / binSizeX;
+			binY = (m_pY[traceIndex] - minY) / binSizeY;
+
+			for (double j = xCoordMin; j < xCoordMax; j += binSizeX) {
+				for (double k = yCoordMin; k < yCoordMax; k += binSizeY) {
+					if ((binX >= (j - binSizeX) && binX < (j + binSizeX)) &&
+						(binY >= (k - binSizeY) && binY < (k + binSizeY)))
+					{
+						m_pInline[traceIndex] = pIndex->GetInline(traceIndex);
+						m_pXline[traceIndex] = pIndex->GetCrossline(traceIndex);
+						fprintf(myfile, "%u        %u         %lf             %lf             %u", m_pInline[traceIndex], m_pXline[traceIndex], m_pX[traceIndex], m_pY[traceIndex], traceIndex);
+					}
+				}
+			}
+		}
+
+Where:
+xCoordMin = 0.0000000000000000
+xCoordMax = 0.0000000000000000
+
+-So it never enters the loop
+
+-----
+
+void CHorizon::GetInlineXlineFromXY()
+{
+	CIMACDoc* pDoc = CIMACDoc::GetIMACDocPtr();
+	int segyToUse = pDoc->GetSegyToUse();
+	int fileCount = pDoc->GetFileCount();
+	TRACE("<Inline>        <Xline>         <X>             <Y>             <traceNo> \n");
+	myfile = fopen("find_nearest_trace.log", "a+");
+	fprintf(myfile, "<Inline>        <Xline>         <X>             <Y>             <traceNo> \n");
+	fclose(myfile);
+
+	for (int i = 0; i < fileCount; i++) {
+		CSegy* pSegy = pDoc->GetSegyInPtr(i);
+		CString attrName = pDoc->GetAttr(i);
+
+		// skip loading if this attribute doesn`t appear on any xplot.
+		if (!pDoc->IsAttributeInUse(attrName) && i != segyToUse) {
+			// check if the attribute is needed for a virtual volume
+			if (!pDoc->IsAttributeInVirtualVolumeInUse(attrName)) {
+				continue;
+			}
+		}
+
+		// Get nearest bins
+		CSegyIndex* pIndex = pSegy->GetSegyIndexPtr();
+		double minX, minY, maxX, maxY;
+		pIndex->GetCoordMinMax(minX, maxX, minY, maxY);
+		DWORD inLine, xLine, inLine2, xLine2, inLine3, xLine3;
+		pIndex->FindNearestTrace(minX, minY, inLine, xLine);
+		pIndex->FindNearestTrace(maxX, maxX, inLine2, xLine2);
+		pIndex->FindNearestTrace(maxX, minY, inLine3, xLine3);
+
+		double binSizeX, binSizeY;
+		if (inLine == inLine3) {
+			binSizeX = (maxX - minX) / (pIndex->GetCrosslineTraceCount() - 1);
+			binSizeY = (maxY - minY) / (pIndex->GetInlineTraceCount() - 1);
+		}
+		else {
+			binSizeX = (maxX - minX) / (pIndex->GetInlineTraceCount() - 1);
+			binSizeY = (maxY - minY) / (pIndex->GetCrosslineTraceCount() - 1);
+		}
+		myfile = fopen("find_nearest_trace.log", "a+");
+		double binX = 0;
+		double binY = 0;
+
+		for (DWORD traceIndex = 0; traceIndex < pIndex->GetTraceCount(); traceIndex++) {
+			binX = (m_pX[traceIndex] - minX) / binSizeX;
+			binY = (m_pY[traceIndex] - minY) / binSizeY;
+
+			for (double j = minX; j < maxX; j += binSizeX) {
+				for (double k = minY; k < maxY; k += binSizeY) {
+					if ((binX >= (j - binSizeX) && binX < (j + binSizeX)) &&
+						(binY >= (k - binSizeY) && binY < (k + binSizeY)))
+					{
+						m_pInline[traceIndex] = pIndex->GetInline(traceIndex);
+						m_pXline[traceIndex] = pIndex->GetCrossline(traceIndex);
+						fprintf(myfile, "%u        %u         %lf             %lf             %u", m_pInline[traceIndex], m_pXline[traceIndex], m_pX[traceIndex], m_pY[traceIndex], traceIndex);
+					}
+				}
+			}
+		}
+
+		fclose(myfile);
+	}
+}
+
+traceIndex = 0:
+		binSizeX	29.294545454545453	double
+		binSizeY	32.726923076923079	double
+		binX	-383.99640019860976	double
+		binY	-77.948055000587615	double
+		j	-9.2559631349317831e+61	double
++		m_pX	0x0000021b24669070 {616883.00000000000}	double *
+		m_pX[traceIndex]	616883.00000000000	double
++		m_pY	0x0000021b249a1070 {6620608.0000000000}	double *
+		m_pY[traceIndex]	6620608.0000000000	double
+		maxX	636188.00000000000	double
+		minX	628132.00000000000	double
+		minY	6623159.0000000000	double
++		this	0x0000021b23096ee0 {myfile=0x0000021b1e4a2050 {_Placeholder=0x0000000000000000 } m_pY=0x0000021b249a1070 {...} ...}	CHorizon *
+		traceIndex	0	unsigned long
+
+m_pX[traceIndex]
+616883.00000000000
+m_pY[traceIndex]
+6620608.0000000000
+
+		binX	-384.50844091360477	double
+		binY	-65.114584557527323	double
+
+                
+
+pIndex->GetTraceCount()
+69394
+traceNo
+15541732
+
+	DWORD  GetInlineTraceCount() { return m_indexData->GetInlineCount(); }
+	DWORD  GetCrosslineTraceCount() { return m_indexData->GetCrosslineCount(); }
+
+	DWORD  GetInlineCount() { return m_inlineCount; }
+	DWORD  GetCrosslineCount() { return m_xlineCount; }
+n = 15541732
+
+pIndex->GetInlineTraceCount()
+m_inlineCount
+276
+m_xlineCount
+261
+
+-----
+
+ 	QI-Pro.exe!CHorizon::FindIndex(int inLine, int xLine, int & istart) Line 916	C++
+ 	QI-Pro.exe!CHorizon::operator+=(const CHorizon & rHorizon) Line 985	C++
+>	QI-Pro.exe!CHrzParmDlg::OnClickedAddFreeFmt() Line 291	C++
+ 	[External Code]	
+ 	QI-Pro.exe!CIMACApp::OnHrzParms() Line 972	C++
+ 	[External Code]	
+ 	QI-Pro.exe!WinMain(HINSTANCE__ * hInstance, HINSTANCE__ * hPrevInstance, char * lpCmdLine, int nCmdShow) Line 26	C++
+
+-----
+
+void CHorizon::GetInlineXlineFromXY()
+{
+	CIMACDoc* pDoc = CIMACDoc::GetIMACDocPtr();
+	TRACE("<Inline>        <Xline>         <X>             <Y>             <traceNo> \n");
+	myfile = fopen("find_nearest_trace.log", "a+");
+	fprintf(myfile, "<Inline>        <Xline>         <X>             <Y>             <traceNo> \n");
+	fclose(myfile);
+
+	// Get nearest bins
+	CSegy* pSegy = pDoc->GetSegyInPtr(0);
+	CSegyIndex* pIndex = pSegy->GetSegyIndexPtr();
+	double minX, minY, maxX, maxY;
+	pIndex->GetCoordMinMax(minX, maxX, minY, maxY);
+	DWORD inLine, xLine, inLine2, xLine2, inLine3, xLine3;
+	pIndex->FindNearestTrace(minX, minY, inLine, xLine);
+	pIndex->FindNearestTrace(maxX, maxX, inLine2, xLine2);
+	pIndex->FindNearestTrace(maxX, minY, inLine3, xLine3);
+
+	double binSizeX, binSizeY;
+	if (inLine == inLine3) {
+		binSizeX = (maxX - minX) / (pIndex->GetCrosslineTraceCount() - 1);
+		binSizeY = (maxY - minY) / (pIndex->GetInlineTraceCount() - 1);
+	}
+	else {
+		binSizeX = (maxX - minX) / (pIndex->GetInlineTraceCount() - 1);
+		binSizeY = (maxY - minY) / (pIndex->GetCrosslineTraceCount() - 1);
+	}
+	myfile = fopen("find_nearest_trace.log", "a+");
+	int binX = 0;
+	int binY = 0;
+
+	for (int inputFileRec = 0; inputFileRec < m_nRecs; inputFileRec++) {
+		binX = (m_pX[inputFileRec] - minX) / binSizeX;
+		binY = (m_pY[inputFileRec] - minY) / binSizeY;
+		int traceNo = 0;
+
+		if (inLine == inLine3) {
+			traceNo = binY * pIndex->GetCrosslineTraceCount() + binX;
+		}
+		else {
+			traceNo = binY * pIndex->GetInlineTraceCount() + binX;
+		}
+		const int inlineTrace = pIndex->GetInline(traceNo);
+		if (inlineTrace != -1) {
+			m_pInline[inputFileRec] = inlineTrace;
+		}
+		const int xlinTrace = pIndex->GetCrossline(traceNo);
+		if (xlinTrace != -1) {
+			m_pXline[inputFileRec] = xlinTrace;
+		}
+		fprintf(myfile, "%u        %u         %lf             %lf             %u", m_pInline[inputFileRec], m_pXline[inputFileRec], m_pX[inputFileRec], m_pY[inputFileRec], inputFileRec);
+	}
+
+	fclose(myfile);
+}
+
+Where:
+
+		if (inlineTrace != -1) {
+			m_pInline[inputFileRec] = inlineTrace;
+		}
+
+inputFileRec = 88
+inlineTrace = 5440
+
+...
+
+		if (xlinTrace != -1) {
+			m_pXline[inputFileRec] = xlinTrace;
+		}
+
+xlinTrace = 1390
+inputFileRec = 88
+
+2021.02.10
+I. Researching and implementing solution:
+
+Exception thrown at 0x00007FF685FA62D8 in QI-Pro.exe: 0xC0000005: Access violation reading location 0x0000022B31E2A36C.
+
+DWORD  GetInline(int n) {return m_pInline[n]; }
+
+Where:
+n = -5969
+
+const int inlineTrace = pIndex->GetInline(traceNo);
+
+Where:
+traceNo = 4294961327
+
+-----
+
+m_nRecs = 418248
+
+		// read the data, store in memory.
+		for (i = 0; i < m_nRecs; i++) {
+			fgets(pBuf, NCHAR, pf);
+			char* pStart;
+			pStart = pBuf;
+			int ix = 0;
+
+
+			char* pch;
+			pch = strtok(pStart, delimiters);
+			j = 0;
+			while (pch != NULL || j < wordCount)
+			{
+				if (j == inlineCol) {
+					m_pInline[i] = (int)strtod(pch, NULL);
+				}
+				else if (j == xlineCol) {
+					m_pXline[i] = (int)strtod(pch, NULL);
+				}
+				else if (j == xCoordCol) {
+					m_pX[i] = (int)strtod(pch, NULL);
+				}
+				else if (j == yCoordCol) {
+					m_pY[i] = (int)strtod(pch, NULL);
+				}
+				else {
+					if (arrTitles->GetAt(j) != IGNORECOLUMN) {
+						m_pHorizon[ix][i] = (float)strtod(pch, NULL);
+						if (m_pHorizon[ix][i] == m_nullValue) {
+							m_pHorizon[ix][i] = NULL_HORIZON_VALUE;
+						}
+						ix++;
+					}
+				}
+				pch = strtok(NULL, delimiters);
+				j++;
+			}
+		}
+
+                i = 0
+		m_pX[i]	616883.00000000000	double
+		m_pY[i]	6620608.0000000000	double
+		m_pHorizon[ix][i]	1024.36633	float
+
+                
+-----
+		minX	628132.00000000000	double
+		maxX	636188.00000000000	double                
+		maxY	6631668.0000000000	double
+		minY	6623159.0000000000	double
+
+		m_pX[inputFileRec]	616883.00000000000	double
+		m_pY[inputFileRec]	6620608.0000000000	double
+
+void SegyIndexData::GetCoordMinMax(double& xMin, double& xMax, double& yMin, double& yMax)
+{
+	if (m_ntrace == 0) {
+		xMin = xMax = yMin = yMax = 0;
+		return;
+	}
+	min_max(m_pXcoord, m_ntrace, &xMin, &xMax);
+	min_max(m_pYcoord, m_ntrace, &yMin, &yMax);
+}
+                
+pIn[i]
+628410.00000000000
+i = 1
+1
+pIn[0]
+628411.00000000000
+
+void SegyIndexData::GetCoordMinMax(double& xMin, double& xMax, double& yMin, double& yMax)
+{
+	if (m_ntrace == 0) {
+		xMin = xMax = yMin = yMax = 0;
+		return;
+	}
+	min_max(m_pXcoord, m_ntrace, &xMin, &xMax);
+	min_max(m_pYcoord, m_ntrace, &yMin, &yMax);
+}
+
+
+// find the min and max of inline, xline, x, and y. Unless the value is -1 then skip them.
+void CHorizon::FindLimits()
+{
+	if (m_nRecs == 0) return;
+
+	m_inLineMin = m_inLineMax = m_pInline[0];
+	m_xLineMin = m_xLineMax = m_pXline[0];
+
+	m_yMin = m_yMax = m_pY[0];
+	m_xMin = m_xMax = m_pX[0];
+
+	for (int i=0; i<m_nRecs; i++) {
+		if (m_pInline[i] >= 0) {
+			m_inLineMin = __min( m_inLineMin, m_pInline[i] );
+			m_inLineMax = __max( m_inLineMax, m_pInline[i] );
+		}
+		if (m_pXline[i] >= 0) {
+			m_xLineMin  = __min( m_xLineMin,  m_pXline[i] );
+			m_xLineMax  = __max( m_xLineMax,  m_pXline[i] );
+		}
+		if (m_pX[i] >= 0) {
+			m_xMin = __min( m_xMin, m_pX[i] );
+			m_xMax = __max( m_xMax, m_pX[i] );
+		}
+		if (m_pY[i] >= 0) {
+			m_yMin = __min( m_yMin, m_pY[i] );
+			m_yMax = __max( m_yMax, m_pY[i] );
+		}
+	}
+}
+
+------
+
+binY * pIndex->GetInlineTraceCount() + binX
+119.05687933463074
+binY * pIndex->GetCrosslineTraceCount() + binX
+113.04979405455680
+
+SegyIndexData:
+	DWORD  GetInline(int n) {return m_pInline[n]; }
+	DWORD  GetCrossline(int n) { return m_pXline[n]; }
+
+
+Horizon::GetInlineXlineFromXY:        
+			if (traceNo < pIndex->GetTraceCount())
+			{
+				//const int inlineTrace = pIndex->GetInline2(traceNo);
+				m_pInline[inputFileRec] = pIndex->GetInline(traceNo);
+
+				//const int xlinTrace = pIndex->GetCrossline2(traceNo);
+				m_pXline[inputFileRec] = pIndex->GetCrossline(traceNo);
+				fprintf(myfile, "%u        %u         %lf             %lf             %u             %lu", m_pInline[inputFileRec], m_pXline[inputFileRec], m_pX[inputFileRec], m_pY[inputFileRec], inputFileRec, traceNo);
+			}        
+
+2021.02.16
+I. Researching and implementing solution:                        
+                        
+m_logfile = "C:\\QI-Pro Demo\\Horn River Demo\\Projects\\Diagnostics\\QI-Pro.log"
+
++		m_file	{hFile=0xffffffffffffffff name=""}	CFile
+
++		m_filename	""	ATL::CStringT<char,StrTraitMFC_DLL<char,ATL::ChTraitsCRT<char>>>
+
+
+	CString projectPath = pDoc->GetPathName();
+	pLogfile->OpenLogfile(projectPath);
+	pLogfile->WriteLogfile("CHorizon::GetInlineXlineFromXY",
+		"<Inline>        <Xline>         <X>             <Y>             <nRec>\n");
+
+		CString msg;
+		msg.Format("%u        %u         %lf             %lf             %d             %lu\n", m_pInline[inputFileRec], m_pXline[inputFileRec], m_pX[inputFileRec], m_pY[inputFileRec], inputFileRec);
+		pLogfile->WriteLogfile("CHorizon::GetInlineXlineFromXY",
+			msg);        

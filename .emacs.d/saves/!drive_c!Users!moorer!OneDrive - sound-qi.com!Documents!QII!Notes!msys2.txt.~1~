@@ -1,0 +1,57 @@
+See https://github.com/orlp/dev-on-windows/wiki/Installing-GCC--&-MSYS2
+
+gcc: Msys2 doesn't add the windows path, so use the full path:w
+$ /C/msys64/mingw64/bin/gcc.exe --version
+
+Setting on msys2 on windows:
+
+$ pacman -Sy
+$ pacman --needed -S bash pacman pacman-mirrors msys2-runtime
+-Close and reopen msys2 
+$ pacman -Su
+-Close and reopen msys2 
+$ pacman -S base-devel git mercurial cvs wget p7zip
+$ pacman -S perl ruby python3 mingw-w64-i686-toolchain mingw-w64-x86_64-toolchain
+$ pacman -S --needed base-devel mingw-w64-i686-toolchain mingw-w64-x86_64-toolchain \
+                   git subversion mercurial \
+                   mingw-w64-i686-cmake mingw-w64-x86_64-cmake
+
+				   
+-Now, to use gcc include the full path:
+$ /C/msys64/mingw64/bin/gcc.exe
+				   
+-> Solution: Actually, open the mingw64.exe instead of msys2.exe to get gcc!
+
+-Also, be sure to install ssh (see https://www.booleanworld.com/get-unix-linux-environment-windows-msys2/):
+
+$ pacman -S openssh				   
+$ ssh-keygen -f /etc/ssh/ssh_host_rsa_key -N '' -t rsa
+$ ssh-keygen -f /etc/ssh/ssh_host_dsa_key -N '' -t dsa
+$ ssh-keygen -f /etc/ssh/ssh_host_ecdsa_key -N '' -t ecdsa
+$ ssh-keygen -f /etc/ssh/ssh_host_ed25519_key -N '' -t ed25519				   
+
+-> In one command:
+
+$ ssh-keygen -f /etc/ssh/ssh_host_rsa_key -N '' -t rsa && ssh-keygen -f /etc/ssh/ssh_host_dsa_key -N '' -t dsa && ssh-keygen -f /etc/ssh/ssh_host_ecdsa_key -N '' -t ecdsa && ssh-keygen -f /etc/ssh/ssh_host_ed25519_key -N '' -t ed25519	
+
+Install emacs (see https://emacs.stackexchange.com/questions/23837/msys2-emacs-install-not-working and https://www.gnu.org/software/emacs/download.html):
+
+$ pacman -S mingw-w64-x86_64-emacs mingw-w64-x86_64-qt5 mingw-w64-x86_64-giflib mingw-w64-x86_64-libjpeg-turbo mingw-w64-x86_64-libpng mingw-w64-x86_64-librsvg mingw-w64-x86_64-libtiff mingw-w64-x86_64-imagemagick mingw-w64-x86_64-libxml2 
+
+OR:
+
+$ pacman -S mingw-w64-x86_64-emacs
+
+2019.04.18
+I. Inheriting full PATH variable:
+https://sourceforge.net/p/msys2/discussion/general/thread/dbe17030/
+
+D:\msys64>start_shell.cmd -use-full-path
+
+-----
+
+2020.11.25
+I. Install MySQL/MariaDB client:
+	
+$ pacman -S mingw-w64-x86_64-libmariadbclient
+	

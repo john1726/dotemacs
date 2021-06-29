@@ -1,0 +1,145 @@
+Pipeline: Feature Requests and Defects
+Priority: Medium
+Name: Color wheel- Delete or insert new colors between classes
+Description: Addition of the ability to remove any color class or add more in between
+Software Component: Color Editor
+Rank: 3 - Med
+Video Link:
+
+2021.04.28
+I. Researching and implementing solution:
+
+
+IDR_MAPCONTEXT MENU
+BEGIN
+    POPUP "Map Context Popup"
+    BEGIN
+        MENUITEM "Line Select mode",            ID_MAP_SELECT
+        MENUITEM "Pan mode",                    ID_MAP_PAN
+        MENUITEM "Zoom Select Area",            ID_MAP_ZOOM
+        MENUITEM "Digitize User Line",          ID_MAP_DIGITIZE
+        MENUITEM SEPARATOR
+        MENUITEM "Zoom +",                      ID_MAP_ZOOM_UP
+        MENUITEM "Zoom -",                      ID_MAP_ZOOM_DOWN
+        MENUITEM "Zoom 0",                      ID_MAP_ZOOM_OFF
+    END
+END
+
+IDR_COLORBARCONTEXT MENU
+BEGIN
+    POPUP "Colorbar Context Popup"
+    BEGIN
+        MENUITEM "Insert Class", ID_INSERT_CLASS
+        MENUITEM "Pan mode", ID_DELETE_CLASS
+    END
+END
+
+
+2021.05.04
+I. Researching and implementing solution:
+
+See https://owlcation.com/stem/VC-MFC-Example-Display-Context-Menu-On-right-button-click-using-rackPopupMenu-of-CMenu
+
+	//int curID = IDR_COLORBARCONTEXT_START;
+	m_mnuPopup.CreatePopupMenu();
+	m_mnuPopup.AppendMenu(MF_STRING, ID_INSERT_CLASS, "Insert");
+	//curID++;
+	m_mnuPopup.AppendMenu(MF_STRING, ID_DELETE_CLASS, "Delete");
+
+	//CMenu m_mnuPopup;        
+
+-----
+
+void CColorBarView::OnContextMenu(CWnd* pWnd, CPoint point)
+{
+	//Declarations
+	CRect client_rect;
+	CMenu mnuPopup;
+
+	//Get Mouse Click position and convert it to the Screen Co-ordinate
+	GetClientRect(&client_rect);
+	ClientToScreen(&client_rect);
+
+	//Check the mouse pointer position is inside the client area
+	if (client_rect.PtInRect(point))
+	{
+		//Create the Main Menu
+		mnuPopup.CreatePopupMenu();
+		mnuPopup.AppendMenu(MF_STRING, ID_INSERT_CLASS, _T("Insert"));
+		mnuPopup.AppendMenu(MF_STRING, ID_DELETE_CLASS, _T("Delete"));
+		
+		//Display the Popup Menu
+		UINT nCmd = mnuPopup.TrackPopupMenu(TPM_LEFTALIGN | TPM_RETURNCMD, point.x, point.y, this);
+		TRACE("CColorBarView::OnContextMenu nCmd == %u\n", nCmd);
+
+		MENUITEMINFO info;
+		info.cbSize = sizeof(MENUITEMINFO); // must fill up this field
+		info.fMask = MIIM_STATE;             // get the state of the menu item
+		VERIFY(mnuPopup.GetMenuItemInfo(ID_INSERT_CLASS, &info));
+
+		if (info.fState & MF_CHECKED) {
+			mnuPopup.CheckMenuItem(ID_INSERT_CLASS, MF_UNCHECKED | MF_BYCOMMAND);
+			//TRACE("CColorBarView::OnContextMenu ID_INSERT_CLASS MF_UNCHECKED\n");
+		}
+		else {
+			mnuPopup.CheckMenuItem(ID_INSERT_CLASS, MF_CHECKED | MF_BYCOMMAND);
+			//TRACE("CColorBarView::OnContextMenu ID_INSERT_CLASS MF_CHECKED\n");
+		}
+
+		MENUITEMINFO info2;
+		info2.cbSize = sizeof(MENUITEMINFO); // must fill up this field
+		info2.fMask = MIIM_STATE;             // get the state of the menu item
+		VERIFY(mnuPopup.GetMenuItemInfo(ID_DELETE_CLASS, &info2));
+
+		if (info2.fState & MF_CHECKED) {
+			mnuPopup.CheckMenuItem(ID_DELETE_CLASS, MF_UNCHECKED | MF_BYCOMMAND);
+			//TRACE("CColorBarView::OnContextMenu ID_DELETE_CLASS MF_UNCHECKED\n");
+		}
+		else {
+			mnuPopup.CheckMenuItem(ID_DELETE_CLASS, MF_CHECKED | MF_BYCOMMAND);
+			//TRACE("CColorBarView::OnContextMenu ID_DELETE_CLASS MF_CHECKED\n");
+		}
+		
+		//unsigned int menuItemId = mnuPopup.GetMenuItemID();
+		//mnuPopup.CheckMenuItem()
+		//TRACE("CColorBarView::OnContextMenu menuItemId == %u\n", menuItemId);
+
+		//MENUITEMINFO mii;
+		//mii.fMask = MIIM_DATA;
+		//GetMenuItemInfo(mnuPopup, ID_INSERT_CLASS, FALSE, &mii);
+		//TRACE("CColorBarView::OnContextMenu mii.dwItemData == %ul\n", mii.dwItemData);
+
+		//MENUITEMINFO mii2;
+		//mii2.fMask = MIIM_DATA;
+		//GetMenuItemInfo(mnuPopup, ID_DELETE_CLASS, FALSE, &mii2);
+		//TRACE("CColorBarView::OnContextMenu mii.dwItemData2 == %ul\n", mii2.dwItemData);
+	}
+	else
+	{
+		CWnd::OnContextMenu(pWnd, point);
+	}
+}
+        
+c:\sound-qi_source\soundqi-branch\rm_branch\imac\colorbarview.cpp(88) : atlTraceGeneral - CColorBarView::OnContextMenu nCmd == 33012
+c:\sound-qi_source\soundqi-branch\rm_branch\imac\colorbarview.cpp(88) : atlTraceGeneral - CColorBarView::OnContextMenu nCmd == 33011
+c:\sound-qi_source\soundqi-branch\rm_branch\imac\colorbarview.cpp(88) : atlTraceGeneral - CColorBarView::OnContextMenu nCmd == 33012
+c:\sound-qi_source\soundqi-branch\rm_branch\imac\colorbarview.cpp(88) : atlTraceGeneral - CColorBarView::OnContextMenu nCmd == 33011        
+
+2021.05.05
+I. Researching and implementing solution:
+
+COLORREF m_colorbar[MAXCBSIZE];
+
+2021.05.06
+I. Researching and implementing solution:
+IDR_COLORBARCONTEXT MENU
+BEGIN
+    POPUP "Colorbar Context Popup"
+    BEGIN
+        MENUITEM "Insert Class", ID_INSERT_CLASS
+        MENUITEM "Delete Class", ID_DELETE_CLASS
+        MENUITEM "Move Up", ID_MOVE_UP_CLASS
+        MENUITEM "Move Down", ID_MOVE_DOWN_CLASS
+    END
+END
+

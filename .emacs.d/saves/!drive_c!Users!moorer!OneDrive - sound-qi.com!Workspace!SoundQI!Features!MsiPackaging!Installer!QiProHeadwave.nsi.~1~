@@ -1,0 +1,613 @@
+!include "LogicLib.nsh"
+!include "Sections.nsh"
+    
+;Include Modern UI
+!include "MUI2.nsh"
+
+!define MAJOR_VERSION "4" 
+!define MINOR_VERSION "4" 
+!define PATCH_VERSION "4" 
+!define BUILD_VERSION "71" 
+    
+!define APP_COPYRIGHT "QI-Pro © Sound QI 2021"
+!define COMPANY_NAME "SoundQI"
+!define FLEX_LM "FlexLM"        
+!define FLEX_DIR "FlexSQI"     
+!define HW_DATA "HW-Data"
+!define HW_WORKSPACE "HW-Workspaces"        
+!define LANG_ENGLSH "English" 
+!define PRODUCT_NAME "QI-Pro"
+!define PRODUCT_VERSION "${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}.${BUILD_VERSION}"
+!define SETUP_NAME "QIProHeadwaveSetup.exe"
+
+OutFile ${SETUP_NAME}
+Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
+
+InstallDir "$PROGRAMFILES64\${PRODUCT_NAME}"
+InstallDirRegKey HKLM "Software\$PRODUCT_NAME" ""
+ShowInstDetails hide
+ShowUnInstDetails hide
+
+SetCompressor /SOLID lzma
+SetCompressorDictSize 12
+
+;Request application privileges for Windows 
+RequestExecutionLevel admin
+
+!insertmacro MUI_PAGE_WELCOME
+!insertmacro MUI_PAGE_LICENSE "QiProLicense.txt"
+
+!define MUI_PAGE_CUSTOMFUNCTION_PRE SelectFilesCheck
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE ComponentsLeave
+!insertmacro MUI_PAGE_COMPONENTS
+
+## This is the title on the Headwave Directory page
+!define MUI_DIRECTORYPAGE_TEXT_TOP "$(MUI_DIRECTORYPAGE_TEXT_TOP_HW)"
+
+;Directory for Headwave files and where config.dat will point to
+;!define MUI_PAGE_CUSTOMFUNCTION_PRE hw_wk_pre
+;!define MUI_PAGE_CUSTOMFUNCTION_SHOW hw_wk_dir 
+Var HW_DATA_DIR
+!define MUI_DIRECTORYPAGE_VARIABLE $HW_DATA_DIR
+!define MUI_PAGE_CUSTOMFUNCTION_PRE SelectFilesHW
+!insertmacro MUI_PAGE_DIRECTORY
+!insertmacro MUI_PAGE_INSTFILES    
+;!define MUI_PAGE_CUSTOMFUNCTION_PRE hw_data_pre
+;!define MUI_PAGE_CUSTOMFUNCTION_SHOW hw_data_dir 
+Var HW_WORKSPACE_DIR
+!define MUI_DIRECTORYPAGE_VARIABLE $HW_WORKSPACE_DIR
+;!insertmacro MUI_PAGE_DIRECTORY
+;!insertmacro MUI_PAGE_INSTFILES    
+ 
+## This is the title on the QI-Pro Directory page
+!define MUI_DIRECTORYPAGE_TEXT_TOP "$(MUI_DIRECTORYPAGE_TEXT_TOP_A)"
+ 
+!define MUI_PAGE_CUSTOMFUNCTION_PRE SelectFilesA
+!insertmacro MUI_PAGE_DIRECTORY
+!insertmacro MUI_PAGE_INSTFILES
+ 
+## This is the title on the FlexLM Directory page
+!define MUI_DIRECTORYPAGE_TEXT_TOP "$(MUI_DIRECTORYPAGE_TEXT_TOP_B)"
+ 
+!define MUI_PAGE_CUSTOMFUNCTION_PRE SelectFilesB
+!insertmacro MUI_PAGE_DIRECTORY
+!insertmacro MUI_PAGE_INSTFILES
+ 
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE DeleteSectionsINI
+!insertmacro MUI_PAGE_FINISH
+
+;--------------------------------
+;Languages
+
+!insertmacro MUI_LANGUAGE "English"
+
+;--------------------------------
+
+LangString NoSectionsSelected ${LANG_ENGLSH} "You haven't selected any sections!"
+
+LangString MUI_DIRECTORYPAGE_TEXT_TOP_HW ${LANG_ENGLSH} "Setup will install \
+${HW_DATA} in the following folder..."
+LangString MUI_DIRECTORYPAGE_TEXT_TOP_A ${LANG_ENGLSH} "Setup will install \
+${PRODUCT_NAME} in the following folder..."
+LangString MUI_DIRECTORYPAGE_TEXT_TOP_B ${LANG_ENGLSH} "Setup will install \
+${FLEX_LM} in the following folder..."
+
+;--------------------------------
+; Settings
+ 
+!define PROG0_InstDir    "C:\${HW_DATA}"
+!define PROG0_StartIndex ${PROG0}
+!define PROG0_EndIndex   ${SEC0B} 
+ 
+!define PROG1_InstDir    "$PROGRAMFILES64\${PRODUCT_NAME}"
+!define PROG1_StartIndex ${PROG1}
+!define PROG1_EndIndex   ${SEC2}
+ 
+!define PROG2_InstDir "C:\${FLEX_DIR}"
+!define PROG2_StartIndex ${PROG2}
+!define PROG2_EndIndex   ${SEC4}
+
+;--------------------------------
+; Start sections
+
+## Sections Group 0
+Function hw_data_pre
+  StrCpy $HW_DATA_DIR "C:\${HW_DATA}"
+  StrCpy $HW_WORKSPACE_DIR "C:\${HW_WORKSPACE}"
+  Call IsPROG0Selected
+  Pop $R0
+  
+  ${If} $R0 == "1"    
+     strcmp '$0' '1' noabort
+	 messagebox mb_yesno|mb_defbutton2|mb_iconquestion "Leave Headwave directory at default value of C:\${HW_DATA}?" idno noabort
+     strcpy $0 2
+     abort
+   noabort:
+     strcpy $0 1
+  ${EndIf}          
+Functionend
+
+Function hw_data_dir
+  Call IsPROG0Selected
+  Pop $R0
+  
+  ${If} $R0 == "1"    
+     GetDlgItem $1 $HWNDPARENT 1037
+     CreateFont $2 "$(^Font)" "8" "700"
+     SendMessage $1 ${WM_SETFONT} $2 0
+     SetCtlColors $1  '0x000000' '0xFFFFFF'
+
+     GetDlgItem $1 $HWNDPARENT 1038
+     CreateFont $2 "$(^Font)" "8" ""
+     SendMessage $1 ${WM_SETFONT} $2 0
+     SetCtlColors $1  '0x000000' '0xFFFFFF'
+  ${EndIf}                   
+Functionend
+
+Function hw_wk_pre
+  StrCpy $HW_DATA_DIR "C:\${HW_DATA}"
+  StrCpy $HW_WORKSPACE_DIR "C:\${HW_WORKSPACE}"
+  Call IsPROG0Selected
+  Pop $R0
+  
+  ${If} $R0 == "1"
+     strcmp '$0' '1' noabort
+     messagebox mb_yesno|mb_defbutton2|mb_iconquestion "Leave Headwave directory at default value of C:\${HW_WORKSPACE}?" idno noabort
+     strcpy $0 2
+     abort
+   noabort:
+     strcpy $0 1             
+  ${EndIf}         
+Functionend
+
+Function hw_wk_dir
+  Call IsPROG0Selected
+  Pop $R0
+  
+  ${If} $R0 == "1"    
+     GetDlgItem $1 $HWNDPARENT 1037
+     CreateFont $2 "$(^Font)" "8" "700"
+     SendMessage $1 ${WM_SETFONT} $2 0
+     SetCtlColors $1  '0x000000' '0xFFFFFF'
+
+     GetDlgItem $1 $HWNDPARENT 1038
+     CreateFont $2 "$(^Font)" "8" ""
+     SendMessage $1 ${WM_SETFONT} $2 0
+     SetCtlColors $1  '0x000000' '0xFFFFFF'
+  ${EndIf}                            
+Functionend
+         
+SectionGroup /e "Headwave" PROG0 
+Section "Data" SEC0A
+  Call IsPROG0Selected
+  Pop $R0
+  
+  ${If} $R0 == "1"    
+	SetDetailsPrint none
+
+    ##All the files in Group 1 will be installed to the same location, $INSTDIR
+    ;SetOutPath "$INSTDIR"
+
+    CreateDirectory "$HW_DATA_DIR"
+    CreateDirectory "$HW_DATA_DIR\QI-Pro-Plugins"
+    CreateDirectory "$HW_DATA_DIR\QI-Pro-Plugins\ComputePlugin"
+    CreateDirectory "$HW_DATA_DIR\QI-Pro-Plugins\ExtensionPlugin"                                       
+
+    File /oname=$HW_DATA_DIR\QI-Pro-Plugins\ComputePlugin\computeplugin.xplot.dll computeplugin.xplot.dll
+    File /oname=$HW_DATA_DIR\QI-Pro-Plugins\ComputePlugin\computeplugin.xplot.exp computeplugin.xplot.exp
+    File /oname=$HW_DATA_DIR\QI-Pro-Plugins\ComputePlugin\computeplugin.xplot.lib computeplugin.xplot.lib
+             
+    File /oname=$HW_DATA_DIR\QI-Pro-Plugins\ExtensionPlugin\hwProxyInterface.QIPro.dll hwProxyInterface.QIPro.dll
+    File /oname=$HW_DATA_DIR\QI-Pro-Plugins\ExtensionPlugin\hwProxyInterface.QIPro.exp hwProxyInterface.QIPro.exp
+    File /oname=$HW_DATA_DIR\QI-Pro-Plugins\ExtensionPlugin\hwProxyInterface.QIPro.lib hwProxyInterface.QIPro.lib
+  ${EndIf}                            
+SectionEnd
+
+Section "Workspaces" SEC0B
+  Call IsPROG0Selected
+  Pop $R0
+  
+  ${If} $R0 == "1"    
+ 	SetDetailsPrint none
+	
+    CreateDirectory "$HW_WORKSPACE_DIR"       
+ 
+    # messagebox mb_ok sec2
+  ${EndIf}                                
+SectionEnd
+ 
+SectionGroupEnd
+
+## Sections Group 1
+SectionGroup /e "QI-Pro" PROG1 
+Section "Main" SEC1
+  ##All the files in Group 1 will be installed to the same location, $INSTDIR
+  SetOutPath "$INSTDIR"
+
+  # specify files to go in output path
+  File config.dat	
+  File QI-Pro.exe
+  File ReleaseNotes.txt
+  File Sound_QI_LandingPage_114.bmp
+  File QiProLicense.txt  
+  
+  # create a shortcut named "new shortcut" in the start menu programs directory
+  CreateShortcut "$SMPROGRAMS\${PRODUCT_NAME}.lnk" "$PROGRAMFILES64\${PRODUCT_NAME}\${PRODUCT_NAME}.exe" 
+
+  # Add application to registry  
+  ClearErrors
+  WriteRegStr HKCU "SOFTWARE\${PRODUCT_NAME}" 'Company Name' "${COMPANY_NAME}"
+  WriteRegStr HKCU "SOFTWARE\${PRODUCT_NAME}" 'Version' "${PRODUCT_VERSION}"
+ 
+  # Add program to Add/Remove programs 
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" \
+                 "DisplayIcon" "$PROGRAMFILES64\${PRODUCT_NAME}\${PRODUCT_NAME}.exe"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" \
+                 "DisplayName" "${PRODUCT_NAME}"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" \
+                 "DisplayVersion" "${PRODUCT_VERSION}"				 
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" \
+                 "InstallLocation" "$INSTDIR"						 
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" \
+                 "Publisher" "${COMPANY_NAME}"				 
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" \
+                   "UninstallString" "$\"$INSTDIR\uninstaller.exe$\"" 
+
+  # define uninstaller name
+  WriteUninstaller $INSTDIR\uninstaller.exe
+
+  # messagebox mb_ok sec1
+SectionEnd
+
+Section "Other" SEC2
+  ## Other files to install here
+ 
+  # messagebox mb_ok sec2
+SectionEnd
+ 
+SectionGroupEnd
+ 
+## Sections Group 2
+SectionGroup /e "FlexLM" PROG2
+ 
+Section "Main" SEC3
+  ##All the files in Group 2 will be installed to the same location, $INSTDIR
+  SetOutPath "$INSTDIR"
+
+  File SQI.exe
+  File flexSQI.log
+  File installs.exe
+  File lmborrow.exe
+  File lmdiag.exe
+  File lmdown.exe
+  File lmflex.exe
+  File lmgrd.exe
+  File lmhostid.exe
+  File lmpath.exe
+  File lmremove.exe
+  File lmreread.exe
+  File lmstat.exe
+  File lmtools.exe
+  File lmutil.exe
+  File lmver.exe
+
+  # define uninstaller name
+  WriteUninstaller $INSTDIR\uninstaller.exe
+
+  # messagebox mb_ok sec3
+ 
+SectionEnd
+ 
+Section "Other" SEC4
+  ## Other files to install here
+ 
+  # messagebox mb_ok sec4
+ 
+SectionEnd
+ 
+SectionGroupEnd
+
+;--------------------------------
+;Descriptions
+
+  ;Language strings
+  LangString DESC_SecQiPro ${LANG_ENGLISH} "QI-ProTM software is an easy-to-use suite of tools for interactively generating reservoir realizations that are jointly calibrated to all available seismic, petrophysical and production knowledge."
+  LangString DESC_SecFlexLM ${LANG_ENGLISH} "FlexSQI contains all the files necessary to implement the FlexLM license server."
+  LangString DESC_SecHeadWave ${LANG_ENGLISH} "Headwave removes the limitations created by seismic data size to enable full visualization, interactivity, and computation delivering value across the E&P workflow to reduce uncertainty and accelerate time to first oil."
+
+  ;Assign language strings to sections
+  !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
+    !insertmacro MUI_DESCRIPTION_TEXT ${SEC0} $(DESC_SecHeadWave)      
+    !insertmacro MUI_DESCRIPTION_TEXT ${SEC1} $(DESC_SecQiPro)
+    !insertmacro MUI_DESCRIPTION_TEXT ${SEC3} $(DESC_SecFlexLM)
+  !insertmacro MUI_FUNCTION_DESCRIPTION_END
+
+Section "Uninstall"  
+
+  # Always delete uninstaller first
+  Delete $INSTDIR\uninstaller.exe
+ 
+  # now delete installed files and registry keys for QI-Pro
+  Delete $INSTDIR\config.dat
+  Delete $INSTDIR\QI-Pro.exe
+  Delete $INSTDIR\ReleaseNotes.txt
+  Delete $INSTDIR\Sound_QI_LandingPage_114.bmp
+  Delete $INSTDIR\QiProLicense.txt
+  Delete "$SMPROGRAMS\QI-Pro.lnk"
+  DeleteRegKey HKCU "SOFTWARE\${PRODUCT_NAME}"
+  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
+  DeleteRegKey /ifempty HKCU "Software\Modern UI Test" 
+
+  # Delete Seisware libs
+  Delete $INSTDIR\libzmq-mt-4_3_0.dll
+  Delete $INSTDIR\seisware.dll
+  Delete $INSTDIR\vcruntime140_1.dll        
+        
+  # now delete installed files and registry keys for FlexLM
+  Delete $INSTDIR\SQI.exe
+  Delete $INSTDIR\flexSQI.log
+  Delete $INSTDIR\installs.exe
+  Delete $INSTDIR\lmborrow.exe
+  Delete $INSTDIR\lmdiag.exe
+  Delete $INSTDIR\lmdown.exe
+  Delete $INSTDIR\lmflex.exe
+  Delete $INSTDIR\lmgrd.exe
+  Delete $INSTDIR\lmhostid.exe
+  Delete $INSTDIR\lmpath.exe
+  Delete $INSTDIR\lmremove.exe
+  Delete $INSTDIR\lmreread.exe
+  Delete $INSTDIR\lmstat.exe
+  Delete $INSTDIR\lmtools.exe
+  Delete $INSTDIR\lmutil.exe
+  Delete $INSTDIR\lmver.exe
+
+  Delete $HW_DATA_DIR\QI-Pro-Plugins\ComputePlugin\computeplugin.xplot.dll 
+  Delete $HW_DATA_DIR\QI-Pro-Plugins\ComputePlugin\computeplugin.xplot.exp 
+  Delete $HW_DATA_DIR\QI-Pro-Plugins\ComputePlugin\computeplugin.xplot.lib 
+        
+  Delete $HW_DATA_DIR\QI-Pro-Plugins\ExtensionPlugin\hwProxyInterface.QIPro.dll 
+  Delete $HW_DATA_DIR\QI-Pro-Plugins\ExtensionPlugin\hwProxyInterface.QIPro.exp 
+  Delete $HW_DATA_DIR\QI-Pro-Plugins\ExtensionPlugin\hwProxyInterface.QIPro.lib 
+
+  # Delete the QI Pro and FlexLM directories
+  RMDir $INSTDIR
+
+SectionEnd
+
+;--------------------------------
+; Please don`t modify below here unless you`re a NSIS 'wiz-kid'
+ 
+## Create $PLUGINSDIR
+Function .onInit
+  InitPluginsDir
+
+  SetOutPath $TEMP
+  File /oname=spltmp.bmp "Sound_QI_LandingPage_114.bmp"
+
+  splash::show 2000 $TEMP\spltmp
+
+  Pop $0 ; $0 has '1' if the user closed the splash screen early,
+  ; '0' if everything closed normally, and '-1' if some error occurred.
+
+  Delete $TEMP\spltmp.bmp  
+FunctionEnd
+
+        
+## If user goes back to this page from 1st Directory page
+## we need to put the sections back to how they were before
+Var IfBack
+Function SelectFilesCheck
+ StrCmp $IfBack 1 0 NoCheck
+  Call ResetFiles
+ NoCheck:
+FunctionEnd
+ 
+## Also if no sections are selected, warn the user!
+Function ComponentsLeave
+Push $R0
+Push $R1
+ 
+ Call IsPROG1Selected
+  Pop $R0
+ Call IsPROG2Selected
+  Pop $R1
+ StrCmp $R0 1 End
+ StrCmp $R1 1 End
+  Pop $R1
+  Pop $R0
+ MessageBox MB_OK|MB_ICONEXCLAMATION "$(NoSectionsSelected)"
+ Abort
+ 
+End:
+Pop $R1
+Pop $R0
+FunctionEnd
+
+Function IsPROG0Selected
+Push $R0
+Push $R1
+ 
+ StrCpy $R0 ${PROG0_StartIndex}    # Group 0 start
+ 
+  Loop:
+   IntOp $R0 $R0 + 1
+   SectionGetFlags $R0 $R1			# Get section flags
+    IntOp $R1 $R1 & ${SF_SELECTED}
+    StrCmp $R1 ${SF_SELECTED} 0 +3		# If section is selected, done
+     StrCpy $R0 1
+     Goto Done
+    StrCmp $R0 ${PROG0_EndIndex} 0 Loop
+ 
+ Done:
+Pop $R1
+Exch $R0
+FunctionEnd
+    
+Function IsPROG1Selected
+Push $R0
+Push $R1
+ 
+ StrCpy $R0 ${PROG1_StartIndex} # Group 1 start
+ 
+  Loop:
+   IntOp $R0 $R0 + 1
+   SectionGetFlags $R0 $R1			# Get section flags
+    IntOp $R1 $R1 & ${SF_SELECTED}
+    StrCmp $R1 ${SF_SELECTED} 0 +3		# If section is selected, done
+     StrCpy $R0 1
+     Goto Done
+    StrCmp $R0 ${PROG1_EndIndex} 0 Loop
+ 
+ Done:
+Pop $R1
+Exch $R0
+FunctionEnd
+ 
+Function IsPROG2Selected
+Push $R0
+Push $R1
+ 
+ StrCpy $R0 ${PROG2_StartIndex}    # Group 2 start
+ 
+  Loop:
+   IntOp $R0 $R0 + 1
+   SectionGetFlags $R0 $R1			# Get section flags
+    IntOp $R1 $R1 & ${SF_SELECTED}
+    StrCmp $R1 ${SF_SELECTED} 0 +3		# If section is selected, done
+     StrCpy $R0 1
+     Goto Done
+    StrCmp $R0 ${PROG2_EndIndex} 0 Loop
+ 
+ Done:
+Pop $R1
+Exch $R0
+FunctionEnd
+
+## Here we are selecting first sections to install
+## by unselecting all the others!
+Function SelectFilesHW
+ 
+ # If user clicks Back now, we will know to reselect Group 0`s sections for
+ # Components page
+ StrCpy $IfBack 1
+ 
+ # We need to save the state of the Group 0 Sections
+ # for the next InstFiles page
+Push $R0
+Push $R1
+ 
+ StrCpy $R0 ${PROG0_StartIndex} # Group 0 start
+ 
+  Loop:
+   IntOp $R0 $R0 + 1
+   SectionGetFlags $R0 $R1				    # Get section flags
+    WriteINIStr "$PLUGINSDIR\sections.ini" Sections $R0 $R1 # Save state
+    !insertmacro UnselectSection $R0			    # Then unselect it
+    StrCmp $R0 ${PROG0_EndIndex} 0 Loop
+ 
+ # Don`t install prog 1?
+ Call IsPROG1Selected
+ Pop $R0
+ StrCmp $R0 1 +4
+  Pop $R1
+  Pop $R0
+  Abort
+ 
+ # Set current $INSTDIR to PROG1_InstDir define
+ StrCpy $INSTDIR "${PROG1_InstDir}"
+ 
+Pop $R1
+Pop $R0
+FunctionEnd
+    
+## Here we are selecting first sections to install
+## by unselecting all the others!
+Function SelectFilesA
+ 
+ # If user clicks Back now, we will know to reselect Group 2`s sections for
+ # Components page
+ StrCpy $IfBack 1
+ 
+ # We need to save the state of the Group 2 Sections
+ # for the next InstFiles page
+Push $R0
+Push $R1
+ 
+ StrCpy $R0 ${PROG2_StartIndex} # Group 2 start
+ 
+  Loop:
+   IntOp $R0 $R0 + 1
+   SectionGetFlags $R0 $R1				    # Get section flags
+    WriteINIStr "$PLUGINSDIR\sections.ini" Sections $R0 $R1 # Save state
+    !insertmacro UnselectSection $R0			    # Then unselect it
+    StrCmp $R0 ${PROG2_EndIndex} 0 Loop
+ 
+ # Don`t install prog 1?
+ Call IsPROG1Selected
+ Pop $R0
+ StrCmp $R0 1 +4
+  Pop $R1
+  Pop $R0
+  Abort
+ 
+ # Set current $INSTDIR to PROG1_InstDir define
+ StrCpy $INSTDIR "${PROG1_InstDir}"
+ 
+Pop $R1
+Pop $R0
+FunctionEnd
+ 
+## Here we need to unselect all Group 1 sections
+## and then re-select those in Group 2 (that the user had selected on
+## Components page)
+Function SelectFilesB
+Push $R0
+Push $R1
+ 
+ StrCpy $R0 ${PROG1_StartIndex}    # Group 1 start
+ 
+  Loop:
+   IntOp $R0 $R0 + 1
+    !insertmacro UnselectSection $R0		# Unselect it
+    StrCmp $R0 ${PROG1_EndIndex} 0 Loop
+ 
+ Call ResetFiles
+ 
+ # Don't install prog 2?
+ Call IsPROG2Selected
+ Pop $R0
+ StrCmp $R0 1 +4
+  Pop $R1
+  Pop $R0
+  Abort
+ 
+ # Set current $INSTDIR to PROG2_InstDir define
+ StrCpy $INSTDIR "${PROG2_InstDir}"
+ 
+Pop $R1
+Pop $R0
+FunctionEnd
+ 
+## This will set all sections to how they were on the components page
+## originally
+Function ResetFiles
+Push $R0
+Push $R1
+ 
+ StrCpy $R0 ${PROG2_StartIndex}    # Group 2 start
+ 
+  Loop:
+   IntOp $R0 $R0 + 1
+   ReadINIStr "$R1" "$PLUGINSDIR\sections.ini" Sections $R0 # Get sec flags
+    SectionSetFlags $R0 $R1				  # Re-set flags for this sec
+    StrCmp $R0 ${PROG2_EndIndex} 0 Loop
+ 
+Pop $R1
+Pop $R0
+FunctionEnd
+ 
+## Here we are deleting the temp INI file at the end of installation
+Function DeleteSectionsINI
+ FlushINI "$PLUGINSDIR\Sections.ini"
+ Delete "$PLUGINSDIR\Sections.ini"
+FunctionEnd

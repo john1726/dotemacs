@@ -1,0 +1,2513 @@
+Description:
+Since each colour on the wheel gives the [R,G,B] breakdown, it would be nice if it was possible to specify a class colour by its [R,G,B] numbers. This is especially useful when moving classes around and you want to duplicate a colour that you already had.
+
+2020.12.08
+I. Researching and implementing solution:
+
+-Consider also the AA interface which has similar functionality:
+
+void CAAParmCntrl::Create(CWnd *pWnd)
+{
+	CRect winRect;
+	pWnd->GetWindowRect(winRect);
+
+	m_pDoc = CIMACDoc::GetIMACDocPtr();
+	if ( m_pDoc == NULL) return;
+    CAADialogParms *pDialogParms = m_pDoc->GetAADialogParmsPtr();;
+	
+	// ...
+}
+
+-------------------------------------------------------------------------------
+
+    CAAButtonWnd  m_dotsizeWnd;
+    CStatic       m_dotsizeStatic;
+    CEdit         m_dotsizeEdit;
+
+    m_dotsizeWnd.Create(_T("STATIC"), _T(""), WS_CHILD | WS_VISIBLE,
+        CRect(PANESIDE, y, winRect.Width() - PANESIDE, y + PANEROW * 3), pWnd, 1);
+    m_dotsizeWnd.SetParentPtr(this);
+
+    int dx = (winRect.Width() - PANESIDE ) / 5;
+    int px1 = 0;
+    m_dotsizeStatic.Create(_T("Dot Size:"), WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+        CRect(px1, 0, px1 + dx, 32), &m_dotsizeWnd);
+    m_dotsizeStatic.SetFont(m_pFont);
+
+    px1 += dx;
+    m_dotsizeEdit.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER | ES_RIGHT | ES_READONLY | ES_CENTER,
+        CRect(px1, 6, px1 + 40, 6+PANEROW), &m_dotsizeWnd, IDC_EDIT_DOTSIZE);
+    m_dotsizeEdit.SetFont(m_pFont);
+    int dotsize = pDialogParms->GetDotSize();
+    CString txt;
+    txt.Format("%d", dotsize);
+    m_dotsizeEdit.SetWindowText(txt);
+
+-------------------------------------------------------------------------------
+
+LTEXT           "Crossplot Title:",IDC_STATIC,14,30,56,12,SS_CENTERIMAGE
+
+IDD_XPLOTPARM DIALOGEX 0, 0, 895, 322
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Crossplot Settings"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    EDITTEXT        IDC_EDIT13,82,30,355,14,ES_AUTOHSCROLL
+    LTEXT           "Reference Template:",IDC_STATIC,451,28,68,12,SS_CENTERIMAGE
+    EDITTEXT        IDC_EDIT5,528,28,280,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Browse",IDC_BUTTON1,814,28,50,14
+    CONTROL         "Fine Tune Mode:",IDC_CHECKFINETUNE,"Button",BS_AUTOCHECKBOX | BS_LEFTTEXT | BS_LEFT | BS_VCENTER | WS_TABSTOP,451,59,99,12
+    CONTROL         "Hide Reference Template:",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | BS_LEFTTEXT | BS_LEFT | BS_VCENTER | WS_TABSTOP,451,46,99,12
+    LTEXT           "Seismic Attribute:",IDC_STATIC,14,88,55,12,SS_CENTERIMAGE
+    COMBOBOX        IDC_X_COMBO,76,88,356,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Scan",IDC_X_SCAN,141,107,50,28,BS_MULTILINE
+    LTEXT           "Axis Minimum:",IDC_STATIC,14,107,52,12,SS_CENTERIMAGE
+    EDITTEXT        IDC_X_MIN,76,107,61,12,ES_RIGHT | ES_AUTOHSCROLL
+    LTEXT           "Axis Maximum:",IDC_STATIC,14,123,52,12,SS_CENTERIMAGE
+    EDITTEXT        IDC_X_MAX,76,123,61,12,ES_RIGHT | ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT15,371,107,61,12,ES_RIGHT | ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT16,371,123,61,12,ES_RIGHT | ES_AUTOHSCROLL
+    COMBOBOX        IDC_Y_COMBO,513,88,356,64,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Scan",IDC_Y_SCAN,578,107,50,28,BS_MULTILINE
+    EDITTEXT        IDC_Y_MIN,513,107,61,12,ES_RIGHT | ES_AUTOHSCROLL
+    EDITTEXT        IDC_Y_MAX,513,123,61,12,ES_RIGHT | ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT17,808,107,61,12,ES_RIGHT | ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT18,808,123,61,12,ES_RIGHT | ES_AUTOHSCROLL
+    LTEXT           "For better performance, you can raise the scatter decimation to only display every n-th scatter point.",IDC_STATIC,451,155,335,8
+    EDITTEXT        IDC_EDIT_SCATTER_DECIMATION,532,171,61,12,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_EDIT_DOTSIZE,809,170,61,12,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "Class",IDC_RADIO_CLASS,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,526,194,35,8
+    CONTROL         "Point Density",IDC_RADIO_DEN,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,571,194,56,8
+    CONTROL         "Seismic Attribute",IDC_RADIO_ATTR,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,635,194,74,8
+    PUSHBUTTON      "Color Map",IDC_COLORMAP,820,245,50,14,WS_GROUP
+    EDITTEXT        IDC_EDIT_BINX,532,207,61,12,ES_RIGHT | ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_COLOR_MIN,809,205,61,12,ES_RIGHT | ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_AMPMIN,532,245,61,12,ES_RIGHT | ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_BINY,532,223,61,12,ES_RIGHT | ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_COLOR_MAX,809,221,61,12,ES_RIGHT | ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_AMPMAX,532,261,61,12,ES_RIGHT | ES_AUTOHSCROLL
+    COMBOBOX        IDC_ATTRIBUTE_COMBO,516,279,353,64,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Delete this Crossplot",IDC_DELETE,7,304,100,14
+    PUSHBUTTON      "Help",ID_CROSSPLOT_SETTINGS_HELP,115,304,50,14
+    DEFPUSHBUTTON   "OK",IDOK,775,304,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,838,304,50,14
+    LTEXT           "Crossplot Title:",IDC_STATIC,14,30,56,12,SS_CENTERIMAGE
+    GROUPBOX        "X Axis",IDC_STATIC,7,75,432,65
+    LTEXT           "Seismic Attribute:",IDC_STATIC,14,88,55,12,SS_CENTERIMAGE
+    LTEXT           "Axis Minimum:",IDC_STATIC,14,107,52,12,SS_CENTERIMAGE
+    LTEXT           "Axis Maximum:",IDC_STATIC,14,123,52,12,SS_CENTERIMAGE
+    LTEXT           "Label Spacing (0):",IDC_STATIC,293,107,58,12,SS_CENTERIMAGE
+    LTEXT           "Tick Spacing (0):",IDC_STATIC,293,123,55,12,SS_CENTERIMAGE
+    GROUPBOX        "Y Axis",IDC_STATIC,444,75,432,65
+    LTEXT           "Seismic Attribute:",IDC_STATIC,451,88,55,12,SS_CENTERIMAGE
+    LTEXT           "Axis Minimum:",IDC_STATIC,451,107,52,12,SS_CENTERIMAGE
+    LTEXT           "Axis Maximum:",IDC_STATIC,451,123,52,12,SS_CENTERIMAGE
+    LTEXT           "Label Spacing (0):",IDC_STATIC,730,107,58,12,SS_CENTERIMAGE
+    LTEXT           "Tick Spacing (0):",IDC_STATIC,730,123,55,12,SS_CENTERIMAGE
+    LTEXT           "For better performance, you can raise the scatter decimation to only display every n-th scatter point.",IDC_STATIC,452,155,335,8
+    LTEXT           "Scatter Decimation (n):",IDC_STATIC,451,171,73,12,SS_CENTERIMAGE
+    LTEXT           "Scatter Point Size:",IDC_STATIC_DOTSIZE,730,170,61,12,SS_CENTERIMAGE
+    CONTROL         "Scatter Color Mode:",IDC_STATIC_COLOR_MODE,"Static",SS_LEFTNOWORDWRAP,451,194,68,8
+    LTEXT           "Density Bin Size X (0):",IDC_STATIC_BIN_X,451,207,70,12,SS_CENTERIMAGE | NOT WS_GROUP
+    LTEXT           "Density Bin Size Y (0):",IDC_STATIC_BIN_Y,451,223,70,12,SS_CENTERIMAGE | NOT WS_GROUP
+    LTEXT           "Density Color Bar Min:",IDC_STATIC_COLOR_MIN,730,205,71,12,SS_CENTERIMAGE | NOT WS_GROUP
+    LTEXT           "Density Color Bar Max:",IDC_STATIC_COLOR_MAX,730,221,73,12,SS_CENTERIMAGE | NOT WS_GROUP
+    LTEXT           "Use these settings to change the way the Crossplot displays. A value of 0 means the default value is used..",IDC_STATIC,7,7,427,20
+    LTEXT           "Seismic Attribute:",IDC_STATIC_ATTR,451,277,55,12,SS_CENTERIMAGE | NOT WS_GROUP
+    LTEXT           "Attribute Color Bar Min:",IDC_STATIC_ATTR_MIN,451,245,77,12,SS_CENTERIMAGE | NOT WS_GROUP
+    LTEXT           "Attribute Color Bar Max:",IDC_STATIC_ATTR_MAX,451,261,77,12,SS_CENTERIMAGE | NOT WS_GROUP
+    CONTROL         "Use CSI",IDC_CSI_Y_CHECK,"Button",BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_TABSTOP,637,107,41,12
+    CONTROL         "Use CSI",IDC_CSI_X_CHECK,"Button",BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_TABSTOP,200,107,41,12
+    PUSHBUTTON      "Scan",IDC_ATTRIBUTE_SCAN,598,245,50,28,BS_MULTILINE
+    GROUPBOX        "Scatter Points",IDC_STATIC,444,144,432,152
+    PUSHBUTTON      "Move Down",IDC_CUTOFF_MOVEDOWN,382,217,50,14
+    PUSHBUTTON      "Move Up",IDC_CUTOFF_MOVEUP,382,196,50,14
+    PUSHBUTTON      "Delete",IDC_CUTOFF_DELETE,382,175,50,14
+    PUSHBUTTON      "Add/Insert",IDC_CUTOFF_ADD,382,154,50,14
+    CONTROL         "List3",IDC_CUTOFF_LIST,"SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | LVS_EDITLABELS | WS_BORDER | WS_TABSTOP,10,155,367,133
+    GROUPBOX        "Cutoff Elements",IDC_STATIC,7,144,432,152
+    PUSHBUTTON      "Apply",IDC_APPLY,719,304,50,14,NOT WS_VISIBLE
+END
+
+DDX_Text(pDX, IDC_EDIT13, m_title);
+
+Where:
+
+CString	m_title;
+
+CCrossPlotSettingsDlg::CCrossPlotSettingsDlg(CWnd* pParent /*=NULL*/)
+	: CDialog(CCrossPlotSettingsDlg::IDD, pParent)
+{
+	m_xMin = 0;
+	m_xMax = 0;
+	m_yMin = 0;
+	m_yMax = 0;
+	m_ImageFile = _T("");
+	m_strXAttr = _T("");
+	m_strTitleBox = _T("");
+	m_strYAttr = _T("");
+	m_bDisableImage = FALSE;
+	m_bFineTuneMode = FALSE;
+	m_nScatter = 1;
+	m_xLabelInterval = 0;
+	m_yLabelInterval = 0;
+	m_xTickInterval = 0;
+	m_yTickInterval = 0;
+	m_title = _T("");
+	m_dotSize = 1;
+	m_nScatterMode = 0;
+	m_binXsize = 0.0f;
+	m_binYsize = 0.0f;
+	m_colorBarMin = 0;
+	m_colorBarMax = 0;
+	m_strColorAttr = _T("");
+	m_attrColorBarMin = 0.0;
+	m_attrColorBarMax = 0.0;
+	m_viewInstance = 0;
+	m_csiXstate = FALSE;
+	m_csiYstate = FALSE;
+}
+
+void CCrossPlotSettingsDlg::DoDataExchange(CDataExchange* pDX)
+{
+    CDialog::DoDataExchange(pDX);
+    DDX_Control(pDX, IDC_CUTOFF_LIST, m_lstCutoffLines);
+    DDX_Control(pDX, IDC_CUTOFF_DELETE, m_btnCutoffDelete);
+    DDX_Control(pDX, IDC_CUTOFF_ADD, m_btnCutoffAdd);
+    DDX_Control(pDX, IDC_X_SCAN, m_btnScanXAttr);
+    DDX_Control(pDX, IDC_Y_SCAN, m_btnScanYAttr);
+    DDX_Control(pDX, IDC_ATTRIBUTE_SCAN, m_btnScanAttribute);
+    DDX_Control(pDX, IDC_X_COMBO, m_xAttrCombo);
+    DDX_Control(pDX, IDC_Y_COMBO, m_yAttrCombo);
+    DDX_Control(pDX, IDC_CSI_X_CHECK, m_btnCSIX);
+    DDX_Control(pDX, IDC_CSI_Y_CHECK, m_btnCSIY);
+    DDX_Control(pDX, IDC_BUTTON1, m_ImageBrowse);
+    DDX_Text(pDX, IDC_X_MIN, m_xMin);
+    DDX_Text(pDX, IDC_X_MAX, m_xMax);
+    DDX_Text(pDX, IDC_Y_MIN, m_yMin);
+    DDX_Text(pDX, IDC_Y_MAX, m_yMax);
+    DDX_Text(pDX, IDC_EDIT5, m_ImageFile);
+    DDX_Check(pDX, IDC_CHECK1, m_bDisableImage);
+    DDX_Text(pDX, IDC_EDIT_SCATTER_DECIMATION, m_nScatter);
+    DDX_Text(pDX, IDC_EDIT15, m_xLabelInterval);
+    DDX_Text(pDX, IDC_EDIT17, m_yLabelInterval);
+    DDX_Text(pDX, IDC_EDIT16, m_xTickInterval);
+    DDX_Text(pDX, IDC_EDIT18, m_yTickInterval);
+    DDX_Text(pDX, IDC_EDIT13, m_title);
+    DDX_Text(pDX, IDC_EDIT_DOTSIZE, m_dotSize);
+    DDV_MinMaxInt(pDX, m_dotSize, 1, 20);
+    DDX_Radio(pDX, IDC_RADIO_CLASS, m_nScatterMode);
+    DDX_Text(pDX, IDC_EDIT_BINX, m_binXsize);
+    DDX_Text(pDX, IDC_EDIT_BINY, m_binYsize);
+    DDX_Text(pDX, IDC_EDIT_COLOR_MIN, m_colorBarMin);
+    DDX_Text(pDX, IDC_EDIT_COLOR_MAX, m_colorBarMax);
+    DDX_Check(pDX, IDC_CHECKFINETUNE, m_bFineTuneMode);
+    DDX_Control(pDX, IDC_ATTRIBUTE_COMBO, m_thirdAttribute);
+    DDX_Control(pDX, IDC_COLORMAP, m_btnColorMap);
+    DDX_Text(pDX, IDC_EDIT_AMPMIN, m_attrColorBarMin);
+    DDX_Text(pDX, IDC_EDIT_AMPMAX, m_attrColorBarMax);
+    DDX_Check(pDX, IDC_CSI_X_CHECK, m_csiXstate);
+    DDX_Check(pDX, IDC_CSI_Y_CHECK, m_csiYstate);
+}
+
+
+-------------------------------------------------------------------------------
+
+STRINGTABLE
+BEGIN
+    ID_OUTPUT_SEGY          "SEG-Y Output"
+    ID_FILE_EXPORT_SEGY     "Save Classified Seismic Volume as a SEG-Y file\nSave Classified Seismic Volume as a SEG-Y file"
+    ID_CB_NEW               "Create a New Color Set\nCreate a New Color Set"
+    ID_CB_OPEN              "Load a Color Set File\nLoad a Color Set File"
+    ID_CB_SAVE              "Save this Color Set\nSave this Color Set"
+    ID_CB_CLEAR             "Clear All Colors\nClear All Colors"
+    ID_CB_INTERP            "Interpolate Color Scale\nInterpolate Color Scale"
+    ID_CB_HELP              "Class Manager Help\nClass Manager Help"
+END
+
+Where ID_CB_NEW in:
+
+BEGIN_MESSAGE_MAP(CColorBarView, CView)
+	ON_WM_LBUTTONDOWN()
+	ON_WM_LBUTTONUP()
+	ON_WM_MOUSEMOVE()
+	ON_COMMAND(ID_CB_INTERP, OnCbInterp)
+	ON_COMMAND(ID_CB_CLEAR, OnCbClear)
+	ON_COMMAND(ID_CB_NEW, OnCbNew)
+	ON_COMMAND(ID_CB_OPEN, OnCbOpen)
+	ON_COMMAND(ID_CB_SAVE, OnCbSave)
+	ON_COMMAND(ID_CB_HELP, OnCbHelp)
+END_MESSAGE_MAP()
+
+NOTE: This is in the CSI project, not IMAC:
+void CColorBarView::OnCbNew() 
+{
+	CCSIDoc* pDoc = GetDocument();
+	CNewColorbarDlg dlg;
+
+	if (dlg.DoModal() != IDOK) return;
+
+	pDoc->m_cbSize = dlg.m_ncolors;
+	for (int i=0; i<MAXCBSIZE; i++) {
+		pDoc->m_colorbar[i] = NOCOLOR; 
+	}
+	m_colorbarIndex = -1;
+	pDoc->SetForceRedraw(TRUE);
+
+	Invalidate(FALSE);
+}
+
+-----
+
+m_colorbar[i]=m_pallet[ix];
+
+-----
+
+See also:
+
+IDD_ATTRIBUTE_ADVISOR_SELECT DIALOGEX 0, 0, 549, 437
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,427,416,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,492,416,50,14
+    PUSHBUTTON      "Add All >>",IDC_BUTTON_ADD_ALL,242,134,68,25
+    PUSHBUTTON      "<< Remove All",IDC_BUTTON_REMOVE_ALL,242,246,68,25
+    LTEXT           "Attributes",IDC_STATIC,25,18,199,8
+    LTEXT           "Selected Attributes",IDC_STATIC,325,18,199,8
+    LISTBOX         IDC_SELECTED_LIST,325,39,199,360,LBS_NOINTEGRALHEIGHT | LBS_EXTENDEDSEL | WS_VSCROLL | WS_TABSTOP
+    LISTBOX         IDC_ATTRIBUTE_LIST,25,39,199,360,LBS_NOINTEGRALHEIGHT | LBS_EXTENDEDSEL | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Add >",IDC_BUTTON_ADD,242,102,68,25
+    PUSHBUTTON      "< Remove",IDC_BUTTON_REMOVE,242,214,68,25
+END
+
+BEGIN_MESSAGE_MAP(CAttributeAdvisorSelectDlg, CDialog)
+    ON_BN_CLICKED(IDC_BUTTON_ADD, &CAttributeAdvisorSelectDlg::OnClickedButtonAdd)
+    ON_BN_CLICKED(IDC_BUTTON_REMOVE, &CAttributeAdvisorSelectDlg::OnClickedButtonRemove)
+    ON_BN_CLICKED(IDC_BUTTON_ADD_ALL, &CAttributeAdvisorSelectDlg::OnClickedButtonAddAll)
+    ON_BN_CLICKED(IDC_BUTTON_REMOVE_ALL, &CAttributeAdvisorSelectDlg::OnClickedButtonRemoveAll)
+END_MESSAGE_MAP()
+
+void CAttributeAdvisorSelectDlg::OnClickedButtonAddAll()
+{
+    int count = m_attributeList.GetCount();
+    if (count == 0) {
+        AfxMessageBox("No Attributes available on the left panel.");
+        return;
+    }
+    for (int i = 0; i < count; i++) {
+        CString itemText;
+        m_attributeList.GetText(i, itemText);
+        m_selectedAttributes.SetAtGrow(m_selectedAttributeCount++, itemText);
+    }
+    PopulateControls();
+}
+
+#define CUPDIALOG_TEXTBOX_ID		(1026)		//Static Control Id
+
+	if (iState & ODS_SELECTED)								// If Selected
+	{														// Set Selected Attributes
+		dc.SetTextColor((0x00FFFFFF & ~(crText)));								// Set Inverted Text Color (With Mask)
+		dc.SetBkColor(crSelected);					// Set BG To Highlight Color
+		dc.FillSolidRect(&rBlockRect, crSelected);	// Erase Item
+	}
+
+IDD_ATTRIBUTE_ADVISOR_SELECT DIALOGEX 0, 0, 549, 437
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,427,416,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,492,416,50,14
+    PUSHBUTTON      "Add All >>",IDC_BUTTON_ADD_ALL,242,134,68,25
+    PUSHBUTTON      "<< Remove All",IDC_BUTTON_REMOVE_ALL,242,246,68,25
+    LTEXT           "Attributes",IDC_STATIC,25,18,199,8
+    LTEXT           "Selected Attributes",IDC_STATIC,325,18,199,8
+    LISTBOX         IDC_SELECTED_LIST,325,39,199,360,LBS_NOINTEGRALHEIGHT | LBS_EXTENDEDSEL | WS_VSCROLL | WS_TABSTOP
+    LISTBOX         IDC_ATTRIBUTE_LIST,25,39,199,360,LBS_NOINTEGRALHEIGHT | LBS_EXTENDEDSEL | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Add >",IDC_BUTTON_ADD,242,102,68,25
+    PUSHBUTTON      "< Remove",IDC_BUTTON_REMOVE,242,214,68,25
+END
+
+--------------------------------------------------------------------------------
+
+void CColorBarView::OnDraw(CDC* pDCin)
+{
+	CCSIDoc* pDoc = GetDocument();
+
+	CPoint p1[NCOL+1], p2[NCOL+1], pixel[4];
+	CRgn region;
+	CRect rcRect, rcImage;
+	CString sText;
+	COLORREF pixelColor;
+	int red, grn, blu;
+	int i, j, k;
+
+	double px, py;
+	double theta;
+	double pi = atan(1.0)*4;
+
+	GetClientRect( &rcRect );
+	CDC		*pDC;
+	CDC		memDC;
+	CBitmap memBM;
+	CBrush	hbrBkGnd;
+	memDC.CreateCompatibleDC(pDCin);
+	memBM.CreateCompatibleBitmap(pDCin, rcRect.right, rcRect.bottom);
+	CBitmap *pBM=memDC.SelectObject(&memBM);
+	hbrBkGnd.CreateSolidBrush(GetSysColor(COLOR_WINDOW));
+	pDC=&memDC;
+	pDC->FillRect(&rcRect,&hbrBkGnd);
+
+	int winWidth  = 2*(NCOL+1) + 14;
+	int winHeight = 2*(NCOL+1) + 6;
+	float winAspect = (float)winWidth / (float)winHeight;
+
+	float rectAspect = (float)rcRect.Width() / (float) rcRect.Height();
+
+	if (rectAspect < winAspect) {
+		dx = rcRect.Width()/winWidth;
+	} else {
+		dx = rcRect.Height()/winHeight;
+	}
+	TRACE("dx=%d\n", dx);
+
+	xOrigin = rcRect.Width()/2;
+	yOrigin = rcRect.Height()/2;
+	
+	/* Draw the titles */
+	rcRect.bottom=dx;
+	pDC->DrawText("Class Color Editor", -1, rcRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+	for (i=0; i<NCOL+1; i++) {
+		p2[i].x = ((i+1)*dx) + xOrigin;
+	    p2[i].y = yOrigin;
+	}
+	
+	// draw the color wheel, slice by slice. Each piece grades from pure on the outside to grey in the center.
+	for (i=1, k=0; i<=NCOL*6; i++) {
+		// compute the slice
+		theta = pi * (double) i / (double) (3*NCOL);
+		if (i==NCOL*6) theta = 0; // get rid of rounding error with 2*pi
+		px =  cos(theta);
+		py =  sin(theta);
+		// compute the coordinates of the slice
+		for (j=0; j<NCOL+1; j++) {
+			p1[j] = p2[j];
+			p2[j].x = (int)((j+1) * px * dx) + xOrigin;
+			p2[j].y = (int)((j+1) * py * dx) + yOrigin;
+		}
+		// fill in the colors from the pallet
+		for (j=NCOL-1; j>=0; j--) {
+			pixel[0] = p1[j];
+			pixel[1] = p1[j+1];
+			pixel[2] = p2[j+1];
+			pixel[3] = p2[j];
+			region.CreatePolygonRgn(pixel, 4, ALTERNATE);
+			pixelColor = pDoc->m_pallet[k++];
+			pixelColor = RGB (GetRValue(pixelColor)*m_intensity, 
+							  GetGValue(pixelColor)*m_intensity,
+							  GetBValue(pixelColor)*m_intensity);
+			pDC->FillRgn(&region, &CBrush(pixelColor));
+			region.DeleteObject();
+		}
+		// the center color is always a shade of grey.
+		pixel[0].x = xOrigin;
+		pixel[0].y = yOrigin;
+		pixel[1] = p1[0];
+		pixel[2] = p2[0];
+		region.CreatePolygonRgn(pixel, 3, ALTERNATE);
+		pixelColor = RGB (255*m_intensity, 255*m_intensity, 255*m_intensity);
+		pDC->FillRgn(&region, &CBrush(pixelColor));
+		region.DeleteObject();
+	}
+
+	// Draw the color under the mouse pointer, if it is over the pallet, or the colorbar.
+	if (m_palletIndex >= -1 || m_colorbarIndexMouseMove > -1) {
+		if (m_palletIndex > -1) {
+			pixelColor = pDoc->m_pallet[m_palletIndex];
+			red = (int) (GetRValue(pixelColor) * m_intensity);
+			grn = (int) (GetGValue(pixelColor) * m_intensity);
+			blu = (int) (GetBValue(pixelColor) * m_intensity);
+			sText.Format("RGB(%d,%d,%d)", red, grn, blu);
+		} else if (m_palletIndex == -1) {
+			red = (int) (255 * m_intensity);
+			grn = (int) (255 * m_intensity);
+			blu = (int) (255 * m_intensity);
+			sText.Format("RGB(%d,%d,%d)", red, grn, blu);
+		}
+		if (m_colorbarIndexMouseMove > -1) {
+			pixelColor = pDoc->m_colorbar[m_colorbarIndexMouseMove];
+			if (pixelColor != NOCOLOR) {
+				red = GetRValue(pixelColor);
+				grn = GetGValue(pixelColor);
+				blu = GetBValue(pixelColor);
+				sText.Format("RGB(%d,%d,%d)", red, grn, blu);
+			} else {
+				red = grn = blu = 255;
+				sText.Empty();
+			}
+		}
+	} else {
+		red = grn = blu = 255;
+		sText.Empty();
+	}
+
+	GetClientRect( &rcRect );
+	rcRect.right  = rcRect.right/2 + dx;
+	rcRect.left   = rcRect.right - 2*dx;
+	rcRect.bottom = rcRect.bottom - dx;
+	rcRect.top    = rcRect.bottom - 2*dx;
+	pDC->FillRect(rcRect, &CBrush(RGB(red, grn, blu)));
+	pDC->FrameRect(rcRect,&CBrush(RGB(0,0,0)));
+	rcRect.left=rcRect.right+5;
+	rcRect.right+=150;
+	pDC->DrawText(sText, rcRect, DT_LEFT|DT_VCENTER|DT_SINGLELINE);
+	
+
+	// Draw the intensity slider on the right.
+	GetClientRect( &rcRect );
+	rcImage.right = rcRect.right - 4*dx;
+	rcImage.left = rcImage.right - dx;
+	rcImage.top = 4*dx;
+	rcImage.bottom = rcRect.bottom - 4*dx;
+
+	m_rcSlider = rcImage;
+	m_rcSlider.right = rcRect.right;
+	m_rcSlider.left  = rcImage.right;
+
+	float greyScale = 1.0;
+	float ftop = (float) rcImage.top;
+	float stepSize = (float) (rcImage.bottom - rcImage.top) / (float) NGREY;
+	float fbottom = ftop + stepSize;
+
+	// the grey boxes
+	CRect greyBox = rcImage;
+	for (i=0; i<NGREY; i++) {
+		greyBox.top = (int) (ftop+0.5);
+		greyBox.bottom = (int) (fbottom+0.5);
+		pixelColor = RGB (255*greyScale, 255*greyScale, 255*greyScale);
+		pDC->FillRect(greyBox, &CBrush(pixelColor));
+		ftop += stepSize;
+		fbottom += stepSize;
+		greyScale -= (float)1.0/(float)NGREY;
+	}
+	// the outline
+	pDC->MoveTo(rcImage.left, rcImage.top);
+	pDC->LineTo(rcImage.right, rcImage.top);
+	pDC->LineTo(rcImage.right, rcImage.bottom);
+	pDC->LineTo(rcImage.left, rcImage.bottom);
+	pDC->LineTo(rcImage.left, rcImage.top);
+
+	// the arrow
+	int iy = (int) ((float)(rcImage.bottom-rcImage.top) * (1.0-m_intensity) + 0.5) + rcImage.top;
+	pixel[0].x = rcImage.right+5;
+	pixel[0].y = iy;
+	pixel[1].x = pixel[0].x+dx/2;
+	pixel[1].y = iy-5;
+	pixel[2].x = pixel[0].x+dx/2;
+	pixel[2].y = iy+5;
+	region.CreatePolygonRgn(pixel, 3, ALTERNATE);
+	pDC->FillRgn(&region, &CBrush(RGB(0,0,0)));
+	region.DeleteObject();
+
+	// the annotation
+	rcRect.left   = pixel[0].x+dx/2+5;
+	rcRect.top    = iy - dx;
+	rcRect.bottom = iy + dx;
+	sText.Format("%0.1f", m_intensity*100);
+	sText += "%";
+	pDC->DrawText(sText, rcRect, DT_LEFT|DT_VCENTER|DT_SINGLELINE);
+	rcRect.right  = rcImage.left-5;
+	rcRect.left   = rcRect.right - 4*dx;
+	rcRect.top    = rcImage.top - dx;
+	rcRect.bottom = rcImage.top + dx;
+	pDC->DrawText("100%", rcRect, DT_RIGHT|DT_VCENTER|DT_SINGLELINE);
+	rcRect.top    = rcImage.bottom - dx;
+	rcRect.bottom = rcImage.bottom + dx;
+	pDC->DrawText("0%", rcRect, DT_RIGHT|DT_VCENTER|DT_SINGLELINE);
+	rcRect.bottom = rcImage.top - dx;
+	rcRect.top = rcRect.bottom - 2*dx;
+	rcRect.left = rcImage.left - 100;
+	rcRect.right = rcImage.right + 100;
+	pDC->DrawText("Intensity", rcRect, DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+
+
+	// Draw the current color bar on the left
+	int cbSize = pDoc->m_cbSize;
+	if (cbSize > 0) {
+		GetClientRect( &rcRect );
+		m_colorBox.left =  4*dx;
+		m_colorBox.right = 5*dx;
+		m_colorBox.top = 4*dx;
+		m_colorBox.bottom = rcRect.bottom - 4*dx;
+
+		ftop = (float) m_colorBox.top;
+		stepSize = (float) (m_colorBox.bottom - m_colorBox.top) / (float) cbSize;
+		fbottom = ftop + stepSize;
+
+		CRect colorBox = m_colorBox;
+		for (i=0; i<cbSize; i++) {
+			colorBox.top = (int) (ftop+0.5);
+			colorBox.bottom = (int) (fbottom+0.5);
+			if (pDoc->m_colorbar[i] == NOCOLOR) {
+				pixelColor = RGB(255,255,255);
+			} else {
+				pixelColor = pDoc->m_colorbar[i];
+			}
+			pDC->FillRect(colorBox, &CBrush(pixelColor));
+			if (i == m_colorbarIndex) {
+				pDC->FrameRect(colorBox,&CBrush(RGB(0,0,0)));
+			}
+			if (i == m_colorbarIndexMouseMove) {
+				rcRect = colorBox;
+				rcRect.right = rcRect.left-dx;
+				rcRect.left = 0;
+				rcRect.top -= dx;
+				rcRect.bottom += dx;
+				sText.Format("%d",i+1);
+				pDC->DrawText(sText, rcRect, DT_RIGHT|DT_VCENTER|DT_SINGLELINE);
+				pDC->FrameRect(colorBox, &CBrush(RGB(0,0,0)));
+			}
+			ftop += stepSize;
+			fbottom += stepSize;
+	}
+	// the outline
+	pDC->FrameRect(m_colorBox, &CBrush(RGB(0,0,0)));
+	// annotation
+	rcRect.bottom = m_colorBox.top - dx;
+	rcRect.top = rcRect.bottom - 2*dx;
+	rcRect.left = m_colorBox.left - 100;
+	rcRect.right = m_colorBox.right + 100;
+	pDC->DrawText("Color Bar", rcRect, DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+	}
+
+
+	// copy the memory bitmap to the current DC.
+	GetClientRect( &rcRect );
+	pDCin->BitBlt(rcRect.left, rcRect.top, rcRect.right-rcRect.left, rcRect.bottom-rcRect.top, 
+		&memDC, 0, 0, SRCCOPY);
+	memDC.SelectObject(pBM);
+	memBM.DeleteObject();
+
+}
+
+Where a key part of the above function is:
+
+	// Draw the color under the mouse pointer, if it is over the pallet, or the colorbar.
+	if (m_palletIndex >= -1 || m_colorbarIndexMouseMove > -1) {
+		if (m_palletIndex > -1) {
+			pixelColor = pDoc->m_pallet[m_palletIndex];
+			red = (int) (GetRValue(pixelColor) * m_intensity);
+			grn = (int) (GetGValue(pixelColor) * m_intensity);
+			blu = (int) (GetBValue(pixelColor) * m_intensity);
+			sText.Format("RGB(%d,%d,%d)", red, grn, blu);
+		} else if (m_palletIndex == -1) {
+			red = (int) (255 * m_intensity);
+			grn = (int) (255 * m_intensity);
+			blu = (int) (255 * m_intensity);
+			sText.Format("RGB(%d,%d,%d)", red, grn, blu);
+		}
+		if (m_colorbarIndexMouseMove > -1) {
+			pixelColor = pDoc->m_colorbar[m_colorbarIndexMouseMove];
+			if (pixelColor != NOCOLOR) {
+				red = GetRValue(pixelColor);
+				grn = GetGValue(pixelColor);
+				blu = GetBValue(pixelColor);
+				sText.Format("RGB(%d,%d,%d)", red, grn, blu);
+			} else {
+				red = grn = blu = 255;
+				sText.Empty();
+			}
+		}
+	} else {
+		red = grn = blu = 255;
+		sText.Empty();
+	}
+
+-----
+
+	CDC		*pDC;
+	CDC		memDC;
+	CBitmap memBM;
+	CBrush	hbrBkGnd;
+	memDC.CreateCompatibleDC(pDCin);
+	memBM.CreateCompatibleBitmap(pDCin, rcClient.right, rcClient.bottom);
+	CBitmap *pBM=memDC.SelectObject(&memBM);
+	hbrBkGnd.CreateSolidBrush(GetSysColor(COLOR_WINDOW));
+	pDC=&memDC;
+	pDC->FillRect(&rcClient,&hbrBkGnd);
+
+--------------------------------------------------------------------------------
+
+void CColorBarView::DrawCursorColor(CDC *pDC, CRect rcClient, CRect &rcSlider, CRect &rcColorBar, 
+	float intensity, int colorbarIndex, int colorbarIndexMouseMove)
+{
+	CString sText;
+	COLORREF pixelColor;
+	int red, grn, blu;
+	COLORREF *pPallet;
+	int      dx, xOrigin, yOrigin;
+
+	CIMACDoc *pDoc = CIMACApp::GetDocument();
+	if (pDoc == NULL) return;
+	pPallet = pDoc->GetPallet();
+
+	GetColorbarBaseData(rcClient, dx, xOrigin, yOrigin );
+
+	int cbSize = GetColorBarSize();
+	COLORREF *pColorbar = GetColorBarPtr();	
+
+	// Get the color under the mouse pointer, pointer might be over the colorwheel or colorbar.
+	if (colorbarIndex >= -1 || colorbarIndexMouseMove > -1) {
+		if (colorbarIndex > -1) {
+			pixelColor = pPallet[colorbarIndex];
+			red = (int) (GetRValue(pixelColor) * intensity);
+			grn = (int) (GetGValue(pixelColor) * intensity);
+			blu = (int) (GetBValue(pixelColor) * intensity);
+			sText.Format("RGB(%d,%d,%d)", red, grn, blu);
+		} else if (colorbarIndex == -1) {
+			red = (int) (255 * intensity);
+			grn = (int) (255 * intensity);
+			blu = (int) (255 * intensity);
+			sText.Format("RGB(%d,%d,%d)", red, grn, blu);
+		}
+		if (colorbarIndexMouseMove > -1) {
+			pixelColor = pColorbar[colorbarIndexMouseMove];
+			if (pixelColor != NOCOLOR) {
+				red = GetRValue(pixelColor);
+				grn = GetGValue(pixelColor);
+				blu = GetBValue(pixelColor);
+				sText.Format("RGB(%d,%d,%d)", red, grn, blu);
+			} else {
+				red = grn = blu = 255;
+				sText.Empty();
+			}
+		}
+	} else {
+		red = grn = blu = 255;
+		sText.Empty();
+	}
+
+	// Draw the color that was found under the mouse pointer
+	CRect rcRect = rcClient;
+	rcRect.right  = rcRect.right/2 + 2*dx;
+	rcRect.left   = rcRect.right - 2*dx;
+	rcRect.bottom = rcRect.bottom - dx;
+	rcRect.top    = rcRect.bottom - 2*dx;
+	pDC->FillRect(rcRect, &CBrush(RGB(red, grn, blu)));
+	pDC->FrameRect(rcRect,&CBrush(RGB(0,0,0)));
+	rcRect.left=rcRect.right+5;
+	rcRect.right+=150;
+	pDC->DrawText(sText, rcRect, DT_LEFT|DT_VCENTER|DT_SINGLELINE);
+}
+
+Where:
+
+DrawColorbar(pDC, rcClient, m_rcSlider, m_rcColorBar, m_intensity, m_colorbarIndex, m_colorbarIndexMouseMove);
+
+
+-----
+
+This is the actual part that draws the coloured square at the bottom of the "Color Bar Editor":
+
+	// Draw the color that was found under the mouse pointer
+	CRect rcRect = rcClient;
+	rcRect.right  = rcRect.right/2 + 2*dx;
+	rcRect.left   = rcRect.right - 2*dx;
+	rcRect.bottom = rcRect.bottom - dx;
+	rcRect.top    = rcRect.bottom - 2*dx;
+	pDC->FillRect(rcRect, &CBrush(RGB(red, grn, blu)));
+	pDC->FrameRect(rcRect,&CBrush(RGB(0,0,0)));
+	rcRect.left=rcRect.right+5;
+	rcRect.right+=150;
+	pDC->DrawText(sText, rcRect, DT_LEFT|DT_VCENTER|DT_SINGLELINE);
+
+-> In MFC controls are normally added to a dialog, but in views controls like CButton or CListBox cannot be added in the same way.  Instead, it is possible to add controls to a CView by changing it to a CFormView which is derived from CView but it acts like a CDialog (see https://www.daniweb.com/programming/software-development/threads/142573/mfc-cview-with-controls)
+-> Instead, simply add RGB columns to the "Edit Class Dialog" but hide them by putting in a horizontal scrollbar
+
+--------------------------------------------------------------------------------
+
+IDD_CLASSNAMES DIALOGEX 0, 0, 315, 175
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Edit Class Names"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "Edit the Class Names by selecting the name below.",IDC_TITLE,7,7,301,8
+    CONTROL         "",IDC_NAMELIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_EDITLABELS | WS_BORDER | WS_TABSTOP,7,20,301,124
+    PUSHBUTTON      "Help",ID_CLASS_NAMES_HELP,7,154,50,14
+    DEFPUSHBUTTON   "OK",IDOK,199,154,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,258,154,50,14
+END
+
+void CColorBarView::DrawColorbar(CDC *pDC, CRect rcClient, CRect &rcSlider, CRect &rcColorBar, 
+	float intensity, int colorbarIndex, int colorbarIndexMouseMove)
+{
+	CPoint p1[NCOL+1], p2[NCOL+1], pixel[4];
+	CRgn region;
+	CRect rcRect;
+	COLORREF pixelColor;
+	COLORREF *pPallet;
+	int dx, xOrigin, yOrigin;
+	int i, j, k;
+
+	double px, py;
+	double theta;
+	double pi = atan(1.0)*4;
+
+	CIMACDoc *pDoc = CIMACApp::GetDocument();
+	if (pDoc == NULL) return;
+	pPallet = pDoc->GetPallet();
+
+	GetColorbarBaseData(rcClient, dx, xOrigin, yOrigin );
+
+	// init the coords for the first slice of the color wheel
+	for (i=0; i<NCOL+1; i++) {
+		p2[i].x = ((i+1)*dx) + xOrigin;
+	    p2[i].y = yOrigin;
+	}
+	
+	// draw the color wheel, slice by slice. Each piece grades from pure on the outside to grey in the center.
+	for (i=1, k=0; i<=NCOL*6; i++) {
+		// compute the slice
+		theta = pi * (double) i / (double) (3*NCOL);
+		if (i == NCOL*6) theta = 0; // get rid of rounding error with 2*pi
+		px =  cos(theta);
+		py =  sin(theta);
+		// compute the coordinates of the slice
+		for (j=0; j<NCOL+1; j++) {
+			p1[j] = p2[j];
+			p2[j].x = (int)((j+1) * px * dx) + xOrigin;
+			p2[j].y = (int)((j+1) * py * dx) + yOrigin;
+		}
+		// fill in the colors from the pallet
+		for (j=NCOL-1; j>=0; j--) {
+			pixel[0] = p1[j];
+			pixel[1] = p1[j+1];
+			pixel[2] = p2[j+1];
+			pixel[3] = p2[j];
+			region.CreatePolygonRgn(pixel, 4, ALTERNATE);
+			pixelColor = pPallet[k++];
+			pixelColor = RGB (GetRValue(pixelColor)*intensity, 
+							  GetGValue(pixelColor)*intensity,
+							  GetBValue(pixelColor)*intensity);
+			pDC->FillRgn(&region, &CBrush(pixelColor));
+			region.DeleteObject();
+		}
+		// the center color is always a shade of grey.
+		pixel[0].x = xOrigin;
+		pixel[0].y = yOrigin;
+		pixel[1] = p1[0];
+		pixel[2] = p2[0];
+		region.CreatePolygonRgn(pixel, 3, ALTERNATE);
+		pixelColor = RGB (255*intensity, 255*intensity, 255*intensity);
+		pDC->FillRgn(&region, &CBrush(pixelColor));
+		region.DeleteObject();
+	}
+
+	// Draw the intensity slider on the right.
+	CRect rcImage;
+	rcImage.right  = rcClient.right - 4*dx;
+	rcImage.left   = rcImage.right - dx;
+	rcImage.top    = 4*dx;
+	rcImage.bottom = rcClient.bottom - dx;
+
+	rcSlider = rcImage;
+	rcSlider.right = rcClient.right;
+	rcSlider.left  = rcImage.right;
+
+	float greyScale = 1.0;
+	float ftop = (float) rcImage.top;
+	float stepSize = (float) (rcImage.bottom - rcImage.top) / (float) NGREY;
+	float fbottom = ftop + stepSize;
+
+	// the grey boxes
+	CRect greyBox = rcImage;
+	for (i=0; i<NGREY; i++) {
+		greyBox.top = (int) (ftop+0.5);
+		greyBox.bottom = (int) (fbottom+0.5);
+		pixelColor = RGB (255*greyScale, 255*greyScale, 255*greyScale);
+		pDC->FillRect(greyBox, &CBrush(pixelColor));
+		ftop += stepSize;
+		fbottom += stepSize;
+		greyScale -= (float)1.0/(float)NGREY;
+	}
+	// the outline
+	pDC->MoveTo(rcImage.left, rcImage.top);
+	pDC->LineTo(rcImage.right, rcImage.top);
+	pDC->LineTo(rcImage.right, rcImage.bottom);
+	pDC->LineTo(rcImage.left, rcImage.bottom);
+	pDC->LineTo(rcImage.left, rcImage.top);
+
+	// the arrow
+	int iy = (int) ((float)(rcImage.bottom-rcImage.top) * (1.0-intensity) + 0.5) + rcImage.top;
+	pixel[0].x = rcImage.right+5;
+	pixel[0].y = iy;
+	pixel[1].x = pixel[0].x+dx/2;
+	pixel[1].y = iy-5;
+	pixel[2].x = pixel[0].x+dx/2;
+	pixel[2].y = iy+5;
+	region.CreatePolygonRgn(pixel, 3, ALTERNATE);
+	pDC->FillRgn(&region, &CBrush(RGB(0,0,0)));
+	region.DeleteObject();
+
+	// the annotation
+	CString sText;
+	rcRect = rcClient;
+	rcRect.left   = pixel[0].x+dx/2+5;
+	rcRect.top    = iy - dx;
+	rcRect.bottom = iy + dx;
+	sText.Format("%0.1f", intensity*100);
+	sText += "%";
+	pDC->DrawText(sText, rcRect, DT_LEFT|DT_VCENTER|DT_SINGLELINE);
+	rcRect.right  = rcImage.left-5;
+	rcRect.left   = rcRect.right - 4*dx;
+	rcRect.top    = rcImage.top ;
+	rcRect.bottom = rcImage.top + dx;
+	pDC->DrawText("100%", rcRect, DT_RIGHT|DT_VCENTER|DT_SINGLELINE);
+	rcRect.top    = rcImage.bottom - dx;
+	rcRect.bottom = rcImage.bottom;
+	pDC->DrawText("0%", rcRect, DT_RIGHT|DT_VCENTER|DT_SINGLELINE);
+	rcRect.bottom = rcImage.top - dx;
+	rcRect.top = rcRect.bottom - 2*dx;
+	rcRect.left = rcImage.left;
+	rcRect.right = rcImage.right + 100;
+	pDC->DrawText("Intensity", rcRect, DT_VCENTER|DT_SINGLELINE);
+
+	// Draw the current color bar on the left
+	DrawLegend(pDC, pDoc, dx, rcClient.bottom, CPoint(0, 0), colorbarIndex, colorbarIndexMouseMove, FALSE);
+
+	rcColorBar.left =  2*dx;
+	rcColorBar.right = 3*dx;
+	rcColorBar.top = 4*dx;
+	rcColorBar.bottom = rcClient.bottom - dx;
+
+//	pDC->FrameRect(rcColorBar, &CBrush(RGB(255,0,0)));
+}
+
+-> This is the key function that must be updated from the numerical values entered into ClassNameDlg.cpp:
+
+void CColorBarView::DrawLegend(CDC *pDC, CIMACDoc *pDoc, int dx, int height, CPoint origin, int colorbarIndex, int colorbarIndexMouseMove, BOOL bSeismicWindow)
+{
+	CRect rcColorBar;
+	CRect rcDrawColorBar;
+	CRect rcRect;
+	COLORREF pixelColor;
+	CString sText;
+
+	BOOL bCSImode = pDoc->IsColorbarOpenedFromCSI() && !bSeismicWindow;
+	BOOL bThirdAttribute = pDoc->IsThirdAttributeMode(pDoc->GetViewInstance()) && !bSeismicWindow;
+
+	int cbSize = 0;
+	COLORREF *pColorbar = NULL;
+	if (!bSeismicWindow) {
+		cbSize = GetColorBarSize();
+		pColorbar = GetColorBarPtr();
+	}
+	else {
+		cbSize = pDoc->GetColorBarSize(-1);
+		pColorbar = pDoc->GetColorBar();
+	}
+
+	if (cbSize > 0) {
+		rcColorBar.left =  origin.x + 2*dx;
+		rcColorBar.right = origin.x + 3*dx;
+		rcColorBar.top = origin.y + 4*dx;
+		rcColorBar.bottom = height - dx;
+		rcDrawColorBar = rcColorBar;
+
+		// center the third attribute color bar since there won`t be any labels drawn.
+		if (bThirdAttribute) {
+			rcDrawColorBar.left += 2*dx;
+			rcDrawColorBar.right += 2*dx;
+		}
+
+		float ftop = (float)rcDrawColorBar.top;
+		float stepSize = (float) (rcDrawColorBar.bottom - rcDrawColorBar.top) / (float) cbSize;
+		float fbottom = ftop + stepSize;
+
+		int index;
+		CRect colorBox = rcDrawColorBar;
+		for (int i=0; i<cbSize; i++) {
+			if (bThirdAttribute) index = cbSize - 1 - i;
+			else index = i;
+			colorBox.top = (int) (ftop+0.5);
+			colorBox.bottom = (int) (fbottom+0.5);
+			if (pColorbar[index] == NOCOLOR) {
+				pixelColor = RGB(255,255,255);
+			} else {
+				pixelColor = pColorbar[index];
+			}
+			pDC->FillRect(colorBox, &CBrush(pixelColor));
+			if (index == colorbarIndex) {
+	
+				CRect box = colorBox;
+				pDC->FrameRect(box,&CBrush(RGB(0,0,0)));
+				box.DeflateRect(1, 1);
+				pDC->FrameRect(box,&CBrush(RGB(0,0,0)));
+				box.DeflateRect(1, 1);
+				pDC->FrameRect(box,&CBrush(RGB(0,0,0)));
+			}
+
+
+			if (!bCSImode && !bThirdAttribute) {
+				rcRect = colorBox;
+				rcRect.top -= dx;
+				rcRect.bottom += dx;
+				rcRect.right = rcRect.left - 5;
+				rcRect.left = rcRect.right - (dx * 2);
+				sText.Format("%d", i);
+				pDC->DrawText(sText, rcRect, DT_RIGHT|DT_VCENTER|DT_SINGLELINE);
+				rcRect.left = colorBox.right + 5;
+				CSize extent = pDC->GetTextExtent(pDoc->GetClssName(index));
+				rcRect.right = rcRect.left + extent.cx;
+				pDC->DrawText(pDoc->GetClssName(index), rcRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+			}
+
+			if (index == colorbarIndexMouseMove) {
+				pDC->FrameRect(colorBox, &CBrush(RGB(0,0,0)));
+			}
+			ftop += stepSize;
+			fbottom += stepSize;
+		}
+
+		// the outline
+		pDC->FrameRect(rcDrawColorBar, &CBrush(RGB(0,0,0)));
+
+		// title
+		rcRect.bottom = rcColorBar.top - dx;
+		rcRect.top = rcRect.bottom - 2*dx;
+		rcRect.left = rcColorBar.left;
+		rcRect.right = rcColorBar.right + 100;
+		if (bThirdAttribute) {
+			pDC->DrawText("Attribute Colors", rcRect, DT_VCENTER | DT_SINGLELINE);
+		} else if (bCSImode) {
+			pDC->DrawText("CSI Colors", rcRect, DT_VCENTER | DT_SINGLELINE);
+		} else {
+			pDC->DrawText("Class Colors", rcRect, DT_VCENTER | DT_SINGLELINE);
+		}
+
+		if (bSeismicWindow){
+			// frame the entire scene
+			rcColorBar.top -= 3*dx;
+			rcColorBar.bottom += dx;
+			rcColorBar.left = origin.x;
+			rcColorBar.right += dx * 5;
+			pDC->FrameRect(rcColorBar, &CBrush(RGB(0,0,0)));
+		}
+	}
+}
+
+			if (!bCSImode && !bThirdAttribute) {
+				rcRect = colorBox;
+				rcRect.top -= dx;
+				rcRect.bottom += dx;
+				rcRect.right = rcRect.left - 5;
+				rcRect.left = rcRect.right - (dx * 2);
+				sText.Format("%d", i);
+				pDC->DrawText(sText, rcRect, DT_RIGHT|DT_VCENTER|DT_SINGLELINE);
+				rcRect.left = colorBox.right + 5;
+				CSize extent = pDC->GetTextExtent(pDoc->GetClssName(index));
+				rcRect.right = rcRect.left + extent.cx;
+				pDC->DrawText(pDoc->GetClssName(index), rcRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+			}
+
+Where:
+
++		sText	"1"	ATL::CStringT<char,StrTraitMFC_DLL<char,ATL::ChTraitsCRT<char>>>
+
+pDoc->GetClssName(index)
+"Ft Simpson"
+    ATL::CSimpleStringT<char,1>: "Ft Simpson"
+
+2020.12.09
+I. Researching and implementing solution:    
+
+		m_arrNames.GetCount()	Function CStringArray::GetCount has no address, possibly due to compiler optimizations.	
+
+BOOL CClassNameDlg::OnInitDialog()
+{
+	CDialogEx::OnInitDialog();
+
+	CRect rItem;
+	m_nameList.GetClientRect(rItem);
+	m_nameList.InsertColumn(0, "Color #", LVCFMT_LEFT, rItem.Width()*15/100);
+	m_nameList.InsertColumn(1, "Name", LVCFMT_LEFT, rItem.Width()*80/100);
+	m_nameList.InsertColumn(2, "Red", LVCFMT_LEFT, rItem.Width() * 10 / 100);
+	m_nameList.InsertColumn(3, "Green", LVCFMT_LEFT, rItem.Width() * 10 / 100);
+	m_nameList.InsertColumn(4, "Blue", LVCFMT_LEFT, rItem.Width() * 10 / 100);
+
+	for (int i=0; i<m_pDoc->GetClassCount(); i++) {
+		CString msg;
+		msg.Format("%d", i);
+		m_nameList.InsertItem(i, msg);
+		m_nameList.SetItem(i, 1, LVIF_TEXT, m_arrNames[i], 0,0,0,0);
+	}
+
+	return TRUE;
+}
+
+
+m_nameList.GetItemCount()
+Function CListCtrl::GetItemCount has no address, possibly due to compiler optimizations.
+
+-		m_arrNames	<Information not available, no symbols loaded for mfc140d.dll>	CStringArray
+
+m_arrNames.m_nSize
+40
+
+-		m_nameList	{hWnd=0x00000000000f0ce8 {unused=??? }}	CEditListCtrl
+
+Which has data member:
+
+-		m_arrColors	0x000000a13c6fcc68 {{m_pData=0x0000000000000000 {???} m_nSize=0 m_nMaxSize=0 ...}, {m_pData=0x0000000000000000 {...} ...}, ...}	CArray<unsigned long,unsigned long>[25]
++		[0]	{m_pData=0x0000000000000000 {???} m_nSize=0 m_nMaxSize=0 ...}	CArray<unsigned long,unsigned long>
+
+-		m_arrColors	0x000000a13c6fcc68 {{m_pData=0x0000000000000000 {???} m_nSize=0 m_nMaxSize=0 ...}, {m_pData=0x0000000000000000 {...} ...}, ...}	CArray<unsigned long,unsigned long>[25]
+-		[0]	{m_pData=0x0000000000000000 {???} m_nSize=0 m_nMaxSize=0 ...}	CArray<unsigned long,unsigned long>
++		CObject	{...}	CObject
++		m_pData	0x0000000000000000 {???}	unsigned long *
+		m_nSize	0	__int64
+		m_nMaxSize	0	__int64
+		m_nGrowBy	0	__int64
+
+                
+	CStringArray m_arrColorR;
+	CStringArray m_arrColorG;
+	CStringArray m_arrColorB;
+
+    CStringArray m_arrClassColorR;
+    CStringArray m_arrClassColorG;
+    CStringArray m_arrClassColorB;
+
+    CString GetClssColorR(int i) { return m_arrClassColorR.GetAt(i); }
+    CString GetClssColorG(int i) { return m_arrClassColorG.GetAt(i); }
+    CString GetClssColorB(int i) { return m_arrClassColorB.GetAt(i); }
+
+				pDC->DrawText(sText, rcRect, DT_RIGHT|DT_VCENTER|DT_SINGLELINE);
+				rcRect.left = colorBox.right + 5;
+				CSize extent = pDC->GetTextExtent(pDoc->GetClssName(index));
+				rcRect.right = rcRect.left + extent.cx;
+				pDC->DrawText(pDoc->GetClssName(index), rcRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+
+                                
+void CColorBarView::OnCbNames()
+{
+	CIMACDoc* pDoc = GetDocument();
+	CClassNameDlg dlg;
+	dlg.m_pDoc = pDoc;
+	for (int i=0; i<pDoc->GetClassCount(); i++) {
+		dlg.m_arrNames[i] = pDoc->GetClssName(i);
+	}
+
+	if (dlg.DoModal() != IDOK) return;
+
+	for (int i=0; i<pDoc->GetClassCount(); i++) {
+		pDoc->SetClassName(i, dlg.m_arrNames[i]);
+	}
+	Invalidate(FALSE);
+	pDoc->SetUpdateXplotPaneFlagsAll(TRUE);
+	pDoc->UpdateViews();
+}
+
+-----
+
+m_colorbar[i] = RGB(190, 190, 190); // unclassified is grey
+
+#define RGB(r,g,b)          ((COLORREF)(((BYTE)(r)|((WORD)((BYTE)(g))<<8))|(((DWORD)(BYTE)(b))<<16)))
+
+COLORREF m_colorbar[MAXCBSIZE];
+
+typedef DWORD   COLORREF;
+
+	for (int i=0; i<MAXCLASS; i++){
+		if (ix>=NCOL*NCOL*6) ix = i;
+		m_colorbar[i]=m_pallet[ix];
+		ix += NCOL*NCOL;
+		m_histoData[i] = 0;
+		m_histoFlag[i] = 0;
+		if(i==0) {
+			m_arrClassNames[i] = "Unclassified";
+            m_colorbar[i] = RGB(190, 190, 190); // unclassified is grey
+		}
+		else {
+			m_arrClassNames[i].Format("Class %d", i);
+		}
+	}
+	
+i = 0:	
+m_colorbar[i] 
+12500670
+	
+m_colorbar[i] 
+65535
+
+    CStringArray m_arrClassColorR;
+    CStringArray m_arrClassColorG;
+    CStringArray m_arrClassColorB;
+
+-----
+    
+m_arrColorR = {m_pData=0x0000029eb8996510 "" m_nSize=40 m_nMaxSize=40 ...}
+
+wn (CDC *pDC, CPoint point, CRect rcClient, CRect rcSlider, CRect rcColorBar, 
+	BOOL &m_lbuttondown, float m_intensity, int m_palletIndex, int &m_colorbarIndex)
+{
+	int dx, xOrigin, yOrigin;
+
+	CIMACDoc *pDoc = CIMACApp::GetDocument();
+	if (pDoc == NULL) return;
+
+	BOOL bThirdAttribute = pDoc->IsThirdAttributeMode(pDoc->GetViewInstance());
+	
+	GetColorbarBaseData(rcClient, dx, xOrigin, yOrigin);
+
+	int cbSize = GetColorBarSize();
+	COLORREF *pColorbar = GetColorBarPtr();
+
+	// intensity slider
+	int iy = (int) ((float)(rcSlider.bottom - rcSlider.top) * (1.0-m_intensity) + 0.5) + rcSlider.top;
+	if (point.x > rcSlider.left &&
+		point.y > iy-5 &&
+		point.y < iy+5) 
+	{
+		m_lbuttondown = TRUE;
+		CRect windowRect, clipRect;
+		clipRect = rcSlider;
+		pDC->GetWindow()->ClientToScreen(clipRect);
+		ClipCursor(clipRect);
+	}
+
+	// the colorbar
+	if (point.x > rcColorBar.left &&
+		point.x < (rcColorBar.right+80) && 
+		point.y > rcColorBar.top &&
+		point.y < rcColorBar.bottom )
+	{
+		m_colorbarIndex =(int) ( (float)(point.y-rcColorBar.top) /
+			(float)(rcColorBar.bottom-rcColorBar.top) * cbSize);
+
+		if (bThirdAttribute) m_colorbarIndex = cbSize - 1 - m_colorbarIndex;
+	}
+
+	// the pallet
+	int red, grn, blu;
+	int dist = (int)(sqrt((float)((point.x-xOrigin)*(point.x-xOrigin))  +
+			              (float)((point.y-yOrigin)*(point.y-yOrigin))) /dx ) - 1;
+	if (dist < NCOL && m_colorbarIndex >= 0) {
+		if (m_palletIndex >= 0) {
+			COLORREF *pallet = pDoc->GetPallet();
+			COLORREF pixelColor = pallet[m_palletIndex];
+			red = (int) (GetRValue(pixelColor) * m_intensity);
+			grn = (int) (GetGValue(pixelColor) * m_intensity);
+			blu = (int) (GetBValue(pixelColor) * m_intensity);
+		} else {
+			// the center greyshade was selected
+			red = (int) (255 * m_intensity);
+			grn = (int) (255 * m_intensity);
+			blu = (int) (255 * m_intensity);
+		}
+		pColorbar[m_colorbarIndex] = RGB(red, grn, blu);
+		pDoc->m_bNewColorFlag=0xffffffff;
+		pDoc->SendColorbarToHeadwave();
+		pDoc->UpdateViews();
+	}
+}
+
+-----
+
+This is where the color for each class is set?
+
+			if (pColorbar[index] == NOCOLOR) {
+				pixelColor = RGB(255,255,255);
+			} else {
+				pixelColor = pColorbar[index];
+			}
+
+Updated to:
+
+			if (pColorbar[index] == NOCOLOR) {
+				pixelColor = RGB(255,255,255);
+			} else {
+				const int classNameRed = atoi(pDoc->GetClssColorR(i));
+				const int classNameGreen = atoi(pDoc->GetClssColorG(i));
+				const int classNameBlue = atoi(pDoc->GetClssColorB(i));
+				
+				if (classNameRed != 0 ||
+					classNameGreen != 0 ||
+					classNameBlue != 0)
+				{
+					pixelColor = RGB(classNameRed, 
+						classNameGreen, 
+						classNameBlue);
+				}
+				else
+				{
+					pixelColor = pColorbar[index];
+				}
+			}
+
+		dlg.m_arrColorR[i] = pDoc->GetClssColorR(i);
+		dlg.m_arrColorG[i] = pDoc->GetClssColorG(i);
+		dlg.m_arrColorB[i] = pDoc->GetClssColorB(i);
+
+-----
+
+TODO: After the user changes the color for a class again, the above R, G and B values from the class name dialog need to be reset to 0:
+                
+void CColorBarView::OnLButtonDown(UINT nFlags, CPoint point) 
+{
+	CDC *pDC = GetDC();
+	CRect rcClient;
+	GetClientRect(rcClient);
+
+	DoLButtonDown( pDC, point, rcClient, m_rcSlider, m_rcColorBar, m_lbuttondown, m_intensity, m_palletIndex, m_colorbarIndex );
+
+	Invalidate(FALSE);
+}
+
+// Update RGB values in ClassNameDlg
+
+		pDoc->SetClassColorR(i, dlg.m_arrColorR[i]);
+		pDoc->SetClassColorG(i, dlg.m_arrColorG[i]);
+		pDoc->SetClassColorB(i, dlg.m_arrColorB[i]);
+
+	for (int i=0; i<pDoc->GetClassCount(); i++) {
+		dlg.m_arrNames[i] = pDoc->GetClssName(i);
+		dlg.m_arrColorR[i] = pDoc->GetClssColorR(i);
+		dlg.m_arrColorG[i] = pDoc->GetClssColorG(i);
+		dlg.m_arrColorB[i] = pDoc->GetClssColorB(i);
+                
+--------------------------------------------------------------------------------
+
+	if (dist < NCOL && m_colorbarIndex >= 0) {
+		if (m_palletIndex >= 0) {
+			COLORREF *pallet = pDoc->GetPallet();
+			COLORREF pixelColor = pallet[m_palletIndex];
+			red = (int) (GetRValue(pixelColor) * m_intensity);
+			grn = (int) (GetGValue(pixelColor) * m_intensity);
+			blu = (int) (GetBValue(pixelColor) * m_intensity);
+		} else {
+			// the center greyshade was selected
+			red = (int) (255 * m_intensity);
+			grn = (int) (255 * m_intensity);
+			blu = (int) (255 * m_intensity);
+		}
+		pColorbar[m_colorbarIndex] = RGB(red, grn, blu);
+
+		// Reset RGB values in ClassNameDlg
+		char color[10];
+		sprintf(color, "%d", 0);
+		pDoc->SetClassColorR(m_colorbarIndex, color);
+		pDoc->SetClassColorR(m_colorbarIndex, color);
+		pDoc->SetClassColorR(m_colorbarIndex, color);
+
+		// Final legend color update steps
+		pDoc->m_bNewColorFlag=0xffffffff;
+		pDoc->SendColorbarToHeadwave();
+		pDoc->UpdateViews();
+
+                
+2020.12.10
+I. Researching and implementing solution:
+
+-Note that it is unnecessary to add these numeric color values that were entered into the Edit Class Name Dialog to the archive "Serialize(CArchive &ar)" functionality
+                
+--------------------------------------------------------------------------------
+                
+-From CSI:
+                
+void CColorBarView::OnLButtonDown(UINT nFlags, CPoint point) 
+{
+	CCSIDoc* pDoc = GetDocument();
+	int red, grn, blu;
+	// intensity slider
+	int iy = (int) ((float)(m_rcSlider.bottom-m_rcSlider.top) * 
+					(1.0-m_intensity) + 0.5) + m_rcSlider.top;
+	if (point.x > m_rcSlider.left &&
+		point.y > iy-5 &&
+		point.y < iy+5) 
+	{
+		m_lbuttondown = TRUE;
+		m_mx = point.x;
+		m_my = point.y;
+		CRect windowRect, clipRect;
+		GetWindowRect(&windowRect);
+		clipRect = m_rcSlider;
+		clipRect.left += windowRect.left;
+		clipRect.right += windowRect.left;
+		// the windowrect is 4 pixels larger than the clientrect??? So we add some tolerance!
+		clipRect.top += windowRect.top-5;
+		clipRect.bottom += windowRect.top+10;
+		ClipCursor(clipRect);
+	}
+
+	// the colorbar
+	if (point.x > m_colorBox.left &&
+		point.x < m_colorBox.right && 
+		point.y > m_colorBox.top &&
+		point.y < m_colorBox.bottom )
+	{
+		m_colorbarIndex =(int) ( (float)(point.y-m_colorBox.top) /
+								 (float)(m_colorBox.bottom-m_colorBox.top) * pDoc->m_cbSize);
+	}
+
+	// the pallet
+	int dist = (int)(sqrt((float)((point.x-xOrigin)*(point.x-xOrigin))  +
+			              (float)((point.y-yOrigin)*(point.y-yOrigin))) /dx ) - 1;
+	if (dist < NCOL && m_colorbarIndex >= 0) {
+		if (m_palletIndex >= 0) {
+			COLORREF pixelColor = pDoc->m_pallet[m_palletIndex];
+			red = (int) (GetRValue(pixelColor) * m_intensity);
+			grn = (int) (GetGValue(pixelColor) * m_intensity);
+			blu = (int) (GetBValue(pixelColor) * m_intensity);
+		} else {
+			// the center greyshade was selected
+			red = (int) (255 * m_intensity);
+			grn = (int) (255 * m_intensity);
+			blu = (int) (255 * m_intensity);
+		}
+		pDoc->m_colorbar[m_colorbarIndex] = RGB(red, grn, blu);
+		pDoc->SetForceRedraw(TRUE);
+	}
+	Invalidate(FALSE);
+}
+                
+1) To update the "Classified Seismic Volume" with the new color check:
+                
+void CColorBarView::OnLButtonDown(UINT nFlags, CPoint point) 
+{
+	CDC *pDC = GetDC();
+	CRect rcClient;
+	GetClientRect(rcClient);
+
+	DoLButtonDown( pDC, point, rcClient, m_rcSlider, m_rcColorBar, m_lbuttondown, m_intensity, m_palletIndex, m_colorbarIndex );
+
+	Invalidate(FALSE);
+}
+
+Which calls:
+
+void CIMACDoc::UpdateViews(BOOL bSkipCombo)
+{
+	if (!m_bDrawFlag) return;  // nothing do to
+	CVolType *pVolType;
+	POSITION pos;
+	CIMACApp *pApp = (CIMACApp *)AfxGetApp();
+	if (pApp->IsFeature2()){
+		// refresh the volume type combo box
+		pApp->m_volTypeCombo->ResetContent();
+		VolTypeList	*pVolTypeList = GetVolTypeListPtr();
+		pos = pVolTypeList->GetHeadPosition();
+		if (pos == NULL) {
+			return;  // nothing to do, there is no volume type list.
+		}
+		while (pos) {
+			pVolType = pVolTypeList->GetNext(pos);
+			CString txt = pVolType->GetVolTypeName();
+			pApp->m_volTypeCombo->AddString(txt);
+		}
+		pApp->m_volTypeCombo->SetCurSel(GetCurrentVolTypeIx());
+		pVolType = pVolTypeList->GetAt(pVolTypeList->FindIndex(GetCurrentVolTypeIx()));
+	}
+	if (IsCSIMode()){
+		// save the state of the slider controls.
+		if (IsUpdateSliderEnabledFlag()) {
+			int n = pVolType->GetParmNamesCount();
+			for (int i = 0; i < pVolType->GetParmNamesCount(); i++) {
+				if (m_arrDynamicSliders && m_arrDynamicSliders[i]) {
+					CDynamicSlider *pDynamicSlider = m_arrDynamicSliders[i];
+					pVolType->SetParmEnabled(i, pDynamicSlider->isEnabled());  // save the state of the slider
+				}
+			}
+		}
+		SetUpdateSliderEnabledFlag(TRUE);
+
+		if (IsShowCSIPane()) {
+			// rebuild the pane from scratch. Calls CCSIDoc::AllocateDynamicSliders()
+			GetMainFrame()->ShowCSIPane();
+		}
+
+		if (m_pColorMapWnd && !m_bMinimizeColorMap) m_pColorMapWnd->Invalidate();
+
+		// Find a volume that matches the slider settings.
+		int ix = 0;
+		m_viewIndex = -1;
+		pos = m_seisParmsList.GetHeadPosition();
+		while (pos) {
+			CSeisParms *seisParms = m_seisParmsList.GetNext(pos);
+			if (seisParms->GetVolType() == pVolType->GetVolTypeName() &&
+				seisParms->GetParmCount() == pVolType->GetParmNamesCount()) {
+				BOOL bAllMatch = TRUE;
+				BOOL bNoActiveSliders = TRUE;
+				for (int i = 0; i < seisParms->GetParmCount(); i++) {
+					CDynamicSlider *pDynamicSlider = m_arrDynamicSliders[i];
+					if (pDynamicSlider == NULL) {
+						AfxMessageBox("UpdateViews NULL pointer found");
+						return;
+					}
+					if (!pDynamicSlider->isEnabled()) continue;
+					bNoActiveSliders = FALSE;
+					int value = pDynamicSlider->GetValue();
+					if (value != seisParms->GetParmValue(i)) {
+						bAllMatch = FALSE;
+						break;
+					}
+				}
+				if (bAllMatch && !bNoActiveSliders) {
+					// we found a volume that matches all the parameters.
+					m_viewIndex = ix;
+					break;
+				}
+			}
+			ix++;
+		}
+	}
+
+	// inline and crossline combo boxes...
+	SetModifiedFlag();
+	if (!bSkipCombo) {
+		// refresh the line select combo boxes
+		if (GetFileCount() > 0) {
+			CSegy *pSegy = GetSegyInPtr(0);
+			CSegyIndex *pIndex = pSegy->GetSegyIndexPtr();
+			DWORD lineCount;
+			DWORD *pLine;
+
+			// Update Inline combobox
+			pIndex->GetLiveInlineNumbers(lineCount, &pLine);
+			UpdateCombobox(lineCount, pLine, pApp->m_cmbInline, m_nDisplayInline);
+
+			// Update Xline combobox
+			pIndex->GetLiveXlineNumbers(lineCount, &pLine);
+			UpdateCombobox(lineCount, pLine, pApp->m_cmbXline, m_nDisplayXline);
+
+            // Update Userline combobox
+            UpdateUserlineCombobox(pApp->m_cmbUserline, m_nDisplayUserline);
+		}
+
+		pApp->m_btnInline->SetCheck(GetInlineXlineMode() == eINLINE);
+		pApp->m_btnXline->SetCheck(GetInlineXlineMode() == eXLINE);
+        pApp->m_btnUserline->SetCheck(GetInlineXlineMode() == eUSERLINE);
+    }
+
+	// Time Slice...
+	if (m_timeSlice.isActive() && m_timeSlice.isShowSliceFlag()) {
+		if (m_timeSlice.isLoadSliceFlag()) {
+			if (!m_timeSlice.Create(GetFileCount()+GetVirtualVolumeCount(), GetSegyInPtr(0)->GetSegyIndexPtr())) {
+				m_timeSlice.Destroy();
+				m_timeSlice.SetShowSliceFlag(FALSE);
+			}
+		}
+		LoadTimeSlice(&m_timeSlice);
+		m_timeSlice.SetLoadSliceFlag(FALSE);
+	}
+	
+	// update the dialogs in the CDockablePane`s 
+	AfxGetMainWnd()->Invalidate();
+
+	// destroy and recreate the filelist pane.
+	ShowFilelistPane();
+
+	m_bReadyToCompute = TRUE;
+	ComputeEngine();
+
+	// turn on update flag for all displays
+	for (int i=0; i<GetXplotCount()+1; i++) {
+		m_bReadyToDisplay[i] = TRUE;
+	}
+
+	UpdateMapSelectDlg();
+	CDocument::UpdateAllViews(NULL);
+	//TRACE("Leaving CIMACDoc::UpdateViews()\n");
+}
+                
+-Is this where it updates the colors?
+
+	// Time Slice...
+	if (m_timeSlice.isActive() && m_timeSlice.isShowSliceFlag()) {
+		if (m_timeSlice.isLoadSliceFlag()) {
+			if (!m_timeSlice.Create(GetFileCount()+GetVirtualVolumeCount(), GetSegyInPtr(0)->GetSegyIndexPtr())) {
+				m_timeSlice.Destroy();
+				m_timeSlice.SetShowSliceFlag(FALSE);
+			}
+		}
+		LoadTimeSlice(&m_timeSlice);
+		m_timeSlice.SetLoadSliceFlag(FALSE);
+	}
+                
+
+pixelColor = pDoc->m_colorbar[m_colorbarIndexMouseMove];                
+
+			if (pDoc->m_colorbar[i] == NOCOLOR) {
+				pixelColor = RGB(255,255,255);
+			} else {
+				pixelColor = pDoc->m_colorbar[i];
+			}
+
+                
+COLORREF * GetColorBar() { return m_colorbar; }
+
+-Is this where I set the color from the "Edit Class Name" dialog?                
+	if (dist < NCOL && m_colorbarIndex >= 0) {
+		if (m_palletIndex >= 0) {
+			COLORREF *pallet = pDoc->GetPallet();
+			COLORREF pixelColor = pallet[m_palletIndex];
+			red = (int) (GetRValue(pixelColor) * m_intensity);
+			grn = (int) (GetGValue(pixelColor) * m_intensity);
+			blu = (int) (GetBValue(pixelColor) * m_intensity);
+		} else {
+			// the center greyshade was selected
+			red = (int) (255 * m_intensity);
+			grn = (int) (255 * m_intensity);
+			blu = (int) (255 * m_intensity);
+		}
+		pColorbar[m_colorbarIndex] = RGB(red, grn, blu);
+
+                
+COLORREF *CColorBarView::GetColorBarPtr() {
+	CIMACDoc *pDoc = CIMACApp::GetDocument();
+	if (pDoc == NULL) return NULL;
+
+    return pDoc->GetColorBarPtr();
+}
+
+RGB = red + (green * 256) + (blue * 65536)
+
+COLORREF color;
+
+                
+int iRed = GetRValue(color);
+int iBlue = GetBValue(color);
+int iGreen = GetGValue(color);
+
+	BOOL SetItem(_In_ int nItem, _In_ int nSubItem, _In_ UINT nMask, _In_opt_z_ LPCTSTR lpszItem,
+		_In_ int nImage, _In_ UINT nState, _In_ UINT nStateMask, _In_ LPARAM lParam);
+
+                
+-----
+
+Why are the numbers not getting saved to m_arrColorR[i] m_arrColorG[i]) and m_arrColorB[i])
+                
+2)
+                
+"Ft Simpson": BOOL CClassNameDlg::OnInitDialog()
+R:                
+                color = 0x00000026c633a938 "174"
+G:
+                color = 0x00000026c633a938 "153"                
+B:
+                color = 0x00000026c633a938 "0"                
+
+"Ft Simpson": BOOL CClassNameDlg::OnOK()                
+R:                
+                color = 0x00000026c633a938 "20"
+G:
+                color = 0x00000026c633a938 "0"                
+B:
+                color = 0x00000026c633a938 "0"                
+
+
+-> Solution: Because the other values are not part of the DDX settings in ClassNameDlg.cpp:
+
+void CClassNameDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_NAMELIST, m_nameList);
+}
+                
+IDD_CLASSNAMES DIALOGEX 0, 0, 315, 175
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Edit Class Names"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "Edit the Class Names by selecting the name below.",IDC_TITLE,7,7,301,8
+    CONTROL         "",IDC_NAMELIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_EDITLABELS | WS_BORDER | WS_TABSTOP,7,20,301,124
+    PUSHBUTTON      "Help",ID_CLASS_NAMES_HELP,7,154,50,14
+    DEFPUSHBUTTON   "OK",IDOK,199,154,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,258,154,50,14
+END
+
+                
+IDC_MAP_LIST
+
+-----
+
+	// the list control
+	CRect rItem;
+	m_mapList.SetTextColRange(1, 2);
+	m_mapList.GetClientRect(rItem);
+	m_mapList.InsertColumn(0,"Point",     LVCFMT_LEFT, rItem.Width()*25/100);
+	m_mapList.InsertColumn(1,"Inline",	  LVCFMT_LEFT, rItem.Width()*38/100);
+	m_mapList.InsertColumn(2,"Crossline", LVCFMT_LEFT, rItem.Width()*38/100);
+
+        
+BOOL CMapSelectDlg::OnInitDialog()
+{
+
+	CDialog::OnInitDialog();
+
+	m_mapView.pDoc = pDoc;
+	m_mapView.pListCtrl = &m_mapList;
+     // ...
+}    
+
+// update the interactive edits from the list control
+void CMapSelectDlg::OnClickedEditPoint()
+{
+	CPointArray *pData = m_mapView.GetUserLine();
+	
+	for (int i = 0; i<m_mapList.GetItemCount(); i++) {
+		CPoint listItem;
+		listItem.x = atoi(m_mapList.GetItemText(i, 1));
+		listItem.y = atoi(m_mapList.GetItemText(i, 2));
+
+		pData->SetAt(i, listItem);
+	}
+
+	CString name = pDoc->GetCurrentUserLineName();
+	pDoc->SetCurrentUserLine(m_mapView.GetUserLine(), name);
+	DWORD lineno = pDoc->GetSelectedUserLineNumber();
+	LoadUserLine( lineno );	
+}
+
+		// Final legend color update steps
+		pDoc->m_bNewColorFlag=0xffffffff;
+		pDoc->SendColorbarToHeadwave();
+		pDoc->UpdateViews();
+
+                
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	C1189	#error:  include 'stdafx.h' before including this file for PCH	NativeUnitTests	c:\sound-qi_source\soundqi-branch\rm_branch\imac\imac.h	5	
+
+2020.12.11
+I. Researching and implementing solution:
+
+-----
+
+qi_pro_rm_branch_20201211d.7za:
+qi_pro_rm_branch_20201211d.7zf:
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2019	unresolved external symbol "public: __cdecl CClassNameDlg::CClassNameDlg(class CWnd *,float)" (??0CClassNameDlg@@QEAA@PEAVCWnd@@M@Z) referenced in function "void __cdecl ____C_A_T_C_H____T_E_S_T____0(void)" (?____C_A_T_C_H____T_E_S_T____0@@YAXXZ)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\NativeUnitTests.obj	1	
+Error	LNK2019	unresolved external symbol "public: virtual __cdecl CClassNameDlg::~CClassNameDlg(void)" (??1CClassNameDlg@@UEAA@XZ) referenced in function "void __cdecl ____C_A_T_C_H____T_E_S_T____0(void)" (?____C_A_T_C_H____T_E_S_T____0@@YAXXZ)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\NativeUnitTests.obj	1	
+Error	LNK2019	unresolved external symbol "public: virtual int __cdecl CClassNameDlg::OnInitDialog(void)" (?OnInitDialog@CClassNameDlg@@UEAAHXZ) referenced in function "void __cdecl ____C_A_T_C_H____T_E_S_T____0(void)" (?____C_A_T_C_H____T_E_S_T____0@@YAXXZ)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\NativeUnitTests.obj	1	
+Error	LNK1120	3 unresolved externals	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\x64\Debug\NativeUnitTests.exe	1	
+
+
+-----
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	C2664	'int CListCtrl::InsertColumn(int,LPCTSTR,int,int,int)': cannot convert argument 2 from 'const char [8]' to 'LPCTSTR'	NativeUnitTests	c:\sound-qi_source\soundqi-branch\rm_branch\osi\nativeunittests\classnamedlg.cpp	59	
+
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	C1189	#error:  Building MFC application with /MD[d] (CRT dll version) requires MFC shared dll version. Please #define _AFXDLL or do not use /MD[d]	IMAC	c:\program files (x86)\microsoft visual studio\2017\buildtools\vc\tools\msvc\14.16.27023\atlmfc\include\afx.h	24	
+
+-----
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2038	mismatch detected for 'RuntimeLibrary': value 'MDd_DynamicDebug' doesn`t match value 'MTd_StaticDebug' in NativeUnitTests.obj	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\seisware-apid.lib(tinyxml2.obj)	1	
+
+-----
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK1107	invalid or corrupt file: cannot read at 0x3D8	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\Libraries\QI-Pro.dll	1	
+
+-----
+
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK1104	cannot open file 'cblas.lib'	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\LINK	1	
+
+-----
+
+qi_pro_rm_branch_20201211i.7zk with DLL:
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK1107	invalid or corrupt file: cannot read at 0x3D8	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\Libraries\QI-Pro.dll	1	
+
+-----
+
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2001	unresolved external symbol _free_dbg	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\libcpmtd.lib(locale.obj)	1	
+Error	LNK2005	"void * __cdecl operator new(unsigned __int64)" (??2@YAPEAX_K@Z) already defined in LIBCMT.lib(new_scalar.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxmem.obj)	1	
+Error	LNK2005	"void __cdecl operator delete(void *)" (??3@YAXPEAX@Z) already defined in LIBCMT.lib(delete_scalar.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxmem.obj)	1	
+Error	LNK2005	"void * __cdecl operator new[](unsigned __int64)" (??_U@YAPEAX_K@Z) already defined in LIBCMT.lib(new_array.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxmem.obj)	1	
+Error	LNK2005	"void __cdecl operator delete[](void *)" (??_V@YAXPEAX@Z) already defined in LIBCMT.lib(delete_array.obj)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\nafxcwd.lib(afxmem.obj)	1	
+Warning	LNK4098	defaultlib 'libcmtd.lib' conflicts with use of other libs; use /NODEFAULTLIB:library	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\LINK	1	
+Error	LNK2001	unresolved external symbol _calloc_dbg	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\libcpmtd.lib(xlocale.obj)	1	
+Error	LNK2001	unresolved external symbol _calloc_dbg	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\NativeUnitTests.obj	1	
+Error	LNK2001	unresolved external symbol _calloc_dbg	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\libcpmtd.lib(_tolower.obj)	1	
+Error	LNK2001	unresolved external symbol _calloc_dbg	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\libcpmtd.lib(locale.obj)	1	
+Error	LNK2001	unresolved external symbol _calloc_dbg	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\libcpmtd.lib(wlocale.obj)	1	
+...
+
+-> Solution: Added these items to libraries which I copied from the IMAC project:
+
+netapi32.lib;Wbemuuid.lib;dhcpcsvc.lib;userenv.lib;libredir_std.lib;legacy_stdio_definitions.lib;lm_new.obj;libcrvs.lib;libsb.lib;lmgr.lib;libnoact.lib;lmgr_dongle_stub.lib;cblas.lib;gsl.lib;seiswared.lib;QI-Pro.lib;%(AdditionalDependencies)
+
+-----
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Warning	LNK4099	PDB 'vc141.pdb' was not found with 'QI-Pro.lib(AppendCurveDlg.obj)' or at 'C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\x64\Debug\vc141.pdb'; linking object as if no debug info	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(AppendCurveDlg.obj)	1	
+
+-> Solution: Copied file from ... and put it into the Debug directory
+
+
+
+-----
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+NativeUnitTests.exe is a Catch v2.10.2 host application.
+Run with -? for options
+
+-------------------------------------------------------------------------------
+A unit test
+-------------------------------------------------------------------------------
+c:\sound-qi_source\soundqi-branch\rm_branch\osi\nativeunittests\nativeunittests.cpp(30)
+...............................................................................
+
+c:\sound-qi_source\soundqi-branch\rm_branch\osi\nativeunittests\nativeunittests.cpp(30): FAILED:
+due to unexpected exception with message:
+  Unknown exception
+
+===============================================================================
+test cases: 1 | 1 failed
+assertions: 1 | 1 failed
+
+
+C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\x64\Debug\NativeUnitTests.exe (process 68932) exited with code 1.
+To automatically close the console when debugging stops, enable Tools->Options->Debugging->Automatically close the console when debugging stops.
+Press any key to close this window . . .
+
+
+2020.12.14
+I. Researching and implementing solution:
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error (active)	E2624	a friend template declaration with a default template argument must be the only declaration (first declared at line 3081)	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\catch.hpp	3081	
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Warning	LNK4204	'C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\x64\Debug\vc141.pdb' is missing debugging information for referencing module; linking object as if no debug info	NativeUnitTests	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\NativeUnitTests\QI-Pro.lib(AppendCurveDlg.obj)	1	
+
+<ConfigurationType>DynamicLibrary</ConfigurationType>
+
+CVVEquation(CString eq = NULL);
+CVVEquation(CString eq = "");
+
+GetVVNullEquation
+
+#include "stdafx.h"
+
+
+2020.12.15
+I. Researching and implementing solution:
+
+"Updating to include actual colour icon"
+"Also resizing "Edit Class Names" window to always include RGB values instead of hiding them."
+
+
+
+afx_msg void OnClickedGetcolor();
+
+BEGIN_MESSAGE_MAP(CHrzParmDlg, CDialogEx)
+	ON_BN_CLICKED(IDC_ADD_HR, &CHrzParmDlg::OnClickedAddHR)
+	ON_BN_CLICKED(IDC_ADD_CSV, &CHrzParmDlg::OnClickedAddCSV)
+	ON_BN_CLICKED(IDC_ADD_FREEFMT, &CHrzParmDlg::OnClickedAddFreeFmt)
+	ON_BN_CLICKED(IDC_DELETE, &CHrzParmDlg::OnClickedDelete)
+	ON_BN_CLICKED(IDC_GETCOLOR, &CHrzParmDlg::OnClickedGetcolor)
+	ON_BN_CLICKED(IDC_HORIZON_PROPERTIES, &CHrzParmDlg::OnClickedHorizonProperties)
+	ON_BN_CLICKED(ID_HORIZON_HELP, &CHrzParmDlg::OnClickedHelp)
+	ON_WM_SIZE()
+END_MESSAGE_MAP()
+
+void CHrzParmDlg::OnClickedGetcolor()
+{
+	int nItem = m_hrzList.GetNextItem(-1, LVNI_SELECTED);
+	if (nItem<0) {
+		AfxMessageBox("No Horizon selected. Select a Horizon for the new color.");
+		return;
+	}
+
+	CGetColorDlg dlg;
+	COLORREF horColor;
+
+	horColor = m_pLocalHor->GetLineColor(nItem);
+	dlg.SetSelectedColor(horColor);
+
+	if (dlg.DoModal() != IDOK) return;
+
+	horColor = dlg.GetSelectedColor();
+	m_pLocalHor->SetLineColor(nItem, horColor);
+	PopulateControls();
+}
+
+
+BOOL CHrzParmDlg::OnInitDialog()
+{
+	CDialogEx::OnInitDialog();
+  
+	// copy in the data from the document. Can be "canceled" later
+	CHorizon *m_pDocHor = m_pDoc->GetHorizonDataPtr();
+	m_pLocalHor = new CHorizon;
+	m_pLocalHor->Create(*m_pDocHor);
+	*m_pLocalHor += *m_pDocHor;
+
+	CRect rItem;
+	m_hrzList.GetClientRect(rItem);
+	m_hrzList.InsertColumn(0, "Name", LVCFMT_LEFT, rItem.Width()*50/100);
+	m_hrzList.InsertColumn(1, "Color", LVCFMT_LEFT, rItem.Width()*10/100);
+	m_hrzList.InsertColumn(2, "Display", LVCFMT_LEFT, rItem.Width()*20/100);
+	m_hrzList.InsertColumn(3, "Line Width", LVCFMT_LEFT, rItem.Width()*20/100);
+
+	// put in some default colors
+	m_hrzList.SetColoredSubitem(1);
+	COLORREF *colorbar = m_pDoc->GetColorBar();
+	for (int j=0; j<MAXHRZ/MAXCLASS; j++) {
+		for (int i=0; i<MAXCLASS; i++) {
+			m_hrzList.SetSubitemColor(1, (j*MAXCLASS)+i, colorbar[i]);
+		}
+	}
+
+	PopulateControls();
+	return TRUE; 
+
+
+}
+
+void CHrzParmDlg::PopulateControls()
+{
+	CHorizon *pHor = m_pLocalHor;
+	m_inlineMin = pHor->GetInlineMin();
+	m_inlineMax = pHor->GetInlineMax();
+	m_xlineMin  = pHor->GetXlineMin();
+	m_xlineMax  = pHor->GetXlineMax();
+
+	m_hrzList.DeleteAllItems();
+	
+	CString txt;
+	int nHor = pHor->GetHorizonCount();
+	for (int i=0; i<nHor; i++) {
+		m_hrzList.InsertItem(i, pHor->GetName(i));
+		txt = pHor->GetDisplayMode(i)? "Yes": "No";
+		m_hrzList.SetItem(i, 2, LVIF_TEXT, txt, 0,0,0,0);
+		txt.Format("%d", pHor->GetLineWidth(i));
+		m_hrzList.SetItem(i, 3, LVIF_TEXT, txt, 0,0,0,0);
+		COLORREF horColor = pHor->GetLineColor(i);
+		if (horColor == NOCOLOR) horColor = m_hrzList.GetSubitemColor(1, i);  // use default color
+		m_hrzList.SetSubitemColor(1, i, horColor);
+	}
+	UpdateData(FALSE);
+}
+
+-----
+
+void CHrzParmDlg::PopulateControls()
+{
+	CHorizon *pHor = m_pLocalHor;
+	m_inlineMin = pHor->GetInlineMin();
+	m_inlineMax = pHor->GetInlineMax();
+	m_xlineMin  = pHor->GetXlineMin();
+	m_xlineMax  = pHor->GetXlineMax();
+
+	m_hrzList.DeleteAllItems();
+	
+	CString txt;
+	int nHor = pHor->GetHorizonCount();
+	for (int i=0; i<nHor; i++) {
+		m_hrzList.InsertItem(i, pHor->GetName(i));
+		txt = pHor->GetDisplayMode(i)? "Yes": "No";
+		m_hrzList.SetItem(i, 2, LVIF_TEXT, txt, 0,0,0,0);
+		txt.Format("%d", pHor->GetLineWidth(i));
+		m_hrzList.SetItem(i, 3, LVIF_TEXT, txt, 0,0,0,0);
+		COLORREF horColor = pHor->GetLineColor(i);
+		if (horColor == NOCOLOR) horColor = m_hrzList.GetSubitemColor(1, i);  // use default color
+		m_hrzList.SetSubitemColor(1, i, horColor);
+	}
+	UpdateData(FALSE);
+}
+
+
+Where:
+
+		COLORREF horColor = pHor->GetLineColor(i);
+		if (horColor == NOCOLOR) horColor = m_hrzList.GetSubitemColor(1, i);  // use default color
+		m_hrzList.SetSubitemColor(1, i, horColor);
+
+                
+-----
+
+	for (int i=0; i<m_pDoc->GetClassCount(); i++) {
+		CString msg;
+		msg.Format("%d", i);
+		m_nameList.InsertItem(i, msg);
+		m_nameList.SetItem(i, 1, LVIF_TEXT, m_arrNames[i], 0,0,0,0);
+
+		const COLORREF classColor = pColorbar[i];
+		SetRgbValuesForClass(i, classColor);
+	}
+
+        
+-----
+
+void  CEditListCtrl::SetSubitemColor(int column, int index, DWORD color) 
+{ 
+	int arrSize = (int) m_arrColors[column].GetSize();
+	if (index >= arrSize) {
+		m_arrColors[column].SetSize(arrSize + 3);
+	}
+	m_arrColors[column][index] = color; 
+}
+
+void CClassNameDlg::OnClickedGetcolor()
+{
+	int nItem = m_nameList.GetNextItem(-1, LVNI_SELECTED);
+	if (nItem < 0) {
+		AfxMessageBox("No Class selected. Select a Class for the new color.");
+		return;
+	}
+
+	CGetColorDlg dlg;
+	if (dlg.DoModal() != IDOK) return;
+	const COLORREF classColor = dlg.GetSelectedColor();
+	SetRgbValuesForClass(nItem, classColor);
+}
+
+	// put in some default colors
+	m_nameList.SetColoredSubitem(2);
+	for (int j = 0; j < MAXCLASS; j++) {
+		m_nameList.SetSubitemColor(2, j, pColorbar[j]);
+	}
+
+        
+-To update colors after the user has edited values:
+
+// Handler for custom message from CEditListCtrl for handling end of editing
+// Once user presses enter after they are done renaming their VV equation,
+// this function is called to update the VV equation name.
+// **See above in DoDataExchange() for message handling set up
+// **Message is recieved from CEditListCtrl::OnLvnEndlabeledit()
+LRESULT CVirtualVolumeV2Dlg::OnEndEdit(WPARAM wparam, LPARAM lparam)
+{
+	int nItem = m_VirtualVolumeList.GetNextItem(-1, LVNI_SELECTED);
+	if (UpdateVVEquationName(nItem) || (UpdateMinMax(nItem))) {
+		PopulateControls();
+	}
+
+	return 0;
+}
+
+
+	ON_MESSAGE(WM_UPDATEPARENT, &CSeiswareExportVirtualVolumesTab::OnEndEdit)	// custom message
+
+	LRESULT OnEndEdit(WPARAM wparam, LPARAM lparam);	// custom message handler        
+        
+LRESULT CSeiswareExportVirtualVolumesTab::OnEndEdit(WPARAM wparam, LPARAM lparam)
+{
+	UpdateData(TRUE);
+	int nItem = m_vvListCtrl.GetNextItem(-1, LVNI_SELECTED);
+	CString attribute = m_vvListCtrl.GetItemText(nItem, 0);
+	CString version = m_vvListCtrl.GetItemText(nItem, 1);
+	CString name = m_surveyModel.name + "." + attribute + "." + version + ".sgy";
+	m_vvListCtrl.SetItemText(nItem, 2, name);
+	return LRESULT();
+}
+
+/ Handler for custom message from CEditListCtrl for handling end of editing
+// Once user presses enter after they are done renaming their VV equation,
+// this function is called to update the VV equation name.
+// **See above in DoDataExchange() for message handling set up
+// **Message is recieved from CEditListCtrl::OnLvnEndlabeledit()
+LRESULT CVirtualVolumeV2Dlg::OnEndEdit(WPARAM wparam, LPARAM lparam)
+{
+	int nItem = m_VirtualVolumeList.GetNextItem(-1, LVNI_SELECTED);
+	if (UpdateVVEquationName(nItem) || (UpdateMinMax(nItem))) {
+		PopulateControls();
+	}
+
+	return 0;
+}
+
+COLORREF* pColorbar = GetColorBarPtr();
+
+
+		const COLORREF classColor = pColorbar[i];
+		SetRgbValuesForClass(i, classColor);
+
+                
+		// Update color bar stored on CIMACDoc
+		int red = atoi(m_arrColorR[i]);
+		int grn = atoi(m_arrColorG[i]);
+		int blu = atoi(m_arrColorB[i]);
+		pColorbar[i] = RGB(red, grn, blu);
+
+2021.01.22
+I. Researching and implementing solution:
+
+-Check resize edit class names dlg (OnResize)
+-Make sure you can read all the names (Color # is hidden) 
+-Make sure "Color" column cannot be edited (see "Input Horizons" where we had to modify the base class)
+-If you change the color, it changes the RGB values,but doesn`t actually change the color in the color column until you click on the text 
+
+                                       
+		m_hrzList.SetSubitemColor(1, i, horColor);
+
+		m_arrColorR[i] = m_nameList.GetItemText(i, 3);
+		m_arrColorG[i] = m_nameList.GetItemText(i, 4);
+		m_arrColorB[i] = m_nameList.GetItemText(i, 5);
+
+		// Update color bar stored on CIMACDoc
+		int red = atoi(m_arrColorR[i]);
+		int grn = atoi(m_arrColorG[i]);
+		int blu = atoi(m_arrColorB[i]);
+		pColorbar[i] = RGB(red, grn, blu);                                       
+
+See https://www.codeproject.com/Articles/28063/An-Extended-MFC-CListCtrl-to-edit-individual-cell
+
+SetColumnReadOnly                                       
+
+2021.02.08
+I. Researching and implementing solution:
+A) 3 new bugs (see https://netorgft3167752-my.sharepoint.com/personal/roger_sound-qi_com/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Froger%5Fsound%2Dqi%5Fcom%2FDocuments%2FCloudFiles%2FVideos%2FScrum%20Soundqi%202020%2002%2009%20Colorbarbug%2Em4v&parent=%2Fpersonal%2Froger%5Fsound%2Dqi%5Fcom%2FDocuments%2FCloudFiles%2FVideos&originalPath=aHR0cHM6Ly9uZXRvcmdmdDMxNjc3NTItbXkuc2hhcmVwb2ludC5jb20vOnY6L2cvcGVyc29uYWwvcm9nZXJfc291bmQtcWlfY29tL0VlUURPbjdDSnd4R3JZRUIwYjNuMC04QldwS1U4TEotVGEwbnVJZ0NCNzJXRHc_cnRpbWU9ZVlPMUR6TE4yRWc):
+
+1) Get rid of intensity from "Edit Class Names" dialog
+2) When adding new classes (extending color bar, so colors are undefined), they are white which means no color in the Color Bar Editor, but then when changing to Xplot settings they change to black 
+3) When for a color the high byte is 0x0f (i.e., NOCOLOR) then then put them as an empty string  in the Edit Class Names dialog.  If the color is defined as NOCOLOR, then don/t put any zeros in and amke colors white.
+
+os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', '4.4.4.83')
+'Z:\\Applications\\QI-Pro\\PreRelease\\4.4.4.83'
+
+2021.02.12
+I. Researching and implementing solution:
+
+	int cbSize = GetColorBarSize();
+	COLORREF *pColorbar = GetColorBarPtr();
+
+pColorbar[m_colorbarIndex] = RGB(red, grn, blu);
+
+			for (int i=(oldCount<newCount)?oldCount:newCount; i<MAXCBSIZE; i++) {
+				pColorbar[i] = NOCOLOR; 
+			}
+
+	for (int i=0; i<MAXCBSIZE; i++) {
+		pColorbar[i] = NOCOLOR; 
+	}
+
+		if (colorbarIndexMouseMove > -1) {
+			pixelColor = pColorbar[colorbarIndexMouseMove];
+			if (pixelColor != NOCOLOR) {
+				red = GetRValue(pixelColor);
+				grn = GetGValue(pixelColor);
+				blu = GetBValue(pixelColor);
+				sText.Format("RGB(%d,%d,%d)", red, grn, blu);
+			} else {
+				red = grn = blu = 255;
+				sText.Empty();
+			}
+		}
+
+-----
+                
+	COLORREF* pColorbar = pDoc->GetColorBarPtr();
+	m_lstCutoffLines.ResetSubItemColorArray();
+	m_colorList.RemoveAll();
+	for (int i = 0; i < pDoc->GetClassCount(); i++) {
+		m_colorList.Add(pColorbar[i]);
+		m_lstCutoffLines.SetSubitemColor(COL_CLASS_ABOVE_IN, i, pColorbar[i]);
+		m_lstCutoffLines.SetSubitemColor(COL_CLASS_BELOW_OUT, i, pColorbar[i]);
+		m_lstCutoffLines.SetSubitemColor(COL_APPLY, i, pColorbar[i]);
+	}
+
+-----
+
+		pDC->FillSolidRect(bar, pColorbar[i]);
+		pDC->FrameRect(bar, &CBrush(RGB(0,0,0)));
+
+				COLORREF* pColorbar = GetColorBarPtr();
+				if (pColorbar[colorIndex] == NOCOLOR) m_selectColor1 = RGB(255, 255, 255);
+				else m_selectColor1 = pColorbar[colorIndex];
+
+				m_selectColor2 = RGB(255, 255, 255);
+				if (nVersion > 52) {
+					ar >> colorIndex;
+					if (pColorbar[colorIndex] == NOCOLOR) m_selectColor2 = RGB(255, 255, 255);
+					else m_selectColor2 = pColorbar[colorIndex];
+				}
+
+
+			COLORREF pixelColor = pColorbar[cbSize-i-1];
+			if (pixelColor == NOCOLOR) {
+				pixelColor = RGB(255,255,255);
+			}
+                                
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK1120	2 unresolved externals	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\OSI\QI-Pro\x64\Debug\QI-Pro.exe	1	
+Warning	C4651	'/D_WINDLL' specified for precompiled header but not for current compile	IMAC	c:\sound-qi_source\soundqi-branch\rm_branch\imac\classifybyzonedlg.cpp	4	
+Error	LNK2005	"public: class ATL::CStringT<char,class StrTraitMFC_DLL<char,class ATL::ChTraitsCRT<char> > > __cdecl CViewZone::GetZoneBottomReference(void)" (?GetZoneBottomReference@CViewZone@@QEAA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ) already defined in ClassifyByZoneDlg.obj	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\ViewZone.obj	1	
+Error	LNK2005	"public: class ATL::CStringT<char,class StrTraitMFC_DLL<char,class ATL::ChTraitsCRT<char> > > __cdecl CViewZone::GetZoneTopReference(void)" (?GetZoneTopReference@CViewZone@@QEAA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ) already defined in ClassifyByZoneDlg.obj	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\ViewZone.obj	1	
+Error	LNK2019	unresolved external symbol "public: bool __cdecl CViewZone::operator!=(class CViewZone const &)" (??9CViewZone@@QEAA_NAEBV0@@Z) referenced in function "public: virtual void __cdecl ClassifyByZoneDlg::OnOK(void)" (?OnOK@ClassifyByZoneDlg@@UEAAXXZ)	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\ClassifyByZoneDlg.obj	1	
+Error	LNK2019	unresolved external symbol "public: __cdecl CClassNameDlg::CClassNameDlg(class CWnd *,float)" (??0CClassNameDlg@@QEAA@PEAVCWnd@@M@Z) referenced in function "public: void __cdecl CColorBarView::OnCbNames(void)" (?OnCbNames@CColorBarView@@QEAAXXZ)	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\ColorBarView.obj	1	
+
+void CClassNameDlg::PopulateControls()
+{
+	m_nameList.DeleteAllItems();
+	const COLORREF blackColor = RGB(255, 255, 255);
+	COLORREF* pColorbar = GetColorBarPtr();
+
+	for (int i = 0; i < m_pDoc->GetClassCount(); i++) {
+		CString msg;
+		msg.Format("%d", i);
+		m_nameList.InsertItem(i, msg);
+		m_nameList.SetItem(i, 1, LVIF_TEXT, m_arrNames[i], 0, 0, 0, 0);
+
+		if ((int)pColorbar[i] > (int)blackColor)
+		{
+			pColorbar[i] = blackColor;
+		}
+		const COLORREF classColor = pColorbar[i];
+		SetRgbValuesForClass(i, classColor);
+	}
+
+	// put in some default colors
+	m_nameList.SetColoredSubitem(2);
+	for (int j = 0; j < MAXCLASS; j++) {
+		m_nameList.SetSubitemColor(2, j, pColorbar[j]);
+	}
+		
+	UpdateData(FALSE);
+}
+
+i
+25
+pColorbar[i]
+251658240
+
+pColorbar[i]
+251658240
+
+F000000
+
+251658240
+
+				// annotate curve name
+				rcItem.top = firstY;
+				rcItem.bottom = rcItem.top + DXY;
+				rcItem.left = iorigin - 50;
+				rcItem.right = iorigin + 50;
+                                pDC->DrawText(pWell->GetCurveName(colorIndex), rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+
+					if (bFirstPoint) {
+						bFirstPoint = FALSE;
+						firstY = py;
+						pDC->MoveTo(curveOrigin + px, firstY);
+					}
+					pDC->LineTo(curveOrigin + px, py);
+
+                                        
+		pDC->FillRect(rcItem, &hbrBkGnd);
+		pDC->FrameRect(rcItem, &CBrush(RGB(0, 0, 0)));
+		pDC->DrawText(pWell->wellName, rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+		pDC->MoveTo(iorigin, TOP);
+		pDC->LineTo(iorigin + 5, TOP - 6);
+		pDC->MoveTo(iorigin, TOP);
+		pDC->LineTo(iorigin - 5, TOP - 6);
+
+                
+2021.02.16
+I. Researching and implementing solution:
+
+Exception thrown: read access violation.
+**this** was 0xFFFFFFFFFFFFFFBF.
+
+Stack:
+>	mfc140d.dll!CWnd::GetSafeHwnd() Line 25	C++
+ 	mfc140d.dll!CWnd::GetParentFrame() Line 2834	C++
+ 	QI-Pro.exe!CIMACDoc::DoCascadeOrTile(int mode) Line 5713	C++
+ 	QI-Pro.exe!CIMACDoc::TileImacWindows() Line 5670	C++
+ 	QI-Pro.exe!CMainFrame::OnWindowTileHorz() Line 641	C++
+ 	[External Code]	
+ 	QI-Pro.exe!WinMain(HINSTANCE__ * hInstance, HINSTANCE__ * hPrevInstance, char * lpCmdLine, int nCmdShow) Line 26	C++
+ 	[External Code]	
+
+
+-From line "pView->GetParentFrame()->SetWindowPos(0, rc.left, rc.top, rc.Width(), rc.Height(), 0)" in here:        
+
+	for (int i = 0; i < NXPLOT; i++) {
+		CXplotParms *pXplot = GetXplotParms(i);
+		CView *pView = GetCrossPlotViewPtr(i);
+		if ( pView != NULL && pXplot->IsXplotActive() ) {
+			CRect tmpRect = pXplot->rcWinFrame;
+			pXplot->rcWinFrame.left = delta.x;
+			pXplot->rcWinFrame.top  = delta.y;
+			pXplot->rcWinFrame.right = delta.x + tmpRect.Width();
+			pXplot->rcWinFrame.bottom = delta.y + tmpRect.Height();
+			//SetInitializeXplotViewFlag(i, TRUE);
+			if (mode) {
+				delta += CPoint(50, 50);
+			} else {
+				delta.x += tmpRect.Width();
+				// if the next tile isn`t visible, wrap back to the left side.
+				if(delta.x > (clientRect.right - 100)) {
+					delta.x = origin.x;
+					delta.y += 200;
+				}
+			}
+			CRect rc = pXplot->rcWinFrame;
+			// have to add an adjustment
+			CPoint adjustment = CPoint(2, 5);
+			adjustment.y += GetToolbarHeight();
+			rc -= adjustment;
+			AfxGetMainWnd()->ScreenToClient(rc);
+			pView->GetParentFrame()->SetWindowPos(0, rc.left, rc.top, rc.Width(), rc.Height(), 0);
+		}
+	}        
+
+--------------------------------------------------------------------------------
+
+	m_lstCutoffLines.InsertColumn(COL_CLASS_ABOVE_IN,"Class Above/In",	LVCFMT_LEFT, rItem.Width()*17/100);
+	m_lstCutoffLines.InsertColumn(COL_CLASS_BELOW_OUT,"Class Below/Out",LVCFMT_LEFT, rItem.Width()*18/100);
+
+
+CCrossPlotSettingsDlg::::OnInitDialog()
+{
+    // ...
+	m_colorList.RemoveAll();
+	const COLORREF whiteColor = RGB(255, 255, 255);
+	
+	for (int i = 0; i < pDoc->GetClassCount(); i++) {
+		m_colorList.Add(pColorbar[i]);
+
+
+		if (pColorbar[i] == NOCOLOR) {
+			m_lstCutoffLines.SetSubitemColor(COL_CLASS_ABOVE_IN, i, whiteColor);
+			m_lstCutoffLines.SetSubitemColor(COL_CLASS_BELOW_OUT, i, whiteColor);
+			m_lstCutoffLines.SetSubitemColor(COL_APPLY, i, whiteColor);
+		}
+		else {
+			m_lstCutoffLines.SetSubitemColor(COL_CLASS_ABOVE_IN, i, pColorbar[i]);
+			m_lstCutoffLines.SetSubitemColor(COL_CLASS_BELOW_OUT, i, pColorbar[i]);
+			m_lstCutoffLines.SetSubitemColor(COL_APPLY, i, pColorbar[i]);
+		}
+	}
+    // ...    
+}    
+
+whiteColor
+16777215
+
+-----
+
+CClassNameDlg::PopulateControls()
+{
+    // ...
+    for (int j = 0; j < MAXCLASS; j++) {
+
+        if (pColorbar[j] == NOCOLOR) {
+            m_nameList.SetSubitemColor(2, j, whiteColor);
+        }
+        else {
+            m_nameList.SetSubitemColor(2, j, pColorbar[j]);
+        }
+    }
+    // ...    
+}    
+
+whiteColor
+16777215
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error (active)	E0433	qualifiers dropped in binding reference of type "COLORREF &" to initializer of type "const COLORREF"	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\CrossPlotSettingsDlg.cpp	208	
+
+-----
+
+void CEditListCtrl::OnPaint()
+{
+    // ...
+
+	CStringArray* pComboStrings = NULL;
+	CColorArray* pComboColors = NULL;
+	if (m_subitem && (!m_comboMap.Lookup(m_subitem, pComboStrings)) && (!m_colorComboMap.Lookup(m_subitem, pComboColors))) {
+		CRect rect;
+		CRect editrect;
+		GetSubItemRect(m_item,m_subitem,LVIR_LABEL, rect);
+		if (m_editWnd.m_hWnd == NULL) {
+			TRACE("m_editWnd.m_hWnd == NULL\n");
+			return;
+		}
+		m_editWnd.GetWindowRect(editrect);
+		ScreenToClient(editrect);
+		// Clean up the original text to the right of the edit control
+		if (editrect.right < rect.right) {
+			rect.left = editrect.right;
+			ValidateRect(rect);
+			CDC* hDc = GetDC();
+			hDc->FillRect(rect,&CBrush(::GetSysColor(COLOR_WINDOW)));
+			ReleaseDC(hDc);
+		}
+		//block filling redraw of leftmost item (caused by FillRect)
+		GetItemRect(m_item, rect,LVIR_LABEL );
+		ValidateRect(rect);
+	}
+    
+    // ...
+}    
+
+
+typedef struct tagRECT
+{
+    LONG    left;
+    LONG    top;
+    LONG    right;
+    LONG    bottom;
+} RECT, *PRECT, NEAR *NPRECT, FAR *LPRECT;
+
+    CRect rect;
+    GetWindowRect(rect);
+    SetWindowPos(0, rect.left, rect.top, windowSize.cx, windowSize.cy, 0);
+    
+    
+const COLORREF whiteColor = RGB(255, 255, 255);    
+
+		if (pColorbar[j] == NOCOLOR) {
+			m_nameList.SetSubitemColor(2, j, whiteColor);
+		}
+		else {
+			m_nameList.SetSubitemColor(2, j, pColorbar[j]);
+		}
+color
+251658240
+
+
+	if (color == NOCOLOR) {
+		m_arrColors[column][index] = whiteColor;
+	}
+
+--------------------------------------------------------------------------------
+
+CIMACDoc* pDoc = CIMACApp::GetDocument();
+
+CRect rItem;
+
+	// the outline
+	pDC->MoveTo(rcImage.left, rcImage.top);
+	pDC->LineTo(rcImage.right, rcImage.top);
+	pDC->LineTo(rcImage.right, rcImage.bottom);
+	pDC->LineTo(rcImage.left, rcImage.bottom);
+	pDC->LineTo(rcImage.left, rcImage.top);
+
+
+
+        pTimeSlicePen = new CPen(PS_SOLID, 1, timesliceColor);        
+        
+             
+
+2021.02.17
+I. Researching and implementing solution:
+
+GetSubItemRect( m_item, m_subitem, LVIR_BOUNDS , rect );		
+
+m_nameList.SetSubitemColor(2, j, pColorbar[j]);
+
+Where 2 is column, j is index
+
+
+-----
+
+void CLocalStatic::CreateNewMemBM(CPaintDC *pDc)
+{
+	Destroy();
+	if (m_pBgBrush == NULL) {
+		m_pBgBrush = new CBrush;
+		m_pBgBrush->CreateSolidBrush(GetSysColor(COLOR_WINDOW));
+	}
+	
+	m_pDC = new CDC;
+	m_pMemBM = new CBitmap;
+
+	m_pDC->CreateCompatibleDC(pDc);
+	m_pMemBM->CreateCompatibleBitmap(pDc, m_rcClient.right, m_rcClient.bottom);
+	(void) m_pDC->SelectObject(m_pMemBM);
+}
+
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2019	unresolved external symbol "public: __cdecl CClassNameDlg::CClassNameDlg(class CWnd *,float)" (??0CClassNameDlg@@QEAA@PEAVCWnd@@M@Z) referenced in function "public: void __cdecl CColorBarView::OnCbNames(void)" (?OnCbNames@CColorBarView@@QEAAXXZ)	IMAC	C:\Sound-QI_Source\SoundQI-Branch\RM_Branch\IMAC\ColorBarView.obj	1	
+
+-----
+
+// This function is provided for backwards compatibility only.  It returns TRUE
+// if the given block points to an allocation from the OS heap that underlies
+// this CRT debug heap.  Back when the CRT used its own OS heap (prior to Dev10),
+// this function would thus also tell you whether the block was allocated by this
+// debug heap.  Now, it just tells you whether the block was allocated by some
+// debug heap.
+extern "C" int __cdecl _CrtIsValidHeapPointer(void const* const block)
+{
+    if (!block)
+        return FALSE;
+
+    return HeapValidate(__acrt_heap, 0, header_from_block(block));
+}
+
+--------------------------------------------------------------------------------
+
+void  CEditListCtrl::SetSubitemColor(int column, int index, DWORD color) 
+{ 
+	int arrSize = (int) m_arrColors[column].GetSize();
+	const COLORREF whiteColor = RGB(255, 255, 255);
+	if (index >= arrSize) {
+		m_arrColors[column].SetSize(arrSize + 3);
+	}
+
+	if (color == NOCOLOR) {
+		m_arrColors[column][index] = color;
+
+        // Draw NOCOLOR warning
+        CRect rect;
+        GetSubItemRect(column, index, LVIR_LABEL, rect);
+        CDC* pDC = GetDC();
+        COLORREF redColor = RGB(255, 0, 0);
+        CPen *pRedPen = new CPen(PS_SOLID, 1, redColor);
+        pDC->SelectObject(pRedPen);
+        pDC->MoveTo(rect.left, rect.top);
+        pDC->LineTo(rect.right, rect.bottom);
+                
+        if (pRedPen != NULL) delete pRedPen;
+		ReleaseDC(pDC);
+	}
+	else {
+		m_arrColors[column][index] = color;
+	}
+}
+
+-----
+
+	CRect subrect;
+	GetSubItemRect(m_item, m_subitem, LVIR_BOUNDS, subrect);
+	CDC* pDC = GetDC();
+	COLORREF redColor = RGB(255, 0, 0);
+	CPen* pRedPen = new CPen(PS_SOLID, 10, redColor);
+	pDC->SelectObject(pRedPen);
+	pDC->MoveTo(subrect.left, subrect.top);
+	pDC->LineTo(subrect.left, subrect.bottom);
+	pDC->LineTo(subrect.right, subrect.top);
+
+void CEditListCtrl::OnNMCustomdraw(NMHDR *pNMHDR, LRESULT *pResult)
+{
+    // ...
+		// handle the color of a subitem
+		if (pCD->iSubItem >= m_coloredSubitemLow && pCD->iSubItem <= m_coloredSubitemHi && m_arrColors[pCD->iSubItem][row] != COLOR_DEFAULT) {
+			if (row < m_arrColors[pCD->iSubItem].GetCount()) {
+                                if (m_coloredTexMode) {
+                                        // ...                                        
+                                }
+
+                        }
+                }
+    
+    // ...
+
+}    

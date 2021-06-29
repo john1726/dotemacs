@@ -1,0 +1,15 @@
+Pipeline: Feature Requests and Defects
+Priority: High
+Name: Third Attribute color bug
+Description: The third attribute color is showing up on the drop down options on the crossplot dialog. The above/below , apply to fields should show the colors from the classifed volume.
+Software Component: Crossplots
+Rank: 4 - Med/High
+Teams Video Link: https://web.microsoftstream.com/video/c4e1a1f6-f5a6-4561-ae50-b4fae6e870c8 at 34:00ff and
+    https://web.microsoftstream.com/video/5b1d00db-e7b8-4e30-a168-66c22f614795
+
+2021.01.06
+I. Researching and implementing solution:
+
+bookmark 
+38:48
+

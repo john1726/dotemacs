@@ -1,0 +1,478 @@
+# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
+import datetime
+import fileinput
+import io
+import logging
+import os
+import pathlib
+import shutil
+import stat
+import time
+import tempfile
+import sys
+import winreg
+from cryptography.fernet import Fernet
+from datetime import datetime
+from io import TextIOWrapper
+from pathlib import Path
+from stat import S_ISREG, ST_CTIME, ST_MODE
+from winreg import *
+
+# This script must be run from the source root directory, e.g., C:\Sound-QI_Source\SoundQI
+log_file = 'run_installers.log'
+log_dir = tempfile.gettempdir()
+log_file_full_name = os.path.join(log_dir, log_file)
+logging.basicConfig(filename=log_file_full_name, format='%(asctime)s-%(levelname)s-%(message)s', level=logging.DEBUG)
+
+def CopyColorBarTemplateFiles(qiProFullPath):
+    try:    
+         # Add color bar template files
+         os.system('mkdir ' + os.path.join(qiProFullPath, "ColorBarTemplates"))
+         os.system('copy /Y Installer\\Baha.txt ' + os.path.join(os.path.join(qiProFullPath, "ColorBarTemplates"), 'Baha.txt'))
+         os.system('copy /Y Installer\\BlueRed.txt ' + os.path.join(os.path.join(qiProFullPath, "ColorBarTemplates"), 'BlueRed.txt'))
+         os.system('copy /Y Installer\\Bone.txt ' + os.path.join(os.path.join(qiProFullPath, "ColorBarTemplates"), 'Bone.txt'))
+         os.system('copy /Y Installer\\CubeContrast.txt ' + os.path.join(os.path.join(qiProFullPath, "ColorBarTemplates"), 'CubeContrast.txt'))        
+         os.system('copy /Y Installer\\Baha.txt ' + os.path.join(os.path.join(qiProFullPath, "ColorBarTemplates"), 'Baha.txt'))
+         os.system('copy /Y Installer\\CubeYF.txt ' + os.path.join(os.path.join(qiProFullPath, "ColorBarTemplates"), 'CubeYF.txt'))        
+         os.system('copy /Y Installer\\Greyscale.txt ' + os.path.join(os.path.join(qiProFullPath, "ColorBarTemplates"), 'Greyscale.txt'))
+         os.system('copy /Y Installer\\IESX.txt ' + os.path.join(os.path.join(qiProFullPath, "ColorBarTemplates"), 'IESX.txt'))        
+         os.system('copy /Y Installer\\Jet.txt ' + os.path.join(os.path.join(qiProFullPath, "ColorBarTemplates"), 'Jet.txt'))
+         os.system('copy /Y Installer\\LinearLightness.txt ' + os.path.join(os.path.join(qiProFullPath, "ColorBarTemplates"), 'LinearLightness.txt'))        
+         os.system('copy /Y Installer\\Lithology.txt ' + os.path.join(os.path.join(qiProFullPath, "ColorBarTemplates"), 'Lithology.txt'))
+         os.system('copy /Y Installer\\Magma.txt ' + os.path.join(os.path.join(qiProFullPath, "ColorBarTemplates"), 'Magma.txt'))        
+         os.system('copy /Y Installer\\Parula.txt ' + os.path.join(os.path.join(qiProFullPath, "ColorBarTemplates"), 'Parula.txt'))
+         os.system('copy /Y Installer\\Rainbow.txt ' + os.path.join(os.path.join(qiProFullPath, "ColorBarTemplates"), 'Rainbow.txt'))
+         os.system('copy /Y Installer\\Spectral.txt ' + os.path.join(os.path.join(qiProFullPath, "ColorBarTemplates"), 'Spectral.txt'))
+    except Exception as e:
+        logging.error("Exception: " + str(e))   
+        raise
+         
+
+def Run():
+    try:
+        # Get the latest source code from TFS
+        os.system('cd C:\\Sound-QI_Source\\SoundQI && tf get $/SoundQI /recursive')
+        time.sleep(10)
+        os.system('cd C:\\Sound-QI_Source\\SoundQI-Branch\\Release-Branch && tf get $/SoundQI-Branch/Release-Branch /recursive')
+        time.sleep(10)        
+        # Export to changesets.txt file
+        encrypted_data = "gAAAAABgkvcqU6-BUcGlRZjXmmEHrd4yaFXJ37dtTDnuefh4kdkS6Up3VMmFVCI_7fBCAg0GKYsbQAIBlZ-A2kr91RInd0F0Vj_op_JlZsfgK3wVDnH7Dt8="
+        f = Fernet("KFg8nVUGlnZ8S13htxhWgvM5e0HhQ6A_40Km28Qb0Ts=")
+        password_bytes = encrypted_data.encode('utf-8')
+        decrypted_data = f.decrypt(password_bytes) # f is the variable that has the value of the key.
+        os.system('tf history /collection:"http://sqi009:8080/tfs/DefaultCollection/" "$/SoundQI" /recursive /stopafter:50 /format:Detailed /noprompt /login:SOUNDQI.LAN\moorer,' + decrypted_data.decode('utf-8') + ' > changesets.txt')
+        time.sleep(10)
+    except Exception as e:
+        logging.error("Exception: " + str(e))   
+        raise
+
+    build_version = ""
+    current_dir = os.getcwd()
+    aReg = ConnectRegistry(None,HKEY_CURRENT_USER)
+    registry_setting = r"SOFTWARE\QI-Pro"
+    try:
+        # Get the build version
+        aKey = OpenKey(aReg, registry_setting)
+
+        for i in range(1024):                                           
+            try:
+                n,v,t = EnumValue(aKey,i)
+                print(i, n, v, t)
+                build_version = v
+            except EnvironmentError as e:                                               
+                logging.error("Exception: " + str(e))  
+                break          
+        CloseKey(aKey) 
+        time.sleep(10)
+    except Exception as e:
+        logging.error("Exception: " + str(e))   
+        raise
+
+    major_version = ""
+    minor_version = ""
+    patch_version = ""
+    try:
+        # Get the version number
+        version = ""
+        with open ("IMAC\\IMAC.h", "rt") as imac_file: 
+                for myline in imac_file:              # For each line, read to a string,
+                    print(myline)                  # and print the string.
+                    # print(myline.find("QI_PRO_MAJOR_REVISION"))   
+
+                    if "QI_PRO_MAJOR_REVISION" in myline:
+                        string_array = myline.split()
+                        major_version = string_array[2]
+
+                    if "QI_PRO_MINOR_REVISION" in myline:
+                        string_array = myline.split()
+                        minor_version = string_array[2]    
+
+                    if "QI_PRO_BUGFIX_REVISION" in myline:
+                        string_array = myline.split()
+                        patch_version = string_array[2] 
+                        break
+        version = major_version + "." + minor_version + "." + patch_version + "."  + build_version                                     
+    except Exception as e:
+        logging.error("Exception: " + str(e))   
+        raise
+
+    try:
+        # Get the last used time on QI-Pro.exe
+        previous_build_version_int =  str(int(build_version) - 1)
+        qi_pro_file_prev_installer_path = os.path.join(os.path.join("Z:\\Applications\\QI-Pro\\PreRelease", 
+            major_version + "." + minor_version + "." + patch_version + "." + previous_build_version_int), "QI-Pro.exe")
+
+        if os.path.isfile(qi_pro_file_prev_installer_path):    
+            qi_pro_file_prev_installer_stats = os.stat(qi_pro_file_prev_installer_path)
+            prev_installer_mod_time = time.ctime(qi_pro_file_prev_installer_stats[stat.ST_MTIME]) # .strftime("%m/%d/%Y %H:%M:%S"      
+            prev_installer_modification_time = datetime.strptime(prev_installer_mod_time, '%a %b %d %H:%M:%S %Y').strftime('%d/%m/%y %H:%M:%S')
+            qi_pro_file_latest_build_path = os.path.join(current_dir, r'OSI\QI-Pro\x64\Release\QI-Pro.exe')
+            qi_pro_file_latest_build_file_stats = os.stat(qi_pro_file_latest_build_path)
+            modification_time = time.ctime(qi_pro_file_latest_build_file_stats[stat.ST_MTIME]) # .strftime("%m/%d/%Y %H:%M:%S")
+            latest_installer_modification_time = datetime.strptime(modification_time, '%a %b %d %H:%M:%S %Y').strftime('%d/%m/%y %H:%M:%S')
+            # logging.debug("Previous Installer Modified Time: ", prev_installer_modification_time)
+            # logging.debug("Last Modified Time: ", latest_installer_modification_time)
+
+            if prev_installer_modification_time == latest_installer_modification_time:
+                return
+        time.sleep(10)
+    except Exception as e:
+        logging.error("Exception: " + str(e))   
+        raise
+
+    try:
+        # Update the version file 
+        build_version_int = int(build_version)
+        build_version_int += 1
+        build_version = str(build_version_int)
+        aKey = OpenKey(aReg, registry_setting, 0, KEY_WRITE)
+        try:   
+            SetValueEx(aKey,"BuildVersion",0, REG_SZ, build_version) 
+        except EnvironmentError as e:                                          
+            logging.error("Exception: " + str(e)) 
+        CloseKey(aKey)
+        CloseKey(aReg) 
+        time.sleep(10)
+    except Exception as e:
+        logging.error("Exception: " + str(e))   
+        raise
+
+    try:
+        print("QI-Pro Installer")
+        Path('Z:\\Applications\\QI-Pro\\PreRelease').touch()   
+        os.system('copy /Y ' + os.path.join(current_dir, 'OSI\\QI-Pro\\x64\\Release\\QI-Pro.exe') + ' Installer')
+        os.system('copy /Y ' + os.path.join(current_dir, 'IMAC\\ReleaseNotes.txt') + ' Installer')
+
+        # Update the version in the installer script from the IMAC.h file
+        qiProInstallerScript = 'Installer\\QiPro.nsi'
+        major_version_code = '!define MAJOR_VERSION'
+        minor_version_code = '!define MINOR_VERSION'
+        patch_version_code = '!define PATCH_VERSION'
+        build_version_code = '!define BUILD_VERSION'
+        
+        for line in fileinput.input(qiProInstallerScript, inplace=True):
+            if line.find(major_version_code) != -1:
+                line = major_version_code + " \"" + major_version + "\"\n"
+                sys.stdout.write(line)
+            elif line.find(minor_version_code) != -1:
+                line = minor_version_code + " \"" + minor_version + "\"\n"
+                sys.stdout.write(line)
+            elif line.find(patch_version_code) != -1:
+                line = patch_version_code + " \"" + patch_version + "\"\n"
+                sys.stdout.write(line)   
+            elif line.find(build_version_code) != -1:
+                line = build_version_code + " \"" + build_version + "\"\n"
+                sys.stdout.write(line)   
+            else:
+                sys.stdout.write(line)   
+        fileinput.close()                           
+
+        # Execute the script to create installer
+        os.system('unzip Installer\\flexlm.zip -d Installer\\')
+        os.system('makensis.exe ' + qiProInstallerScript)
+        os.system('mkdir ' + os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version))
+        os.system('copy /Y Installer\\config.dat ' + os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'config.dat'))
+        pathWithVersion = os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version)
+        Path(os.path.join(pathWithVersion, 'config.dat')).touch()   
+        qiProFullPath = os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version)
+        os.system('copy /Y Installer\\QI-Pro.exe ' + os.path.join(qiProFullPath, 'QI-Pro.exe'))
+        Path(qiProFullPath).touch() 
+        releaseNotesFullPath = os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'ReleaseNotes.txt')
+        os.system('copy /Y Installer\\ReleaseNotes.txt ' + releaseNotesFullPath)
+        Path(releaseNotesFullPath).touch() 
+        os.system('copy /Y Installer\\QIProSetup.exe ' + os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'QIProSetup.exe'))
+        os.system('Installer\\SQI-SignTool.bat ' + os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'QIProSetup.exe'))
+        time.sleep(10)        
+
+        CopyColorBarTemplateFiles(qiProFullPath)
+    except Exception as e:
+        logging.error("Exception: " + str(e))   
+        raise
+
+    try:
+        print("QI-Pro Headwave Installer")
+        os.system('copy /Y OSI\\QI-Pro\\x64\\Release\\QI-Pro.exe ' + os.path.join('.', 'Installer\\Headwave'))
+        os.system('copy /Y IMAC\\ReleaseNotes.txt ' + os.path.join('.', 'Installer\\Headwave'))
+
+        # Get the latest plug-ins
+        os.system('copy /Y Z:\\Applications\\Headwave\\QI-Pro-Plugins\\ComputePlugin\\computeplugin.VirtualVolume.dll Installer\\Headwave')
+        os.system('copy /Y Z:\\Applications\\Headwave\\QI-Pro-Plugins\\ComputePlugin\\computeplugin.xplot.dll Installer\\Headwave')
+        os.system('copy /Y Z:\\Applications\\Headwave\\QI-Pro-Plugins\\ExtensionPlugin\\hwProxyInterface.QIPro.dll Installer\\Headwave')
+
+        # Get the latest python files 
+        os.system('copy /Y HW-Plugin\python\__init__.py Installer\\Headwave')
+        os.system('copy /Y HW-Plugin\python\QiProConfig.py Installer\\Headwave')
+        os.system('copy /Y HW-Plugin\python\QiProPlugin.py Installer\\Headwave')
+
+        # Update the version in the installer script
+        qiProInstallerScript = os.path.join('Installer\\Headwave', 'QiProHeadwave.nsi')
+        major_version_code = '!define MAJOR_VERSION'
+        minor_version_code = '!define MINOR_VERSION'
+        patch_version_code = '!define PATCH_VERSION'
+        build_version_code = '!define BUILD_VERSION'
+        
+        for line in fileinput.input(qiProInstallerScript, inplace=True):
+            if line.find(major_version_code) != -1:
+                line = major_version_code + " \"" + major_version + "\"\n"
+                sys.stdout.write(line)
+            elif line.find(minor_version_code) != -1:
+                line = minor_version_code + " \"" + minor_version + "\"\n"
+                sys.stdout.write(line)
+            elif line.find(patch_version_code) != -1:
+                line = patch_version_code + " \"" + patch_version + "\"\n"
+                sys.stdout.write(line)   
+            elif line.find(build_version_code) != -1:
+                line = build_version_code + " \"" + build_version + "\"\n"
+                sys.stdout.write(line)   
+            else:
+                sys.stdout.write(line)   
+        fileinput.close()                           
+
+        # Execute the script to create installer
+        os.system('unzip -o Installer\\flexlm.zip -d ' + os.path.join('.', 'Installer\\Headwave\\'))
+        os.system('makensis.exe ' + qiProInstallerScript)
+        os.system('mkdir ' + os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Headwave'))
+        os.system('copy /Y Installer\\config.dat ' + os.path.join(os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Headwave'), 'config.dat'))
+        pathWithVersion = os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version)
+        Path(os.path.join(os.path.join(pathWithVersion, 'Headwave'),'config.dat')).touch()        
+        qiProFullPath = os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Headwave')
+        os.system('copy /Y Installer\\QI-Pro.exe ' + os.path.join(qiProFullPath, 'QI-Pro.exe'))
+        Path(qiProFullPath).touch() 
+        releaseNotesFullPath = os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Headwave')        
+        os.system('copy /Y Installer\\ReleaseNotes.txt ' + os.path.join(releaseNotesFullPath, 'ReleaseNotes.txt'))
+        Path(releaseNotesFullPath).touch() 
+        os.system('copy /Y ' + os.path.join('Installer\\Headwave', 'QIProSetup.exe') + ' ' + os.path.join(os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Headwave'), 'QIProSetup.exe'))
+        os.system('Installer\\SQI-SignTool.bat ' + os.path.join(os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Headwave'), 'QIProSetup.exe'))
+        time.sleep(10)
+
+        CopyColorBarTemplateFiles(qiProFullPath)        
+    except Exception as e:
+        logging.error("Exception: " + str(e))   
+        raise
+    
+    try:
+        print("QI-Pro Seisware10.3 Installer")
+        os.system('copy /Y ' + os.path.join(current_dir, 'OSI\\QI-Pro\\x64\\SW-v10.3\\QI-Pro.exe') + ' Installer\\Seisware10.3') 
+        os.system('copy /Y ' + os.path.join(current_dir, 'IMAC\\ReleaseNotes.txt') + ' Installer\\Seisware10.3')
+
+        # Update the version in the installer script
+        qiProInstallerScript = os.path.join('Installer\\Seisware10.3', 'QiProSeisware.nsi')
+        major_version_code = '!define MAJOR_VERSION'
+        minor_version_code = '!define MINOR_VERSION'
+        patch_version_code = '!define PATCH_VERSION'
+        build_version_code = '!define BUILD_VERSION'
+        
+        for line in fileinput.input(qiProInstallerScript, inplace=True):
+            if line.find(major_version_code) != -1:
+                line = major_version_code + " \"" + major_version + "\"\n"
+                sys.stdout.write(line)
+            elif line.find(minor_version_code) != -1:
+                line = minor_version_code + " \"" + minor_version + "\"\n"
+                sys.stdout.write(line)
+            elif line.find(patch_version_code) != -1:
+                line = patch_version_code + " \"" + patch_version + "\"\n"
+                sys.stdout.write(line)   
+            elif line.find(build_version_code) != -1:
+                line = build_version_code + " \"" + build_version + "\"\n"
+                sys.stdout.write(line)   
+            else:
+                sys.stdout.write(line)   
+        fileinput.close()                           
+
+        # Execute the script to create installer
+        os.system('unzip -o Installer\\flexlm.zip -d ' + os.path.join('.', 'Installer\\Seisware10.3\\'))
+        os.system('unzip -o ' + os.path.join('.', 'Installer\\Seisware10.3') + '\\sw10-3.zip -d ' + os.path.join('.', 'Installer\\Seisware10.3\\'))
+        os.system('makensis.exe ' + qiProInstallerScript)        
+        os.system('mkdir ' + os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Seisware10.3'))
+        os.system('copy /Y Installer\\config.dat ' + os.path.join(os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Seisware10.3'), 'config.dat'))
+        pathWithVersion = os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version)
+        Path(os.path.join(os.path.join(pathWithVersion, 'Seisware10.3'),'config.dat')).touch()        
+        qiProFullPath = os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Seisware10.3')
+        os.system('copy /Y ' + os.path.join(current_dir, 'OSI\\QI-Pro\\x64\\SW-v10.3\\QI-Pro.exe') + ' ' + os.path.join(qiProFullPath, 'QI-Pro.exe'))
+        Path(qiProFullPath).touch() 
+        releaseNotesFullPath = os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Seisware10.3')        
+        os.system('copy /Y ReleaseNotes.txt ' + os.path.join(releaseNotesFullPath, 'ReleaseNotes.txt'))
+        Path(releaseNotesFullPath).touch() 
+        os.system('copy /Y ' + os.path.join('Installer\\Seisware10.3', 'libzmq-mt-4_3_0.dll') + ' ' + os.path.join(os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Seisware10.3'), 'libzmq-mt-4_3_0.dll'))
+        os.system('copy /Y ' + os.path.join('Installer\\Seisware10.3', 'QIProSetup.exe') + ' ' + os.path.join(os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Seisware10.3'), 'QIProSetup.exe'))
+        os.system('copy /Y ' + os.path.join('Installer\\Seisware10.3', 'seisware.dll') + ' ' + os.path.join(os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Seisware10.3'), 'seisware.dll'))
+        os.system('copy /Y ' + os.path.join('Installer\\Seisware10.3', 'vcruntime140_1.dll') + ' ' + os.path.join(os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Seisware10.3'), 'vcruntime140_1.dll'))
+        os.system('Installer\\SQI-SignTool.bat ' + os.path.join(os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Seisware10.3'), 'QIProSetup.exe'))        
+        time.sleep(10)
+
+        CopyColorBarTemplateFiles(qiProFullPath)        
+    except Exception as e:
+        logging.error("Exception: " + str(e))   
+        raise 
+        
+    try:
+        print("QI-Pro Seisware10.4 Installer")
+        os.system('copy /Y ' + os.path.join(current_dir, 'OSI\\QI-Pro\\x64\\SW-v10.4\\QI-Pro.exe') + ' Installer\\Seisware10.4') 
+        os.system('copy /Y ' + os.path.join(current_dir, 'IMAC\\ReleaseNotes.txt') + ' Installer\\Seisware10.4')
+
+        # Update the version in the installer script
+        qiProInstallerScript = os.path.join('Installer\\Seisware10.4', 'QiProSeisware.nsi')
+        major_version_code = '!define MAJOR_VERSION'
+        minor_version_code = '!define MINOR_VERSION'
+        patch_version_code = '!define PATCH_VERSION'
+        build_version_code = '!define BUILD_VERSION'
+        
+        for line in fileinput.input(qiProInstallerScript, inplace=True):
+            if line.find(major_version_code) != -1:
+                line = major_version_code + " \"" + major_version + "\"\n"
+                sys.stdout.write(line)
+            elif line.find(minor_version_code) != -1:
+                line = minor_version_code + " \"" + minor_version + "\"\n"
+                sys.stdout.write(line)
+            elif line.find(patch_version_code) != -1:
+                line = patch_version_code + " \"" + patch_version + "\"\n"
+                sys.stdout.write(line)   
+            elif line.find(build_version_code) != -1:
+                line = build_version_code + " \"" + build_version + "\"\n"
+                sys.stdout.write(line)   
+            else:
+                sys.stdout.write(line)   
+        fileinput.close()                           
+
+        # Execute the script to create installer
+        os.system('unzip -o Installer\\flexlm.zip -d ' + os.path.join('.', 'Installer\\Seisware10.4\\'))
+        os.system('unzip -o ' + os.path.join('.', 'Installer\\Seisware10.4') + '\\sw10-4.zip -d ' + os.path.join('.', 'Installer\\Seisware10.4\\'))
+        os.system('makensis.exe ' + qiProInstallerScript) 
+        os.system('mkdir ' + os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Seisware10.4'))
+        os.system('copy /Y Installer\\config.dat ' + os.path.join(os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Seisware10.4'), 'config.dat'))
+        pathWithVersion = os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version)
+        Path(os.path.join(os.path.join(pathWithVersion, 'Seisware10.4'),'config.dat')).touch()        
+        qiProFullPath = os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Seisware10.4')
+        os.system('copy /Y OSI\\QI-Pro\\x64\\SW-v10.4\\QI-Pro.exe ' + os.path.join(qiProFullPath, 'QI-Pro.exe'))
+        Path(qiProFullPath).touch() 
+        releaseNotesFullPath = os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Seisware10.4')        
+        os.system('copy /Y ReleaseNotes.txt ' + os.path.join(releaseNotesFullPath, 'ReleaseNotes.txt'))
+        Path(releaseNotesFullPath).touch() 
+        os.system('copy /Y ' + os.path.join('Installer\\Seisware10.4', 'libzmq-mt-4_3_0.dll') + ' ' + os.path.join(os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Seisware10.4'), 'libzmq-mt-4_3_0.dll'))
+        os.system('copy /Y ' + os.path.join('Installer\\Seisware10.4', 'QIProSetup.exe') + ' '  + os.path.join(os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Seisware10.4'), 'QIProSetup.exe'))
+        os.system('copy /Y ' + os.path.join('Installer\\Seisware10.4', 'seisware.dll') + ' ' + os.path.join(os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Seisware10.4'), 'seisware.dll'))
+        os.system('copy /Y ' + os.path.join('Installer\\Seisware10.4', 'vcruntime140_1.dll') + ' ' + os.path.join(os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Seisware10.4'), 'vcruntime140_1.dll'))
+        os.system('Installer\\SQI-SignTool.bat ' + os.path.join(os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Seisware10.4'), 'QIProSetup.exe'))        
+        time.sleep(10)
+
+        CopyColorBarTemplateFiles(qiProFullPath)        
+    except Exception as e:
+        logging.error("Exception: " + str(e))   
+        raise 
+        
+    try:
+        print("QI-Pro Seisware10.5 Installer")
+        os.system('copy /Y OSI\\QI-Pro\\x64\\SW-v10.5\\QI-Pro.exe ' + os.path.join('.', 'Installer\\Seisware10.5'))
+        os.system('copy /Y IMAC\\ReleaseNotes.txt ' + os.path.join('.', 'Installer\\Seisware10.5'))
+
+        # Update the version in the installer script
+        qiProInstallerScript = os.path.join('Installer\\Seisware10.5', 'QiProSeisware.nsi')
+        major_version_code = '!define MAJOR_VERSION'
+        minor_version_code = '!define MINOR_VERSION'
+        patch_version_code = '!define PATCH_VERSION'
+        build_version_code = '!define BUILD_VERSION'
+        
+        for line in fileinput.input(qiProInstallerScript, inplace=True):
+            if line.find(major_version_code) != -1:
+                line = major_version_code + " \"" + major_version + "\"\n"
+                sys.stdout.write(line)
+            elif line.find(minor_version_code) != -1:
+                line = minor_version_code + " \"" + minor_version + "\"\n"
+                sys.stdout.write(line)
+            elif line.find(patch_version_code) != -1:
+                line = patch_version_code + " \"" + patch_version + "\"\n"
+                sys.stdout.write(line)   
+            elif line.find(build_version_code) != -1:
+                line = build_version_code + " \"" + build_version + "\"\n"
+                sys.stdout.write(line)   
+            else:
+                sys.stdout.write(line)   
+        fileinput.close()                           
+
+        # Execute the script to create installer
+        os.system('unzip -o Installer\\flexlm.zip -d ' + os.path.join('.', 'Installer\\Seisware10.5\\'))
+        os.system('unzip -o ' + os.path.join('.', 'Installer\\Seisware10.5') + '\\sw10-5.zip -d ' + os.path.join('.', 'Installer\\Seisware10.5\\'))     
+        os.system('makensis.exe ' + qiProInstallerScript) 
+        os.system('mkdir ' + os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Seisware10.5'))
+        os.system('copy /Y Installer\\config.dat ' + os.path.join(os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Seisware10.5'), 'config.dat'))
+        pathWithVersion = os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version)
+        Path(os.path.join(os.path.join(pathWithVersion, 'Seisware10.5'),'config.dat')).touch()        
+        qiProFullPath = os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Seisware10.5')
+        os.system('copy /Y ' + os.path.join(current_dir, 'OSI\\QI-Pro\\x64\\SW-v10.5\\QI-Pro.exe') + ' ' + os.path.join(qiProFullPath, 'QI-Pro.exe'))   
+        Path(qiProFullPath).touch() 
+        releaseNotesFullPath = os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Seisware10.5')        
+        os.system('copy /Y ReleaseNotes.txt ' + os.path.join(releaseNotesFullPath, 'ReleaseNotes.txt'))
+        Path(releaseNotesFullPath).touch() 
+        os.system('copy /Y ' + os.path.join('Installer\\Seisware10.5', 'libzmq-mt-4_3_0.dll') + ' ' + os.path.join(os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Seisware10.5'), 'libzmq-mt-4_3_0.dll'))
+        os.system('copy /Y ' + os.path.join('Installer\\Seisware10.5', 'QIProSetup.exe') + ' '  + os.path.join(os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Seisware10.5'), 'QIProSetup.exe'))
+        os.system('copy /Y ' + os.path.join('Installer\\Seisware10.5', 'seisware.dll') + ' ' + os.path.join(os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Seisware10.5'), 'seisware.dll'))
+        os.system('copy /Y ' + os.path.join('Installer\\Seisware10.5', 'vcruntime140_1.dll') + ' ' + os.path.join(os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Seisware10.5'), 'vcruntime140_1.dll'))
+        os.system('Installer\\SQI-SignTool.bat ' + os.path.join(os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'Seisware10.5'), 'QIProSetup.exe'))        
+        time.sleep(10)
+
+        CopyColorBarTemplateFiles(qiProFullPath)        
+    except Exception as e:
+        logging.error("Exception: " + str(e))   
+        raise  
+
+    try:
+        # Indicate whether this build is from Release-Branch or not
+        path = pathlib.Path(os.path.join(current_dir, 'readme.txt'))
+        if path.exists():
+            qiProFullPath = os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version)
+            Path(os.path.join(current_dir, 'readme.txt')).touch() 
+            os.system('copy /Y ' + os.path.join(current_dir, 'readme.txt') + ' ' + os.path.join(qiProFullPath, 'readme.txt'))
+
+        # Get changeset history
+        print("QI-Pro Changeset History")
+        os.system('copy ' + os.path.join(current_dir,'changesets.txt') + ' ' + os.path.join(os.path.join('Z:\\Applications\\QI-Pro\\PreRelease', version), 'changesets.txt'))
+
+        # Keep only the latest 7 directories
+        search_dir = r'Z:\Applications\QI-Pro\PreRelease'
+        os.chdir(search_dir)
+        files = filter(os.path.isdir, os.listdir(search_dir))
+        files = [os.path.join(search_dir, f) for f in files] # add path to each file
+        files.sort(reverse=True, key=lambda x: os.path.getmtime(x))
+        file_counter = 1
+
+        for f in files:
+            if file_counter > 20:
+                if os.path.isfile(f):
+                    logging.debug("Removing file: " + f)
+                    os.remove(f)
+                else: 
+                    logging.debug("Removing directory: " + f)
+                    # shutil.rmtree(os.path.dirname(f))
+                    shutil.rmtree(f)
+            file_counter += 1
+        os.chdir(current_dir)
+    except Exception as e:
+        logging.error("Exception: " + str(e))   
+        raise     
+
+    return 1
+
+print("Running create installers")
+returnCode = Run()
+print("Running installers returnCode: " + str(returnCode))

@@ -1,0 +1,1451 @@
+// ColorBarView.cpp : implementation file
+//
+
+#include "stdafx.h"
+#include "IMAC.h"
+#include "IMACDoc.h"
+#include "ColorBarView.h"
+#include "IMACView.h"
+#include "NewColorbarDlg.h"
+#include "ClassNameDlg.h"
+#include "../common/CppUtil.h"
+#include "../common/Utilities.h"
+#include "../common/ColorbarCombo.h"
+#include <math.h>
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#endif
+
+static LPTSTR m_cursor;
+static int m_externalCursor;
+
+/////////////////////////////////////////////////////////////////////////////
+// CColorBarView
+
+IMPLEMENT_DYNCREATE(CColorBarView, CView)
+
+CColorBarView::CColorBarView()
+{
+}
+
+CColorBarView::~CColorBarView()
+{
+	CIMACDoc* pDoc = GetDocument();
+	pDoc->SetColorbarOpenedFromCSI(FALSE);
+	pDoc->SetColorbarOpenedFromCrossplotSettings(FALSE);
+	pDoc->SetColorBarViewPtr(NULL);
+}
+
+BEGIN_MESSAGE_MAP(CColorBarView, CView)
+	ON_WM_LBUTTONDOWN()
+	ON_WM_LBUTTONUP()
+	ON_WM_MOUSEMOVE()
+	ON_WM_ERASEBKGND()
+	ON_WM_CONTEXTMENU()
+	ON_WM_SETCURSOR()
+	ON_COMMAND(ID_CB_INTERP, OnCbInterp)
+	ON_COMMAND(ID_CB_CLEAR, OnCbClear)
+	ON_COMMAND(ID_CB_NEW, OnCbExtend)
+	ON_COMMAND(ID_CB_OPEN, OnCbOpen)
+	ON_COMMAND(ID_CB_SAVE, OnCbSave)
+	ON_COMMAND(ID_CB_HELP, OnCbHelp)
+	ON_COMMAND(ID_CB_EXIT, OnCbExit)
+
+	ON_UPDATE_COMMAND_UI(ID_CB_NAMES, OnUpdateCbNames)
+	ON_COMMAND(ID_CB_NAMES, &CColorBarView::OnCbNames)
+END_MESSAGE_MAP()
+
+void CColorBarView::OnInitialUpdate()
+{
+	m_cursor = 0;
+	m_intensity = 1.0;
+	m_lbuttondown = FALSE;
+	m_palletIndex = -2;	// nothing selected
+	m_colorbarIndex = -1;
+	m_colorbarIndexMouseMove = -1;
+	pApp = (CIMACApp*)AfxGetApp();
+	m_rcClient.SetRectEmpty();
+
+
+}
+
+void CColorBarView::OnContextMenu(CWnd* pWnd, CPoint point)
+{
+	//Declarations
+	CRect rcColorBar = m_rcColorBar;
+	CRect rcDrawColorBar;
+	CMenu mnuPopup;
+	COLORREF colorbar[MAXCBSIZE];
+	CStringArray arrNames;
+	arrNames.SetSize(MAXCLASS);
+	BOOL isColorbarModified = FALSE;
+
+	//Get Mouse Click position and convert it to the Screen Co-ordinate
+	ClientToScreen(&rcColorBar);
+
+	//Check the mouse pointer position is inside the client area
+	if (rcColorBar.PtInRect(point))
+	{
+		//Create the Main Menu
+		mnuPopup.CreatePopupMenu();
+		mnuPopup.AppendMenu(MF_STRING, ID_INSERT_CLASS, _T("Insert"));
+		mnuPopup.AppendMenu(MF_STRING, ID_DELETE_CLASS, _T("Delete"));
+		mnuPopup.AppendMenu(MF_STRING, ID_MOVE_UP_CLASS, _T("Move Up"));
+		mnuPopup.AppendMenu(MF_STRING, ID_MOVE_DOWN_CLASS, _T("Move Down"));
+
+		//Display the Popup Menu
+		UINT nCmd = mnuPopup.TrackPopupMenu(TPM_LEFTALIGN | TPM_RETURNCMD, point.x, point.y, this);
+		//TRACE("CColorBarView::OnContextMenu nCmd == %u\n", nCmd);
+
+		rcDrawColorBar = rcColorBar;
+		int cbSize = GetColorBarSize();
+		COLORREF* pColorbar = GetColorBarPtr();
+		float ftop = (float)rcDrawColorBar.top;
+		float stepSize = (float)(rcDrawColorBar.bottom - rcDrawColorBar.top) / (float)cbSize;
+		float fbottom = ftop + stepSize;
+
+		if (cbSize + 1 > MAXCLASS) {
+			CString msg;
+			msg.Format("maximum colors allowed: %d", MAXCLASS);
+			AfxMessageBox(msg);
+			return;
+		}
+		int cbSelectedIndex = 0;
+
+		for (int i = 0; i < cbSize; i++) {
+			if (point.y > ftop && point.y < fbottom) {
+				cbSelectedIndex = i;
+				break;
+			}
+			ftop += stepSize;
+			fbottom += stepSize;
+		}
+		CIMACDoc* pDoc = GetDocument();
+		CClassNameDlg dlg(this);
+		dlg.m_pDoc = pDoc;
+
+		switch (nCmd) {
+		case ID_DELETE_CLASS:
+			for (int i = 0; i < cbSize; i++) {
+				if (i == cbSelectedIndex) {
+					pDoc->SetNClass(cbSize - 1);
+					isColorbarModified = TRUE;
+				}
+				else if (i < cbSelectedIndex) {
+					colorbar[i] = pColorbar[i];
+					arrNames[i] = pDoc->GetClssName(i);
+				}
+				else {
+					colorbar[i - 1] = pColorbar[i];
+					arrNames[i - 1] = pDoc->GetClssName(i);
+				}
+			}
+			break; 
+		case ID_INSERT_CLASS:
+			for (int i = 0; i < cbSize; i++) {
+				if (i == cbSelectedIndex) {
+						colorbar[i] = NOCOLOR;
+						pDoc->SetNClass(cbSize + 1);
+						isColorbarModified = TRUE;
+				}
+				else if (i < cbSelectedIndex) {
+					colorbar[i] = pColorbar[i];
+					arrNames[i] = pDoc->GetClssName(i);
+				}
+				else {
+					colorbar[i + 1] = pColorbar[i];
+					arrNames[i + 1] = pDoc->GetClssName(i);
+				}
+			}
+			break;
+		case ID_MOVE_UP_CLASS:
+			for (int i = 0; i < cbSize; i++) {
+				if (cbSelectedIndex != 0 && i == cbSelectedIndex) {
+					colorbar[i] = pColorbar[i - 1];
+					colorbar[i - 1] = pColorbar[i];
+					arrNames[i] = pDoc->GetClssName(i - 1);
+					arrNames[i - 1] = pDoc->GetClssName(i);
+					isColorbarModified = TRUE;
+				}
+				else if (i < cbSelectedIndex) {
+					colorbar[i] = pColorbar[i];
+					arrNames[i] = pDoc->GetClssName(i);
+				}
+				else if (i == cbSelectedIndex - 1 && nCmd == ID_MOVE_UP_CLASS) {
+					// Do nothing
+				}
+				else {
+					colorbar[i] = pColorbar[i];
+					arrNames[i] = pDoc->GetClssName(i);
+				}
+			}
+			break;
+		case ID_MOVE_DOWN_CLASS:
+			for (int i = 0; i < cbSize; i++) {
+				if (cbSelectedIndex != cbSize - 1 && i == cbSelectedIndex) {
+					colorbar[i + 1] = pColorbar[i];
+					colorbar[i] = pColorbar[i + 1];
+					arrNames[i + 1] = pDoc->GetClssName(i);
+					arrNames[i] = pDoc->GetClssName(i + 1);
+					isColorbarModified = TRUE;
+				}
+				else if (i < cbSelectedIndex) {
+					colorbar[i] = pColorbar[i];
+					arrNames[i] = pDoc->GetClssName(i);
+				}
+				else if (i == cbSelectedIndex + 1 && nCmd == ID_MOVE_DOWN_CLASS) {
+					// Do nothing
+				}
+				else {
+					colorbar[i] = pColorbar[i];
+					arrNames[i] = pDoc->GetClssName(i);
+				}
+			}
+			break;
+		default: 
+			AfxMessageBox("Cannot find Color Bar Context Menu command");
+			return;
+		}
+
+		for (int i = 0; i < pDoc->GetClassCount(); i++) {
+			pColorbar[i] = colorbar[i];
+			dlg.m_arrNames[i] = arrNames[i];
+			pDoc->SetClassName(i, dlg.m_arrNames[i]);
+		}
+
+#ifdef DEBUG		
+		if (nCmd == ID_INSERT_CLASS) {
+			ASSERT(pDoc->GetClassCount() == cbSize + 1);
+		}
+		else if (nCmd == ID_DELETE_CLASS) {
+			ASSERT(pDoc->GetClassCount() == cbSize - 1);
+		}
+#endif
+		
+		if (isColorbarModified == TRUE) {
+			Invalidate(FALSE);
+			pDoc->SetUpdateXplotPaneFlagsAll(TRUE);
+			pDoc->m_bNewColorFlag = 0xffffffff;
+			pDoc->UpdateViews();
+		}
+	}
+	else
+	{
+		CWnd::OnContextMenu(pWnd, point);
+	}
+}
+
+void CColorBarView::OnDraw(CDC* pDCin)
+{
+	//TRACE("CColorBarView::OnDraw()\n");
+
+	CIMACDoc* pDoc = GetDocument();
+	if (pDoc->GetMinimizedFlag(1)){
+		pDoc->ClearMinimizedFlag(1);
+		GetParentFrame()->RecalcLayout();
+		return;
+	}
+
+	pDoc->SetColorBarViewPtr(this);
+
+	if (m_rcClient.IsRectEmpty()){
+		GetClientRect(&m_rcClient);
+		m_DC.CreateCompatibleDC(pDCin);
+		m_BM.CreateCompatibleBitmap(pDCin, m_rcClient.right, m_rcClient.bottom);
+		m_DC.SelectObject(m_BM);
+	}
+
+	CRect rcClient, rcRect;
+	GetClientRect(rcClient);
+	if (rcClient != m_rcClient) {
+		GetClientRect(&m_rcClient);
+		m_BM.DeleteObject();
+		m_BM.CreateCompatibleBitmap(pDCin, m_rcClient.right, m_rcClient.bottom);
+		m_DC.SelectObject(m_BM);
+	}
+
+	CDC	*pDC = &m_DC;
+
+	CBrush	hbrBkGnd;
+	hbrBkGnd.CreateSolidBrush(GetSysColor(COLOR_WINDOW));
+	pDC->FillRect(&rcClient,&hbrBkGnd);
+
+	DrawColorbar(pDC, rcClient, m_rcSlider, m_rcColorBar, m_intensity, m_colorbarIndex, m_colorbarIndexMouseMove);
+
+	/* Draw the titles */
+	rcRect = rcClient;
+	rcRect.bottom = 20;
+	if (pDoc->IsThirdAttributeMode(pDoc->GetViewInstance())) {
+		pDC->DrawText("Third Attribute Color Bar", -1, rcRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+	} else if (pDoc->IsColorbarOpenedFromCSI()) {
+		pDC->DrawText("CSI Color Bar Editor", -1, rcRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+	} else {
+		pDC->DrawText("Class Manager", -1, rcRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+	}
+
+	DrawCursorColor(pDC, rcClient, m_rcSlider, m_rcColorBar, m_intensity, m_palletIndex, m_colorbarIndexMouseMove);
+	
+	// copy the memory bitmap to the current DC.
+	pDCin->BitBlt(m_rcClient.left, m_rcClient.top, m_rcClient.Width(), m_rcClient.Height(), pDC, 0, 0, SRCCOPY);
+}
+
+void CColorBarView::OnLButtonDown(UINT nFlags, CPoint point) 
+{
+	CDC *pDC = GetDC();
+	m_cursor = NULL;
+	CRect rcClient;
+	GetClientRect(rcClient);
+
+	DoLButtonDown( pDC, point, rcClient, m_rcSlider, m_rcColorBar, m_lbuttondown, m_intensity, m_palletIndex, m_colorbarIndex );
+
+	Invalidate(FALSE);
+}
+
+void CColorBarView::OnLButtonUp(UINT nFlags, CPoint point) 
+{
+	m_lbuttondown=FALSE;
+	CIMACDoc* pDoc = GetDocument();
+	BOOL isColorbarModified = FALSE;
+	
+	// The colorbar
+	if (point.x > m_rcColorBar.left &&
+		point.x < (m_rcColorBar.right + 80) &&
+		point.y > m_rcColorBar.top &&
+		point.y < m_rcColorBar.bottom)
+	{
+		isColorbarModified = TRUE;
+		COLORREF colorbar[MAXCBSIZE];
+		CStringArray arrNames;
+		COLORREF* pColorbar = GetColorBarPtr();
+		
+		arrNames.SetSize(MAXCLASS);
+		CClassNameDlg dlg(this);
+		dlg.m_pDoc = pDoc;
+
+		// Exchange color bar items due to drag action
+		colorbar[m_colorbarIndex] = pColorbar[m_colorbarIndexMouseMove];
+		arrNames[m_colorbarIndex] = pDoc->GetClssName(m_colorbarIndexMouseMove);
+
+		colorbar[m_colorbarIndexMouseMove] = pColorbar[m_colorbarIndex];
+		arrNames[m_colorbarIndexMouseMove] = pDoc->GetClssName(m_colorbarIndex);
+
+		pColorbar[m_colorbarIndex] = colorbar[m_colorbarIndex];
+		pDoc->SetClassName(m_colorbarIndex, arrNames[m_colorbarIndex]);
+
+		pColorbar[m_colorbarIndexMouseMove] = colorbar[m_colorbarIndexMouseMove];
+		pDoc->SetClassName(m_colorbarIndexMouseMove, arrNames[m_colorbarIndexMouseMove]);
+
+		dlg.m_arrNames[m_colorbarIndex] = arrNames[m_colorbarIndex];
+		dlg.m_arrNames[m_colorbarIndexMouseMove] = arrNames[m_colorbarIndexMouseMove];
+	}
+	ClipCursor(NULL);
+
+	if (isColorbarModified == TRUE) {
+		Invalidate(FALSE);
+		pDoc->SetUpdateXplotPaneFlagsAll(TRUE);
+		pDoc->m_bNewColorFlag = 0xffffffff;
+		pDoc->UpdateViews();
+	}
+}
+
+void CColorBarView::OnMouseMove(UINT nFlags, CPoint point) 
+{
+	CDC *pDC = GetDC();
+	CRect rcClient;
+	GetClientRect(rcClient);
+
+	BOOL bInvalidate = FALSE;
+
+	//TRACE("CColorBarView::OnMouseMove: m_colorbarIndex = %d\r\n", m_colorbarIndex);
+	DoMouseMove (pDC, point, rcClient, m_rcSlider, m_rcColorBar, m_intensity, m_palletIndex, 
+		m_colorbarIndexMouseMove, m_lbuttondown, bInvalidate );
+	if (bInvalidate) Invalidate (FALSE);
+}
+
+void CColorBarView::GetColorbarBaseData(CRect rcClient, int &dx, int &xOrigin, int &yOrigin)
+{
+	int widthDx = rcClient.Width()/(2*(NCOL+8));
+	int heightDx = rcClient.Height()/(2*(NCOL+4));
+	dx = min(widthDx, heightDx);
+
+	xOrigin = rcClient.Width()/2 + dx;
+	yOrigin = rcClient.Height()/2 - dx;
+}
+
+void CColorBarView::DrawColorbar(CDC *pDC, CRect rcClient, CRect &rcSlider, CRect &rcColorBar, 
+	float intensity, int colorbarIndex, int colorbarIndexMouseMove)
+{
+	CPoint p1[NCOL+1], p2[NCOL+1], pixel[4];
+	CRgn region;
+	CRect rcRect;
+	COLORREF pixelColor;
+	COLORREF *pPallet;
+	int dx, xOrigin, yOrigin;
+	int i, j, k;
+
+	double px, py;
+	double theta;
+	double pi = atan(1.0)*4;
+
+	CIMACDoc *pDoc = CIMACApp::GetDocument();
+	if (pDoc == NULL) return;
+	pPallet = pDoc->GetPallet();
+
+	GetColorbarBaseData(rcClient, dx, xOrigin, yOrigin );
+
+	// init the coords for the first slice of the color wheel
+	for (i=0; i<NCOL+1; i++) {
+		p2[i].x = ((i+1)*dx) + xOrigin;
+	    p2[i].y = yOrigin;
+	}
+	
+	// draw the color wheel, slice by slice. Each piece grades from pure on the outside to grey in the center.
+	for (i=1, k=0; i<=NCOL*6; i++) {
+		// compute the slice
+		theta = pi * (double) i / (double) (3*NCOL);
+		if (i == NCOL*6) theta = 0; // get rid of rounding error with 2*pi
+		px =  cos(theta);
+		py =  sin(theta);
+		// compute the coordinates of the slice
+		for (j=0; j<NCOL+1; j++) {
+			p1[j] = p2[j];
+			p2[j].x = (int)((j+1) * px * dx) + xOrigin;
+			p2[j].y = (int)((j+1) * py * dx) + yOrigin;
+		}
+		// fill in the colors from the pallet
+		for (j=NCOL-1; j>=0; j--) {
+			pixel[0] = p1[j];
+			pixel[1] = p1[j+1];
+			pixel[2] = p2[j+1];
+			pixel[3] = p2[j];
+			region.CreatePolygonRgn(pixel, 4, ALTERNATE);
+			pixelColor = pPallet[k++];
+			pixelColor = RGB (GetRValue(pixelColor)*intensity, 
+							  GetGValue(pixelColor)*intensity,
+							  GetBValue(pixelColor)*intensity);
+			pDC->FillRgn(&region, &CBrush(pixelColor));
+			region.DeleteObject();
+		}
+		// the center color is always a shade of grey.
+		pixel[0].x = xOrigin;
+		pixel[0].y = yOrigin;
+		pixel[1] = p1[0];
+		pixel[2] = p2[0];
+		region.CreatePolygonRgn(pixel, 3, ALTERNATE);
+		pixelColor = RGB (255*intensity, 255*intensity, 255*intensity);
+		pDC->FillRgn(&region, &CBrush(pixelColor));
+		region.DeleteObject();
+	}
+
+	// Draw the intensity slider on the right.
+	CRect rcImage;
+	rcImage.right  = rcClient.right - 4*dx;
+	rcImage.left   = rcImage.right - dx;
+	rcImage.top    = 4*dx;
+	rcImage.bottom = rcClient.bottom - dx;
+
+	rcSlider = rcImage;
+	rcSlider.right = rcClient.right;
+	rcSlider.left  = rcImage.right;
+
+	float greyScale = 1.0;
+	float ftop = (float) rcImage.top;
+	float stepSize = (float) (rcImage.bottom - rcImage.top) / (float) NGREY;
+	float fbottom = ftop + stepSize;
+
+	// the grey boxes
+	CRect greyBox = rcImage;
+	for (i=0; i<NGREY; i++) {
+		greyBox.top = (int) (ftop+0.5);
+		greyBox.bottom = (int) (fbottom+0.5);
+		pixelColor = RGB (255*greyScale, 255*greyScale, 255*greyScale);
+		pDC->FillRect(greyBox, &CBrush(pixelColor));
+		ftop += stepSize;
+		fbottom += stepSize;
+		greyScale -= (float)1.0/(float)NGREY;
+	}
+	// the outline
+	pDC->MoveTo(rcImage.left, rcImage.top);
+	pDC->LineTo(rcImage.right, rcImage.top);
+	pDC->LineTo(rcImage.right, rcImage.bottom);
+	pDC->LineTo(rcImage.left, rcImage.bottom);
+	pDC->LineTo(rcImage.left, rcImage.top);
+
+	// the arrow
+	int iy = (int) ((float)(rcImage.bottom-rcImage.top) * (1.0-intensity) + 0.5) + rcImage.top;
+	pixel[0].x = rcImage.right+5;
+	pixel[0].y = iy;
+	pixel[1].x = pixel[0].x+dx/2;
+	pixel[1].y = iy-5;
+	pixel[2].x = pixel[0].x+dx/2;
+	pixel[2].y = iy+5;
+	region.CreatePolygonRgn(pixel, 3, ALTERNATE);
+	pDC->FillRgn(&region, &CBrush(RGB(0,0,0)));
+	region.DeleteObject();
+
+	// the annotation
+	CString sText;
+	rcRect = rcClient;
+	rcRect.left   = pixel[0].x+dx/2+5;
+	rcRect.top    = iy - dx;
+	rcRect.bottom = iy + dx;
+	sText.Format("%0.1f", intensity*100);
+	sText += "%";
+	pDC->DrawText(sText, rcRect, DT_LEFT|DT_VCENTER|DT_SINGLELINE);
+	rcRect.right  = rcImage.left-5;
+	rcRect.left   = rcRect.right - 4*dx;
+	rcRect.top    = rcImage.top ;
+	rcRect.bottom = rcImage.top + dx;
+	pDC->DrawText("100%", rcRect, DT_RIGHT|DT_VCENTER|DT_SINGLELINE);
+	rcRect.top    = rcImage.bottom - dx;
+	rcRect.bottom = rcImage.bottom;
+	pDC->DrawText("0%", rcRect, DT_RIGHT|DT_VCENTER|DT_SINGLELINE);
+	rcRect.bottom = rcImage.top - dx;
+	rcRect.top = rcRect.bottom - 2*dx;
+	rcRect.left = rcImage.left;
+	rcRect.right = rcImage.right + 100;
+	pDC->DrawText("Intensity", rcRect, DT_VCENTER|DT_SINGLELINE);
+
+	// Draw the current color bar on the left
+	DrawLegend(pDC, pDoc, dx, rcClient.bottom, CPoint(0, 0), colorbarIndex, colorbarIndexMouseMove, FALSE);
+
+	rcColorBar.left =  2*dx;
+	rcColorBar.right = 3*dx;
+	rcColorBar.top = 4*dx;
+	rcColorBar.bottom = rcClient.bottom - dx;
+
+//	pDC->FrameRect(rcColorBar, &CBrush(RGB(255,0,0)));
+}
+
+void CColorBarView::DrawLegend(CDC *pDC, CIMACDoc *pDoc, int dx, int height, CPoint origin, int colorbarIndex, int colorbarIndexMouseMove, BOOL bSeismicWindow)
+{
+	CRect rcColorBar;
+	CRect rcDrawColorBar;
+	CRect rcRect;
+	COLORREF pixelColor;
+	CString sText;
+
+	BOOL bCSImode = pDoc->IsColorbarOpenedFromCSI() && !bSeismicWindow;
+	BOOL bThirdAttribute = pDoc->IsThirdAttributeMode(pDoc->GetViewInstance()) && !bSeismicWindow;
+
+	int cbSize = 0;
+	COLORREF *pColorbar = NULL;
+	if (!bSeismicWindow) {
+		cbSize = GetColorBarSize();
+		pColorbar = GetColorBarPtr();
+	}
+	else {
+		cbSize = pDoc->GetColorBarSize(-1);
+		pColorbar = pDoc->GetColorBar();
+	}
+
+	if (cbSize > 0) {
+		rcColorBar.left = origin.x + 2 * dx;
+		rcColorBar.right = origin.x + 3 * dx;
+		rcColorBar.top = origin.y + 4 * dx;
+		rcColorBar.bottom = height - dx;
+		rcDrawColorBar = rcColorBar;
+
+		// center the third attribute color bar since there won't be any labels drawn.
+		if (bThirdAttribute) {
+			rcDrawColorBar.left += 2*dx;
+			rcDrawColorBar.right += 2*dx;
+		}
+		float ftop = (float)rcDrawColorBar.top;
+		float stepSize = (float) (rcDrawColorBar.bottom - rcDrawColorBar.top) / (float) cbSize;
+		float fbottom = ftop + stepSize;
+
+		int index;
+		CRect colorBox = rcDrawColorBar;
+		for (int i=0; i<cbSize; i++) {
+			if (bThirdAttribute) index = cbSize - 1 - i;
+			else index = i;
+			colorBox.top = (int) (ftop+0.5);
+			colorBox.bottom = (int) (fbottom+0.5);
+			if (pColorbar[index] == NOCOLOR) {
+				pixelColor = RGB(255,255,255);
+			} else {
+				pixelColor = pColorbar[index];
+			}
+			pDC->FillRect(colorBox, &CBrush(pixelColor));
+			if (index == colorbarIndex) {
+	
+				CRect box = colorBox;
+				pDC->FrameRect(box,&CBrush(RGB(0,0,0)));
+				box.DeflateRect(1, 1);
+				pDC->FrameRect(box,&CBrush(RGB(0,0,0)));
+				box.DeflateRect(1, 1);
+				pDC->FrameRect(box,&CBrush(RGB(0,0,0)));
+			}
+
+
+			if (!bCSImode && !bThirdAttribute) {
+				rcRect = colorBox;
+				rcRect.top -= dx;
+				rcRect.bottom += dx;
+				rcRect.right = rcRect.left - 5;
+				rcRect.left = rcRect.right - (dx * 2);
+				sText.Format("%d", i);
+				pDC->DrawText(sText, rcRect, DT_RIGHT|DT_VCENTER|DT_SINGLELINE);
+				rcRect.left = colorBox.right + 5;
+				CSize extent = pDC->GetTextExtent(pDoc->GetClssName(index));
+				rcRect.right = rcRect.left + extent.cx;
+				pDC->DrawText(pDoc->GetClssName(index), rcRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+			}
+
+			if (index == colorbarIndexMouseMove) {
+				pDC->FrameRect(colorBox, &CBrush(RGB(0,0,0)));
+			}
+			ftop += stepSize;
+			fbottom += stepSize;
+		}
+
+		// the outline
+		pDC->FrameRect(rcDrawColorBar, &CBrush(RGB(0,0,0)));
+
+		// title
+		rcRect.bottom = rcColorBar.top - dx;
+		rcRect.top = rcRect.bottom - 2 * dx;
+		rcRect.left = rcColorBar.left;
+		rcRect.right = rcColorBar.right + 100;
+		if (bThirdAttribute) {
+			pDC->DrawText("Attribute Colors", rcRect, DT_VCENTER | DT_SINGLELINE);
+		} else if (bCSImode) {
+			pDC->DrawText("CSI Colors", rcRect, DT_VCENTER | DT_SINGLELINE);
+		} else {
+			pDC->DrawText("Class Colors", rcRect, DT_VCENTER | DT_SINGLELINE);
+		}
+
+		if (bSeismicWindow){
+			// frame the entire scene
+			rcColorBar.top -= 3 * dx;
+			rcColorBar.bottom += dx;
+			rcColorBar.left = origin.x;
+			rcColorBar.right += dx * 5;
+			pDC->FrameRect(rcColorBar, &CBrush(RGB(0, 0, 0)));
+		}
+	}
+}
+
+int CColorBarView::GetColorBarSize() {
+	CIMACDoc *pDoc = CIMACApp::GetDocument();
+	if (pDoc == NULL) return 0;
+
+    return pDoc->GetColorBarSize();
+}
+
+COLORREF *CColorBarView::GetColorBarPtr() {
+	CIMACDoc *pDoc = CIMACApp::GetDocument();
+	if (pDoc == NULL) return NULL;
+
+    return pDoc->GetColorBarPtr();
+}
+
+void CColorBarView::DrawCursorColor(CDC *pDC, CRect rcClient, CRect &rcSlider, CRect &rcColorBar, 
+	float intensity, int colorbarIndex, int colorbarIndexMouseMove)
+{
+	CString sText;
+	COLORREF pixelColor;
+	int red, grn, blu;
+	COLORREF *pPallet;
+	int      dx, xOrigin, yOrigin;
+
+	CIMACDoc *pDoc = CIMACApp::GetDocument();
+	if (pDoc == NULL) return;
+	pPallet = pDoc->GetPallet();
+
+	GetColorbarBaseData(rcClient, dx, xOrigin, yOrigin );
+
+	int cbSize = GetColorBarSize();
+	COLORREF *pColorbar = GetColorBarPtr();	
+
+	// Get the color under the mouse pointer, pointer might be over the colorwheel or colorbar.
+	if (colorbarIndex >= -1 || colorbarIndexMouseMove > -1) {
+		if (colorbarIndex > -1) {
+			pixelColor = pPallet[colorbarIndex];
+			red = (int)(GetRValue(pixelColor) * intensity);
+			grn = (int)(GetGValue(pixelColor) * intensity);
+			blu = (int)(GetBValue(pixelColor) * intensity);
+			sText.Format("RGB(%d,%d,%d)", red, grn, blu);
+		} else if (colorbarIndex == -1) {
+			red = (int)(255 * intensity);
+			grn = (int)(255 * intensity);
+			blu = (int)(255 * intensity);
+			sText.Format("RGB(%d,%d,%d)", red, grn, blu);
+		}
+		if (colorbarIndexMouseMove > -1) {
+			pixelColor = pColorbar[colorbarIndexMouseMove];
+			if (pixelColor != NOCOLOR) {
+				red = GetRValue(pixelColor);
+				grn = GetGValue(pixelColor);
+				blu = GetBValue(pixelColor);
+				sText.Format("RGB(%d,%d,%d)", red, grn, blu);
+			} else {
+				red = grn = blu = 255;
+				sText.Empty();
+			}
+		}
+	} else {
+		red = grn = blu = 255;
+		sText.Empty();
+	}
+
+	// Draw the color that was found under the mouse pointer
+	CRect rcRect = rcClient;
+	rcRect.right  = rcRect.right/2 + 2*dx;
+	rcRect.left   = rcRect.right - 2*dx;
+	rcRect.bottom = rcRect.bottom - dx;
+	rcRect.top    = rcRect.bottom - 2*dx;
+	pDC->FillRect(rcRect, &CBrush(RGB(red, grn, blu)));
+	pDC->FrameRect(rcRect,&CBrush(RGB(0,0,0)));
+	rcRect.left=rcRect.right+5;
+	rcRect.right+=150;
+	pDC->DrawText(sText, rcRect, DT_LEFT|DT_VCENTER|DT_SINGLELINE);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// CColorBarView diagnostics
+
+#ifdef _DEBUG
+void CColorBarView::AssertValid() const
+{
+	CView::AssertValid();
+}
+
+void CColorBarView::Dump(CDumpContext& dc) const
+{
+	CView::Dump(dc);
+}
+#endif //_DEBUG
+
+
+void CColorBarView::DoMouseMove (CDC *pDC, CPoint point, CRect rcClient, CRect m_rcSlider, CRect m_rcColorBar, 
+		float &m_intensity, int &m_palletIndex, int &m_colorbarIndexMouseMove, BOOL bLbuttonDown, BOOL &bInvalidate )
+{
+	CIMACDoc *pDoc = CIMACApp::GetDocument();
+	if (pDoc == NULL) return;
+
+	BOOL bThirdAttribute = pDoc->IsThirdAttributeMode(pDoc->GetViewInstance());
+	double pi = atan(1.0)*4;
+	double theta;
+	int    dist, slice;
+	int    my;
+	int    dx, xOrigin, yOrigin;
+	GetColorbarBaseData(rcClient, dx, xOrigin, yOrigin);
+
+	// The slider
+	if (point.x > m_rcSlider.left &&
+		point.x < (m_rcSlider.right + 80) &&
+		point.y > m_rcSlider.top &&
+		point.y < m_rcSlider.bottom)
+	{
+		m_cursor = IDC_HAND;
+	}
+	else {
+		m_cursor = IDC_ARROW;
+	}
+	const int cbSize = GetColorBarSize();
+
+	if (bLbuttonDown){
+		// handle the slider control
+		if (point.y < m_rcSlider.top) {
+			my = m_rcSlider.top;
+		} else if (point.y > m_rcSlider.bottom) {
+			my = m_rcSlider.bottom;
+		} else {
+			my = point.y;
+		}
+		m_intensity = (float) (1.0 - ((float)(my-m_rcSlider.top) / (float)m_rcSlider.Height()));
+		//TRACE("m_my %d point.y %d m_intensity %f\n", my, point.y, m_intensity);
+		bInvalidate = TRUE;
+	} else {
+		// the Pallet
+		dist = (int)(sqrt((float)((point.x-xOrigin)*(point.x-xOrigin))  +
+			              (float)((point.y-yOrigin)*(point.y-yOrigin))) /dx ) - 1;
+		if (dist < NCOL) {
+			theta = atan2((float)point.y-yOrigin, (float)point.x-xOrigin);
+			if (theta < 0) theta += 2*pi;
+			slice = (int) ((theta * 3.0 * NCOL) / pi);
+			if (dist >= 0) {
+				m_palletIndex = (slice*NCOL)+(NCOL-dist-1); // the index into m_pallet
+			} else {
+				m_palletIndex = -1; // the center grey color is selected
+			}
+			bInvalidate = TRUE;
+		} else {
+			if (m_palletIndex != -2) {
+				m_palletIndex = -2; // nothing selected
+				bInvalidate = TRUE;
+			}
+		}
+		// The colorbar
+		if (point.x > m_rcColorBar.left &&
+			point.x < (m_rcColorBar.right+80) && 
+			point.y > m_rcColorBar.top &&
+			point.y < m_rcColorBar.bottom )
+		{
+			m_colorbarIndexMouseMove =(int) ( (float)(point.y-m_rcColorBar.top) /
+				(float)(m_rcColorBar.bottom-m_rcColorBar.top) * cbSize);
+			//TRACE("CColorBarView::DoMouseMove: if (point.x > m_rcColorBar.left &&... m_colorbarIndexMouseMove = %d\r\n", m_colorbarIndexMouseMove);
+
+			if (bThirdAttribute) m_colorbarIndexMouseMove = cbSize - 1 - m_colorbarIndexMouseMove;
+			m_cursor = IDC_HAND;
+			bInvalidate = TRUE;
+		} else {
+			if (m_colorbarIndexMouseMove != -1) {
+				m_colorbarIndexMouseMove = -1; // nothing selected
+				m_cursor = IDC_ARROW;
+				bInvalidate = TRUE;
+			}
+		}
+	}
+
+}
+
+void CColorBarView::DoLButtonDown (CDC *pDC, CPoint point, CRect rcClient, CRect rcSlider, CRect rcColorBar, 
+	BOOL &m_lbuttondown, float m_intensity, int m_palletIndex, int &m_colorbarIndex)
+{
+	int dx, xOrigin, yOrigin;
+
+	CIMACDoc* pDoc = GetDocument();
+	if (pDoc == NULL) return;
+	
+	BOOL bThirdAttribute = pDoc->IsThirdAttributeMode(pDoc->GetViewInstance());
+	GetColorbarBaseData(rcClient, dx, xOrigin, yOrigin);
+
+	int cbSize = GetColorBarSize();
+	COLORREF *pColorbar = GetColorBarPtr();
+
+	// intensity slider
+	int iy = (int) ((float)(rcSlider.bottom - rcSlider.top) * (1.0-m_intensity) + 0.5) + rcSlider.top;
+	if (point.x > rcSlider.left &&
+		point.y > iy-5 &&
+		point.y < iy+5) 
+	{
+		m_lbuttondown = TRUE;
+		CRect windowRect, clipRect;
+		clipRect = rcSlider;
+		pDC->GetWindow()->ClientToScreen(clipRect);
+		ClipCursor(clipRect);
+	}
+
+	// the colorbar
+	if (point.x > rcColorBar.left &&
+		point.x < (rcColorBar.right+80) && 
+		point.y > rcColorBar.top &&
+		point.y < rcColorBar.bottom )
+	{
+		m_colorbarIndex =(int) ( (float)(point.y-rcColorBar.top) /
+			(float)(rcColorBar.bottom-rcColorBar.top) * cbSize);
+		if (bThirdAttribute) m_colorbarIndex = cbSize - 1 - m_colorbarIndex;
+	}
+
+	// the pallet
+	int red, grn, blu;
+	int dist = (int)(sqrt((float)((point.x-xOrigin)*(point.x-xOrigin))  +
+			              (float)((point.y-yOrigin)*(point.y-yOrigin))) /dx ) - 1;
+	if (dist < NCOL && m_colorbarIndex >= 0) {
+		if (m_palletIndex >= 0) {
+			COLORREF *pallet = pDoc->GetPallet();
+			COLORREF pixelColor = pallet[m_palletIndex];
+			red = (int) (GetRValue(pixelColor) * m_intensity);
+			grn = (int) (GetGValue(pixelColor) * m_intensity);
+			blu = (int) (GetBValue(pixelColor) * m_intensity);
+		} else {
+			// the center greyshade was selected
+			red = (int) (255 * m_intensity);
+			grn = (int) (255 * m_intensity);
+			blu = (int) (255 * m_intensity);
+		}
+		pColorbar[m_colorbarIndex] = RGB(red, grn, blu);
+
+		// If the current color bar item is not ClassColors.cb or a user color file, save a *.cb version of the template
+		CColorBarCombo* pColorBarCombo = pDoc->GetColorBarComboPointer();
+		const CString selectedColorBarValue = pColorBarCombo->GetSelectedColorbarFile();
+		const int rootSelectedExtensionPos = selectedColorBarValue.ReverseFind('.');
+		const CString rootSelectedValue = selectedColorBarValue.Left(rootSelectedExtensionPos);
+		CStringArray& userColorBarFiles = pColorBarCombo->GetUserColorBarFiles();
+		const CString userColorBarFilesSubDir = "UserColorBarFiles";
+		const int findResult = Utilities::Find(userColorBarFiles, selectedColorBarValue);
+
+		if (findResult == -1) {
+			CStringArray arrNames;
+			arrNames.SetSize(MAXCLASS);
+
+			for (int i = 0; i < pDoc->GetClassCount(); i++) {
+				arrNames[i] = pDoc->GetClssName(i);
+			}
+			
+			CStringArray colorTemplateFiles;
+			CString projectDirectory = pDoc->GetProjectFullPath();
+			CString projects = "Projects";
+			const int projectsPos = projectDirectory.Find(projects);
+			const CString appDataDir = Utilities::GetAppDataDirectory();
+			const CString resourcesDirectory = appDataDir + "ColorBarTemplates";
+			Utilities::GetAllFileNames(colorTemplateFiles, resourcesDirectory, ".txt");
+			CString fileToConvert;
+
+			for (int i = 0; i < colorTemplateFiles.GetCount(); i++) {
+				const int templateNameExtPos = colorTemplateFiles[i].ReverseFind('.');
+				CString rootName = colorTemplateFiles[i].Left(templateNameExtPos);
+				CString msg;
+				
+				if (rootName == rootSelectedValue) {
+					const CString colorBarTemplateDirectory =
+						"\\" + projectDirectory.Mid(projectDirectory.ReverseFind('\\') + 1);
+					const int colorBarTemplateDirectoryExtPos = colorBarTemplateDirectory.ReverseFind('.');
+					const CString userColorBarFilesDir = projectDirectory.Left(projectsPos) + projects + "\\" + userColorBarFilesSubDir;
+					const CString userColorBarFilesProjectDir = userColorBarFilesDir + colorBarTemplateDirectory.Left(colorBarTemplateDirectoryExtPos);
+					fileToConvert = colorTemplateFiles[i];
+
+					CStringArray fileContents;
+					CStdioFile cFile;
+					CFile cFileOutput;
+					CString inputFilePath = resourcesDirectory + "\\" + fileToConvert;
+
+					if (cFile.Open(inputFilePath, CFile::modeRead) == FALSE) {
+						msg.Format("Cannot open file %s", inputFilePath);
+						AfxMessageBox(msg);
+						return;
+					}
+
+					// Get number of lines in the source file
+					int templateSrcLineCount = 0;
+					CString row;
+					try {
+						while (cFile.ReadString(row))
+						{
+							templateSrcLineCount++;
+							fileContents.Add(row);
+						}
+					}
+					catch (CFileException& ex) {
+						TCHAR   szCause[255];
+						ex.GetErrorMessage(szCause, 255);
+						AfxMessageBox(szCause);
+					}
+					const int linesToSkip = templateSrcLineCount / pDoc->GetClassCount();
+					CString fileOutput = userColorBarFilesProjectDir + "\\" + rootName + "UserFile" + ".cb";
+
+					if (cFileOutput.Open(fileOutput, CFile::modeCreate | CFile::modeWrite)
+						== FALSE) {
+						msg.Format("Cannot open file %s", fileOutput);
+						AfxMessageBox(msg);
+						return;
+					}
+
+					// Write template to *.cb file based on number of classes
+					CString line;
+					try {
+						int k = 0;
+						for (int j = 0; j < fileContents.GetCount(); j++) {
+							if (j % linesToSkip == 0) {
+								if (k < pDoc->GetClassCount()) {
+									line = fileContents[j] + " " + arrNames[k];
+									line = line.TrimRight();
+									line.Append("\r\n");
+									cFileOutput.Write(line, line.GetLength());
+								}
+								k++;
+							}
+						}
+					}
+					catch (CFileException& ex) {
+						TCHAR   szCause[255];
+						ex.GetErrorMessage(szCause, 255);
+						AfxMessageBox(szCause);
+					}
+					cFileOutput.Close();
+					cFile.Close();
+
+				}
+			}
+		}
+		
+		// Final legend color update steps
+		pDoc->m_bNewColorFlag=0xffffffff;
+		pDoc->SendColorbarToHeadwave();
+		pDoc->UpdateViews();
+	}
+}
+
+BOOL CColorBarView::DoLButtonClick (CDC *pDC, CPoint point, CRect rcClient, CRect rcSlider, CRect rcColorBar, 
+	BOOL &m_lbuttondown, float m_intensity, COLORREF &colorClick)
+{
+	int dx, xOrigin, yOrigin;
+	int index, slice;
+	double pi = atan(1.0)*4;
+	double theta;
+
+	CIMACDoc *pDoc = CIMACApp::GetDocument();
+	if (pDoc == NULL) return FALSE;
+
+	GetColorbarBaseData(rcClient, dx, xOrigin, yOrigin);
+
+	int cbSize = GetColorBarSize();
+	COLORREF *pColorbar = GetColorBarPtr();
+
+	// intensity slider
+	int iy = (int) ((float)(rcSlider.bottom - rcSlider.top) * (1.0-m_intensity) + 0.5) + rcSlider.top;
+	if (point.x > rcSlider.left &&
+		point.y > iy-5 &&
+		point.y < iy+5) 
+	{
+		m_lbuttondown = TRUE;
+		CRect windowRect, clipRect;
+		clipRect = rcSlider;
+		pDC->GetWindow()->ClientToScreen(clipRect);
+		ClipCursor(clipRect);
+		return FALSE;
+	}
+
+	// the colorbar
+	if (point.x > rcColorBar.left &&
+		point.x < (rcColorBar.right+80) && 
+		point.y > rcColorBar.top &&
+		point.y < rcColorBar.bottom )
+	{
+		index = (int) ( (float)(point.y-rcColorBar.top) /
+			(float)(rcColorBar.bottom-rcColorBar.top) * cbSize);
+		colorClick = pColorbar[index];
+		return TRUE;
+	}
+
+	// the pallet
+	int red, grn, blu;
+	int dist = (int)(sqrt((float)((point.x-xOrigin)*(point.x-xOrigin))  +
+			              (float)((point.y-yOrigin)*(point.y-yOrigin))) /dx ) - 1;	
+	if (dist < NCOL) {
+		theta = atan2((float)point.y-yOrigin, (float)point.x-xOrigin);
+		if (theta < 0) theta += 2*pi;
+			slice = (int) ((theta * 3.0 * NCOL) / pi);
+			if (dist >= 0) {
+				index = (slice*NCOL)+(NCOL-dist-1); // the index into m_pallet
+				COLORREF *pallet = pDoc->GetPallet();
+				COLORREF pixelColor = pallet[index];
+				red = (int) (GetRValue(pixelColor) * m_intensity);
+				grn = (int) (GetGValue(pixelColor) * m_intensity);
+				blu = (int) (GetBValue(pixelColor) * m_intensity);
+			} else {
+				// the center greyshade is selected
+				red = (int) (255 * m_intensity);
+				grn = (int) (255 * m_intensity);
+				blu = (int) (255 * m_intensity);
+			}
+			colorClick = RGB(red, grn, blu);
+			return TRUE;
+	}
+
+	return FALSE;
+}
+
+void CColorBarView::OnCbNames()
+{
+	CIMACDoc* pDoc = GetDocument();
+
+	if (!pDoc->IsColorbarOpenedFromCrossplotSettings()) {
+		CClassNameDlg dlg(this);
+		dlg.m_pDoc = pDoc;
+		for (int i = 0; i < pDoc->GetClassCount(); i++) {
+			dlg.m_arrNames[i] = pDoc->GetClssName(i);
+		}
+
+		if (dlg.DoModal() != IDOK) return;
+
+		for (int i = 0; i < pDoc->GetClassCount(); i++) {
+			pDoc->SetClassName(i, dlg.m_arrNames[i]);
+		}
+		Invalidate(FALSE);
+		pDoc->SetUpdateXplotPaneFlagsAll(TRUE);
+		pDoc->m_bNewColorFlag = 0xffffffff;
+		pDoc->UpdateViews();
+	}
+}
+
+void CColorBarView::OnCbExtend() 
+{
+	CIMACDoc* pDoc = GetDocument();
+	CNewColorbarDlg dlg;
+
+	int cbSize = GetColorBarSize();
+	COLORREF *pColorbar = GetColorBarPtr();	
+
+	int oldCount = cbSize;
+
+	while(true) {
+		dlg.m_ncolors = oldCount;
+		if (dlg.DoModal() != IDOK) return;
+		if (dlg.m_ncolors > MAXCLASS) {
+			CString msg;
+			msg.Format("maximum colors allowed: %d", MAXCLASS);
+			AfxMessageBox(msg);
+			dlg.m_ncolors = MAXCLASS;
+		}
+		int newCount = dlg.m_ncolors;
+
+		// check if any of the old colors are in use on any crossplots.
+		BOOL bConflict = FALSE;
+		CString msg;
+		if (!pDoc->IsThirdAttributeMode(pDoc->GetViewInstance())) {
+			msg = "Reducing the size of the color table results in the following conflicts:\n";
+			if (newCount < oldCount) {
+				for (int i = 0; i < pDoc->GetXplotCount(); i++) {
+					CXplotParms *pXp = pDoc->GetXplotParms(i);
+					for (int j = 0; j < pXp->GetCutoffCount(); j++) {
+						CCutoffParms *pCutoff = pXp->CutoffParmsGetAt(j);
+						for (int iColor = newCount; iColor < oldCount; iColor++) {
+							if (pCutoff->m_nClassAbove == iColor ||
+								pCutoff->m_nClassBelow == iColor ||
+                                pCutoff->m_applyTo == iColor) {
+                                bConflict = TRUE;
+								CString txt;
+								txt.Format("Crossplot: %d Cutoff Element: %d is using Class %d\n", i + 1, j + 1, iColor);
+								msg += txt;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if (bConflict) {
+			msg += "The above conflicts must be fixed before this operation can be performed.";
+			AfxMessageBox(msg);
+		} else {
+			if (pDoc->IsThirdAttributeMode(pDoc->GetViewInstance())) {
+				pDoc->SetColorBarSize(pDoc->GetViewInstance(), newCount);
+				pDoc->m_bNewColorFlag = 0xffffffff;
+			} else if (pDoc->IsColorbarOpenedFromCSI()) {
+				pDoc->SetCurrentColorBarCount(newCount);
+			} else {
+				pDoc->SetNClass(newCount);
+				pDoc->m_bNewColorFlag = 0xffffffff;
+			}
+
+			for (int i=(oldCount<newCount)?oldCount:newCount; i<MAXCBSIZE; i++) {
+				pColorbar[i] = NOCOLOR; 
+			}
+			m_colorbarIndex = -1;
+			pDoc->SendColorbarToHeadwave();
+			Invalidate(FALSE);
+			pDoc->UpdateViews();
+			return;
+		}
+	}
+}
+
+void CColorBarView::OnCbInterp() 
+{
+	CIMACDoc* pDoc = GetDocument();
+
+	int cbSize = GetColorBarSize();
+	COLORREF *pColorbar = GetColorBarPtr();
+
+	if (!pDoc->IsColorbarOpenedFromCSI()) {
+		pDoc->m_bNewColorFlag = 0xffffffff;
+	}
+
+	if (cbSize == 0) return;
+
+	pDoc->InterpolateColorbar(pColorbar, cbSize);
+
+	m_colorbarIndex = -1;
+	pDoc->SendColorbarToHeadwave();
+	Invalidate(FALSE);
+	pDoc->UpdateViews();
+}
+
+void CColorBarView::OnCbClear() 
+{
+	if (AfxMessageBox("Clear all colors in color bar?", MB_YESNO ) != IDYES) return;
+	CIMACDoc* pDoc = GetDocument();
+
+	int cbSize = GetColorBarSize();
+	COLORREF *pColorbar = GetColorBarPtr();
+
+	if (!pDoc->IsColorbarOpenedFromCSI()) {
+		pDoc->m_bNewColorFlag = 0xffffffff;
+	}
+
+	for (int i=0; i<MAXCBSIZE; i++) {
+		pColorbar[i] = NOCOLOR; 
+	}
+	m_colorbarIndex = -1;
+	pDoc->SendColorbarToHeadwave();
+	Invalidate(FALSE);
+	pDoc->UpdateViews();
+}
+
+void CColorBarView::OnCbOpen() 
+{
+	FILE *pf;
+	char buffer[BUFSIZE];
+	char *token;
+	char delimiters[] = " ,\t\n";
+	CString msg, fname, fsaveName;
+	CString fileFilter = "Colorbar Files (*.cb)|*.cb|Colorbar Templates (*.txt)|*.txt|All Files (*.*)|*.*|";
+	CIMACDoc* pDoc = GetDocument();
+
+	int cbSize = GetColorBarSize();
+	COLORREF *pColorbar = GetColorBarPtr();
+	
+	// Get directory for for color bar templates
+	const CString appDataDir = Utilities::GetAppDataDirectory();
+	const CString resourcesDirectory = appDataDir + "ColorBarTemplates";
+	CString projectDirectory = pDoc->GetProjectFullPath();
+	const CString projects = "Projects";
+	const int projectsPos = projectDirectory.Find(projects);
+	CString projectRootDirectory = projectDirectory.Left(projectsPos);
+	const CString colorBarTemplateDirectory =
+		"\\" + projectRootDirectory.Mid(projectRootDirectory.ReverseFind('\\') + 1);
+	const int colorBarTemplateDirectoryExtPos = colorBarTemplateDirectory.ReverseFind('.');
+	const CString userColorBarFilesDir = projectRootDirectory.Left(projectsPos) + projects + "\\" + projectRootDirectory;
+	const CString userColorBarFilesProjectDir = userColorBarFilesDir + colorBarTemplateDirectory.Left(colorBarTemplateDirectoryExtPos);
+	CColorBarCombo* pColorBarCombo = pDoc->GetColorBarComboPointer();
+	CString rootName;
+	int newCount = 0;
+
+	CFileDialog fileDialog(TRUE, "cb", NULL, OFN_HIDEREADONLY|OFN_FILEMUSTEXIST, fileFilter, this);
+	
+	if (fileDialog.DoModal() == IDOK)
+	{
+		fname = fileDialog.GetPathName();	
+        CString ext;
+    
+        if (fname.GetLength() > 3) {
+            ext =  fname.Mid(fname.GetLength() - 3);
+        }        
+		fsaveName = fname.Mid(fname.ReverseFind('\\') + 1);
+		int fSaveNameExtPos = fsaveName.ReverseFind('.');
+		rootName = fsaveName.Left(fSaveNameExtPos);
+
+		if (ext == ".cb" || ext != "txt") {
+			//Put *.cb file in project color bar dir and .txt project color template dir
+			CopyFile(fname, 
+				userColorBarFilesDir + "\\" + fsaveName, FALSE);
+
+			// Read the data in the file into QI-Pro
+			if ((pf = fopen(fname, "r")) == NULL) {
+				msg.Format("Cannot open file %s", fname);
+				AfxMessageBox(msg);
+				return;
+			}
+			int red, grn, blu;
+			CString className;
+			while (!feof(pf)) {
+				memset(buffer, 0, BUFSIZE);
+				if (fgets(buffer, BUFSIZE, pf) == NULL) {
+					if (ferror(pf)) {
+						msg.Format("Error reading file %s", fname);
+						AfxMessageBox(msg);
+						fclose(pf);
+						return;
+					}
+					continue; // eof
+				}
+				token = strtok(buffer, delimiters);
+				if (token) {
+					sscanf(token, "%d", &red);
+					token = strtok(NULL, delimiters);
+				}
+				if (token) {
+					sscanf(token, "%d", &grn);
+					token = strtok(NULL, delimiters);
+				}
+				if (token) {
+					sscanf(token, "%d", &blu);
+				}
+				else {
+					continue;
+				}
+				char* p = &token[strlen(token) + 1];
+				if (strlen(p) > 0) {
+					className = p;
+				}
+				else {
+					className.Empty();
+				}
+				if (newCount > MAXCLASS) {
+					CString msg;
+					msg.Format("maximum colors allowed: %d", MAXCLASS);
+					AfxMessageBox(msg);
+					newCount = MAXCLASS;
+					break;
+				}
+				pColorbar[newCount] = RGB(red, grn, blu);
+				if (!pDoc->IsThirdAttributeMode(pDoc->GetViewInstance()) && !pDoc->IsColorbarOpenedFromCSI()) {
+					pDoc->SetClassName(newCount, className);
+				}
+				newCount++;
+			}
+			fclose(pf);
+		}
+		else if (ext == "txt") {
+			newCount = pDoc->GetClassCount();
+
+			// Save template as color bar *.cb file
+			CStdioFile cFile;
+
+			if (cFile.Open(fname, CFile::modeRead) == FALSE) {
+				msg.Format("Cannot open file %s", fname);
+				AfxMessageBox(msg);
+				return;
+			}
+			CStringArray fileContents;
+
+			// Get number of lines in the source file
+			int templateSrcLineCount = 0;
+			CString row;
+			try {
+				while (cFile.ReadString(row))
+				{
+					templateSrcLineCount++;
+					fileContents.Add(row + "\n");
+				}
+			}
+			catch (CFileException& ex) {
+				TCHAR   szCause[255];
+				ex.GetErrorMessage(szCause, 255);
+				AfxMessageBox(szCause);
+			}
+
+			// Write out as color bar *.cb file from *.txt template based on number of classes
+			int extensionPos;
+			if (fsaveName.GetLength() > 3) {
+				extensionPos = fsaveName.ReverseFind('.');
+				rootName = fsaveName.Left(extensionPos);
+				const int linesToSkip = templateSrcLineCount / pDoc->GetClassCount();
+				CString fsaveFullPath = projectRootDirectory + "\\" + rootName + ".cb";
+				CFile cFileOutput;
+
+				if (cFileOutput.Open(fsaveFullPath, CFile::modeCreate | CFile::modeWrite)
+					== FALSE) {
+					msg.Format("Cannot open file %s", fsaveFullPath);
+					AfxMessageBox(msg);
+					return;
+				}
+
+				// Write template to *.cb file based on number of classes
+				try {
+					for (int j = 0; j < fileContents.GetCount(); j++) {
+						if (j % linesToSkip == 0) {
+							cFileOutput.Write(fileContents[j], fileContents[j].GetLength());
+						}
+					}
+				}
+				catch (CFileException& ex) {
+					TCHAR   szCause[255];
+					ex.GetErrorMessage(szCause, 255);
+					AfxMessageBox(szCause);
+				}
+				cFileOutput.Close();
+				cFile.Close();
+				pDoc->m_bNewColorFlag = 0xffffffff;
+			}
+		}
+		// Add value to color bar template combobox
+		pColorBarCombo->AddColorBarTemplateFile(rootName + ".cb");
+		
+		// Select the new file in the combobox
+		int nDex = pColorBarCombo->FindStringExact(0, rootName + ".cb");
+		if (nDex != CB_ERR)
+		{
+			pColorBarCombo->SetCurSel(nDex);
+			::SendMessage(pColorBarCombo->GetParentFrame()->GetSafeHwnd(), WM_COMMAND,
+				MAKEWPARAM(pColorBarCombo->GetDlgCtrlID(), CBN_SELCHANGE), reinterpret_cast<LPARAM>(pColorBarCombo->GetSafeHwnd()));
+		}
+
+		// Final config based on mode and class count
+		if (pDoc->IsColorbarOpenedFromCSI()) {
+			pDoc->SetCurrentColorBarCount(newCount);
+		} else {
+			pDoc->SetNClass(newCount);
+			pDoc->m_bNewColorFlag = 0xffffffff;
+		}
+		m_colorbarIndex = -1;
+		Invalidate(FALSE);
+		pDoc->UpdateViews();
+	}	
+}
+
+void CColorBarView::OnCbSave() 
+{	
+	CString fname, fsaveName;
+	CString fileFilter = "Colorbar Files (*.cb)|*.cb|All Files (*.*)|*.*|";
+	CIMACDoc* pDoc = GetDocument();	
+
+	CFileDialog fileDialog(FALSE, "cb", NULL, OFN_HIDEREADONLY|OFN_PATHMUSTEXIST, fileFilter, this);
+	CString projectDirectory = pDoc->GetProjectFullPath();
+	const CString userColorBarFiles = "UserColorBarFiles";
+	const CString projects = "Projects";
+	const int projectsPos = projectDirectory.Find(projects);
+	const CString colorBarTemplateDirectory =
+		"\\" + projectDirectory.Mid(projectDirectory.ReverseFind('\\') + 1);
+	const int colorBarTemplateDirectoryExtPos = colorBarTemplateDirectory.ReverseFind('.');
+	const CString userColorBarFilesDir = projectDirectory.Left(projectsPos) + projects + "\\" + userColorBarFiles;
+	const CString userColorBarFilesProjectDir = userColorBarFilesDir + colorBarTemplateDirectory.Left(colorBarTemplateDirectoryExtPos);
+	fileDialog.m_ofn.lpstrInitialDir = userColorBarFilesProjectDir;
+	
+	if (fileDialog.DoModal() == IDOK)
+	{
+		fname = fileDialog.GetPathName();
+        pDoc->ColorBarExport(fname);
+
+		// Get directory for for color bar templates
+		const CString appDataDir = Utilities::GetAppDataDirectory();
+		const CString resourcesDirectory = appDataDir + "ColorBarTemplates";
+		const int fnameExtPos = fname.ReverseFind('.');
+		CString ext = fname.Mid(fnameExtPos, 4);
+		fsaveName = fname.Mid(fname.ReverseFind('\\') + 1);
+		int fSaveNameExtPos = fsaveName.ReverseFind('.');
+		CString rootName = fsaveName.Left(fSaveNameExtPos);
+
+		//Put *.cb file in project color bar dir 
+		CopyFile(fname,
+			userColorBarFilesProjectDir + fsaveName, FALSE);
+	}	
+}
+
+void CColorBarView::OnCbHelp() 
+{
+	CCppUtil::OpenURL(CIMACApp::URL_HELP_CLASS_MANAGER);
+}
+
+void CColorBarView::OnCbExit()
+{
+	GetParentFrame()->PostMessage(WM_CLOSE);
+}
+
+BOOL CColorBarView::OnCommand(WPARAM wParam, LPARAM lParam)
+{
+	return TRUE;
+}
+
+BOOL CColorBarView::OnEraseBkgnd(CDC* pDC)
+{
+	return TRUE;
+}
+
+BOOL CColorBarView::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
+{
+	CIMACDoc* pDoc = CIMACDoc::GetIMACDocPtr();
+	if (m_cursor && !pDoc->IsDragMode()) {
+		if (m_cursor == IDC_NO) {
+			SetCursor(AfxGetApp()->LoadCursor(m_externalCursor));
+		}
+		else {
+			SetCursor(AfxGetApp()->LoadStandardCursor(m_cursor));
+		}
+		return TRUE;
+	}
+	return CView::OnSetCursor(pWnd, nHitTest, message);
+}
+
+void CColorBarView::OnUpdateCbNames(CCmdUI* pCmdUI)
+{
+	CIMACDoc* pDoc = GetDocument();
+	pCmdUI->Enable(!pDoc->IsColorbarOpenedFromCrossplotSettings());
+}
+
+

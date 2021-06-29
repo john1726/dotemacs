@@ -1,0 +1,26 @@
+Pipeline: Feature Requests and Defects
+Priority: Medium
+Name: Color wheel- Delete or insert new colors between classes
+Description: Addition of the ability to remove any color class or add more in between
+Software Component: Color Editor
+Rank: 3 - Med
+Video Link:
+
+2021.04.28
+I. Researching and implementing solution:
+
+
+IDR_MAPCONTEXT MENU
+BEGIN
+    POPUP "Map Context Popup"
+    BEGIN
+        MENUITEM "Line Select mode",            ID_MAP_SELECT
+        MENUITEM "Pan mode",                    ID_MAP_PAN
+        MENUITEM "Zoom Select Area",            ID_MAP_ZOOM
+        MENUITEM "Digitize User Line",          ID_MAP_DIGITIZE
+        MENUITEM SEPARATOR
+        MENUITEM "Zoom +",                      ID_MAP_ZOOM_UP
+        MENUITEM "Zoom -",                      ID_MAP_ZOOM_DOWN
+        MENUITEM "Zoom 0",                      ID_MAP_ZOOM_OFF
+    END
+END

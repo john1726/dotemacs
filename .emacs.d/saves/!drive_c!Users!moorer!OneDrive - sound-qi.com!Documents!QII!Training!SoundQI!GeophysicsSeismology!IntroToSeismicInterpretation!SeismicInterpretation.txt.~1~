@@ -1,0 +1,84 @@
+2021.03.31
+I. Intro to Seismic Interpretation with Carl Reine (se Intro to Seismic Interpretation Carl Reine.m4v):
+What Seismic Is: 
+-Rocks are separated into layers 
+-We have a seismic source which is an explosion, and then a seismic receiver
+-You get a trace, with your wave bouncing back at you 
+-You also have other issues where a truck driving would produce noise 
+-If you have many receivers, then you have a lot of offsets 
+-Another way to look at it is to consider a point down in the earth  
+-Then with all of the shots and receivers you have the same midpoint (this is called a common midpoint gather)
+-This is a prestack gather  
+-We need to figure out how to configure velocities to get to depth 
+-The data gets sent to processors, which do some things to remove some noise  
+-You can correct for time, which is called normal moveout correction (NMO)
+
+Prestack Gathers:
+-This is what your raw data might look like 
+-In the reds, you are seeing peaks 
+-If you are compressing the ground, and you have an increase in velocity (reds)
+-If you decrease the velocity, this is called an expansion (blue)
+-How bright or dim they are, you have how different ...
+-Along this green, your amplitudes at the near offset are not as ... as your far offsets 
+-If you look at the shape of that AVO curve, that tells you a lot about the properties of the earth  
+
+RF is just he amplitude of these reflections, Vp vs Vs  
+
+-A P wave (primary wave) is a compressional 
+-How fast it moves out is your P-wave velocity 
+-Shear wave is the S-wave 
+-The Shear wave, instead of it being a compression and expansion of particles, is particles moving back and forth 
+
+Equation:
+-When we talk about P-impedance  
+
+-Impedance is just a fancy way of saying velocity times density 
+-The reflectivity equation ..., the change in P-impadance, S-impedance, and desntiy ...we can get the properties back, and relate those to geology 
+-Shale which is quite soft is quite slow 
+-A limestone carbonate is very fast  
+-Shales don`t have a lot of space so they make poor reservoise 
+-Sandstones have more pores so they make better reservoirs  
+-Another thing we look at is clay content  
+-If you go behinda coral reef, you have bits of shell, and those combine to make a rock  
+-Calcite mineral has almost no pore space so they would not make a  good reservoir 
+
+Vp/Vs is good at showing if you have a high clay content 
+P-impedance is good for showing if you have a high porosity 
+
+-You look at the Xplot and you see different clusters 
+-High Vp/Vs 
+-High P-impedance is usually stiffer rocks like sandstone 
+
+-We work with the gathers, but most interpreters work with the stack
+
+2021.04.07
+I. Intro to Seismic Interpretation with Carl Reine Part 2:
+What Makes a Seismic Reflection and What Changes Occur?
+-On each layer, certain sound bounces back, and certain portion goes deeper.
+-How do we know how much bounces back, and how much goes deeper?
+
+Let R_0 = reflection coefficient
+ρ = density
+V = Velocity
+
+      V'p' * ρ_p - Vpρ_p
+R_0 = --------------------
+      V'p' * ρ_p + Vpρ_p
+	 
+Where V'p' = I_p (p-Impedance)
+
+-Each trace is one spot on the survey
+
+Rock Properties:
+-Rock grains: Made of different minerals, quarts, calcite, limestone, or clay
+-What goes on in between the mineral grains?  Most of the time it is filled with water.
+-The first layer in the ground is soil.  Pore space in soil is normally filled with air.
+-The next layer has pore spaces usually filled with water.
+-Eventually at a deeper layer you will get organic shales which are heavy clay-rich minerals.  This is organic rich which is plant or animal which eventuall. becomes oil.  Peat bogs that get squished can turn into goal.
+-Coral reefs that get squished can turn into oil and gas.  Whether it turns into oil, gas or coal is determined partly by the amount of pressure.
+-Oil which is lighter than water pushes up until it hits a rock layer than it cannot get past.
+-Same thing with gas--gas is going to bubble up.
+-We need to figure out, what is causing these amplitude to change, is it what is in the rock?
+-When companies are drilling wells they are trying to target traps.
+-Oil and water are going to change the rock properties differently
+

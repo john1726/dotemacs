@@ -1,0 +1,792 @@
+Pipeline: Feature Requests and Defects
+Priority: High
+Name: Third Attribute color bug
+Description: The third attribute color is showing up on the drop down options on the crossplot dialog. The above/below , apply to fields should show the colors from the classifed volume.
+Software Component: Crossplots
+Rank: 4 - Med/High
+Teams Video Link: https://web.microsoftstream.com/video/c4e1a1f6-f5a6-4561-ae50-b4fae6e870c8 at 34:00ff and
+    https://web.microsoftstream.com/video/5b1d00db-e7b8-4e30-a168-66c22f614795
+
+2021.01.06
+I. Researching and implementing solution:
+
+bookmark 
+38:48
+
+2021.01.08
+I. Researching and implementing solution:
+
+-In every step in a curve on a CV, every step is a sample.  
+
+See https://web.microsoftstream.com/video/5b1d00db-e7b8-4e30-a168-66c22f614795
+
+Reproduce bug:
+1) Once a crossplot is open, pen "Crossplot N Settings" and set it to the third attribute, "Seismic Attribute"
+2) Then in "Crossplot N Settings" chosze "Color Map" button which opens "Color Bar Editor" window
+3) While the "Color Bar Editor" window is open, go back to the "Crossplot N" which will open but you will see that all the attributes are red in "Class Below/Out"
+-If you cloase the "Color Bar Editor" window then the "Class Above/In" and "Class Below/Out" go back to normal
+
+See:
+
+COLORREF *CIMACDoc::GetColorBarPtr() {
+
+    COLORREF *pColorbar = NULL;
+    if (IsThirdAttributeMode(GetViewInstance())) {
+        pColorbar = GetColorBarPtr(GetViewInstance());
+    }
+    else if (IsColorbarOpenedFromCSI()) {
+        pColorbar = GetCurrentColorBarPtr();
+    }
+    else {
+        pColorbar = GetColorBar();
+    }
+    return pColorbar;
+}
+
+a) Which calls:
+
+int  GetViewInstance() { return m_viewInstance; 
+
+b) Which calls:
+
+COLORREF *CIMACDoc::GetColorBarPtr(int viewInstance)
+{
+	if (viewInstance < 0 || viewInstance >= NXPLOT) viewInstance = 0;
+
+	return &m_thirdAttributeBar[viewInstance*MAXCBSIZE];
+}
+
+Where:
+
+viewInstance = 1
+
+Where:
+
+COLORREF m_thirdAttributeBar[MAXCBSIZE*NXPLOT]
+
+#define NXPLOT 100		// The number of crossplot windows (this can be set up to 10,000 just because in the resource file we need to reserve that number of resource ids for ID_VIEW_XPLOTS and ID_EDIT_XPLOT_PARMS                         
+#define MAXCBSIZE 128	// the maximum size of the
+
+c) Which calls:
+
+int CIMACDoc::GetColorBarSize() {
+
+    int cbSize = 0;
+    if (IsThirdAttributeMode(GetViewInstance())) {
+        cbSize = GetColorBarSize(GetViewInstance());
+    }
+    else if (IsColorbarOpenedFromCSI()) {
+        cbSize = GetCurrentColorBarCount();
+    }
+    else {
+        cbSize = m_nClass;
+    }
+    return cbSize;
+}
+
+Where:
+
+cbSize = 21
+
+-----
+
+void CColorBarView::DrawCursorColor(CDC *pDC, CRect rcClient, CRect &rcSlider, CRect &rcColorBar, 
+	float intensity, int colorbarIndex, int colorbarIndexMouseMove)
+{
+    // ...
+    int cbSize = GetColorBarSize();
+    COLORREF *pColorbar = GetColorBarPtr();
+    // ...
+		if (colorbarIndexMouseMove > -1) {
+			pixelColor = pColorbar[colorbarIndexMouseMove];
+			if (pixelColor != NOCOLOR) {
+				red = GetRValue(pixelColor);
+				grn = GetGValue(pixelColor);
+				blu = GetBValue(pixelColor);
+				sText.Format("RGB(%d,%d,%d)", red, grn, blu);
+			} else {
+				red = grn = blu = 255;
+				sText.Empty();
+			}
+    // ...                        
+}    
+
+Where:
+
+red = 255
+grn = 51
+blu = 51    
+
+#define GetRValue(rgb)      (LOBYTE(rgb))
+#define GetGValue(rgb)      (LOBYTE(((WORD)(rgb)) >> 8))
+#define GetBValue(rgb)      (LOBYTE((rgb)>>16))
+
+but shouldn`t?
+
+	int red = (int)(GetRValue(classColor) * m_intensity);
+	int grn = (int)(GetGValue(classColor) * m_intensity);
+	int blu = (int)(GetBValue(classColor) * m_intensity);
+
+		// Update color bar stored on CIMACDoc
+		int red = atoi(m_arrColorR[i]);
+		int grn = atoi(m_arrColorG[i]);
+		int blu = atoi(m_arrColorB[i]);
+
+2021.01.13
+I. Researching and implementing solution:    
+    
+	if (colorbarIndex >= -1 || colorbarIndexMouseMove > -1) {
+		if (colorbarIndex > -1) {
+			pixelColor = pPallet[colorbarIndex];
+			red = (int) (GetRValue(pixelColor) * intensity);
+			grn = (int) (GetGValue(pixelColor) * intensity);
+			blu = (int) (GetBValue(pixelColor) * intensity);
+			sText.Format("RGB(%d,%d,%d)", red, grn, blu);
+		} else if (colorbarIndex == -1) {
+			red = (int) (255 * intensity);
+			grn = (int) (255 * intensity);
+			blu = (int) (255 * intensity);
+			sText.Format("RGB(%d,%d,%d)", red, grn, blu);
+		}
+		if (colorbarIndexMouseMove > -1) {
+			pixelColor = pColorbar[colorbarIndexMouseMove];
+			if (pixelColor != NOCOLOR) {
+				red = (int)(GetRValue(pixelColor) * intensity);
+				grn = (int)(GetGValue(pixelColor) * intensity);
+				blu = (int)(GetBValue(pixelColor) * intensity);
+				sText.Format("RGB(%d,%d,%d)", red, grn, blu);
+			} else {
+				red = grn = blu = 255;
+				sText.Empty();
+			}
+		}
+	} else {
+		red = grn = blu = 255;
+		sText.Empty();
+	}
+	
+--------------------------------------------------------------------------------
+
+-First click on ColorMap after settings "Scatter Color Mode" to "Seismic Attribute" and clicking "Color Map" which executes:
+
+        // ...
+	else {
+		red = grn = blu = 255;
+		sText.Empty();
+	}    
+
+Then when settings all values to error red it executes:
+
+		if (colorbarIndexMouseMove > -1) {
+			pixelColor = pColorbar[colorbarIndexMouseMove];
+			if (pixelColor != NOCOLOR) {
+				red = GetRValue(pixelColor);
+				grn = GetGValue(pixelColor);
+				blu = GetBValue(pixelColor);
+				sText.Format("RGB(%d,%d,%d)", red, grn, blu);
+			}
+                        // ...
+                }
+
+-Executes this line in ColorBarView::OnDraw(CDC *pDCin):
+    
+GetClientRect( &rcRect );
+
+		if (colorbarIndexMouseMove > -1) {
+			pixelColor = pColorbar[colorbarIndexMouseMove];
+			if (pixelColor != NOCOLOR) {
+				red = GetRValue(pixelColor);
+				grn = GetGValue(pixelColor);
+				blu = GetBValue(pixelColor);
+				sText.Format("RGB(%d,%d,%d)", red, grn, blu);
+			}
+                        // ...
+                }
+
+Where:
+
+colorbarIndex = -2
+colorbarIndexMouseMove = 12
+pixelColor = 16764108
+red = 204
+grn = 204
+blu = 255    
+    
+m_lstCutoffLines.SetItem(i, COL_CLASS_BELOW_OUT, LVIF_TEXT, _itoa(pCutoff->m_nClassBelow,ibuf,10), 0, 0, 0, 0);
+
+// populate the cutoff line list box
+void CCrossPlotSettingsDlg::PopulateCutoffList()
+{
+	char ibuf[NBUF];
+	m_lstCutoffLines.DeleteAllItems();
+	for (int i=0; i<m_nCutoffs; i++) {
+		CCutoffParms *pCutoff = &m_cutoffParmsList.GetAt(m_cutoffParmsList.FindIndex(i));
+		m_lstCutoffLines.InsertItem(i, _itoa(i + 1, ibuf, 10));
+		CString txt = pCutoff->m_bEnabled ? "Yes" : "No";
+		m_lstCutoffLines.SetItem(i, COL_ENABLED, LVIF_TEXT, txt, 0, 0, 0, 0);
+		m_lstCutoffLines.SetItem(i, COL_NAME, LVIF_TEXT, pCutoff->m_strCutoffName, 0, 0, 0, 0);
+		txt = (pCutoff->m_cutoffType==eLINE)?_T("Line"):
+		              (pCutoff->m_cutoffType==ePOLY)?_T("Polygon"):
+					  (pCutoff->m_cutoffType==eELLIPSE)?_T("Ellipse"):_T("Undefined");
+		m_lstCutoffLines.SetItem(i, COL_TYPE, LVIF_TEXT, txt, 0, 0, 0, 0);
+		m_lstCutoffLines.SetItem(i, COL_CLASS_ABOVE_IN, LVIF_TEXT, _itoa(pCutoff->m_nClassAbove,ibuf,10), 0, 0, 0, 0);
+		m_lstCutoffLines.SetItem(i, COL_CLASS_BELOW_OUT, LVIF_TEXT, _itoa(pCutoff->m_nClassBelow,ibuf,10), 0, 0, 0, 0);
+        m_lstCutoffLines.SetItem(i, COL_APPLY, LVIF_TEXT, _itoa(pCutoff->m_applyTo, ibuf, 10), 0, 0, 0, 0);
+        m_lstCutoffLines.SetItem(i, COL_GROUP, LVIF_TEXT, _itoa(pCutoff->m_nGroupID,ibuf,10), 0, 0, 0, 0);
+
+		COLORREF color = m_colorList[pCutoff->m_nClassAbove];
+		m_lstCutoffLines.SetSubitemColor(COL_CLASS_ABOVE_IN, i, color);
+		color = m_colorList[pCutoff->m_nClassBelow];
+		m_lstCutoffLines.SetSubitemColor(COL_CLASS_BELOW_OUT, i, color);
+		color = m_colorList[pCutoff->m_applyTo];
+		m_lstCutoffLines.SetSubitemColor(COL_APPLY, i, color);
+	}
+}
+
+Where:
+
+pCutoff->m_nClassBelow = 0
+
+Color not working:
+Locals:    
++		this	0x0000000ec42fba00 {hWnd=0x00000000000d1576 {unused=??? }}	CCrossPlotSettingsDlg *
+		color	3435973836	unsigned long
+		i	0	int
++		ibuf	0x0000000ec42f9d30 "12"	char[128]
++		pCutoff	0x00000148e6ef54e8 {m_strCutoffName="Impedance Cutoff\n" m_nClassBelow=0 m_nClassOutside=0 ...}	CCutoffParms *
++		txt	"Line"	ATL::CStringT<char,StrTraitMFC_DLL<char,ATL::ChTraitsCRT<char>>>
+    
+Autos:
+		COL_CLASS_ABOVE_IN	4	const int
+		COL_CLASS_BELOW_OUT	5	const int
+		COL_TYPE	3	const int
+		_itoa	0x00007ff6b2375deb {QI-Pro.exe!_itoa}	void *
+		eELLIPSE	eELLIPSE (2)	eCutoffType
+		i	0	int
++		ibuf	0x0000000ec42f83a0 "12"	char[128]
++		m_lstCutoffLines	{hWnd=0x0000000000220968 {unused=??? }}	CEditListCtrl
++		pCutoff	0x00000148e6ef54e8 {m_strCutoffName="Impedance Cutoff\n" m_nClassBelow=0 m_nClassOutside=0 ...}	CCutoffParms *
+		pCutoff->m_cutoffType	0	int
+		pCutoff->m_nClassAbove	12	int
+		pCutoff->m_nClassBelow	0	int
++		this	0x0000000ec42fa070 {hWnd=0x00000000007e0b26 {unused=??? }}	CCrossPlotSettingsDlg *
++		txt	"Line"	ATL::CStringT<char,StrTraitMFC_DLL<char,ATL::ChTraitsCRT<char>>>
+
+color = m_colorList[pCutoff->m_nClassBelow];
+    
+Where:
+
+pCutoff->m_nClassAbove = 12
+i = 0
+color = 255
+
+Locals:
+    
++		this	0x0000000ec42fa070 {hWnd=0x0000000000371764 {unused=??? }}	CCrossPlotSettingsDlg *
+		color	255	unsigned long
+		i	0	int
++		ibuf	0x0000000ec42f83a0 "1"	char[128]
++		pCutoff	0x00000148ee773288 {m_strCutoffName="Impedance Cutoff\n" m_nClassBelow=0 m_nClassOutside=0 ...}	CCutoffParms *
++		txt	"Line"	ATL::CStringT<char,StrTraitMFC_DLL<char,ATL::ChTraitsCRT<char>>>
+    
+    
+-----
+
+Color is working:
+
+Locals:
++		this	0x0000000ec42fba00 {hWnd=0x00000000004b0898 {unused=??? }}	CCrossPlotSettingsDlg *
+		color	3435973836	unsigned long
+		i	0	int
++		ibuf	0x0000000ec42f9d30 "12"	char[128]
++		pCutoff	0x00000148e6ef54e8 {m_strCutoffName="Impedance Cutoff\n" m_nClassBelow=0 m_nClassOutside=0 ...}	CCutoffParms *
++		txt	"Line"	ATL::CStringT<char,StrTraitMFC_DLL<char,ATL::ChTraitsCRT<char>>>
+
+Autos:
+		COL_CLASS_ABOVE_IN	4	const int
+		COL_CLASS_BELOW_OUT	5	const int
+		COL_TYPE	3	const int
+		_itoa	0x00007ff6b2375deb {QI-Pro.exe!_itoa}	void *
+		eELLIPSE	eELLIPSE (2)	eCutoffType
+		i	0	int
++		ibuf	0x0000000ec42f9d30 "12"	char[128]
++		m_lstCutoffLines	{hWnd=0x00000000002306ae {unused=??? }}	CEditListCtrl
++		pCutoff	0x00000148e6ef54e8 {m_strCutoffName="Impedance Cutoff\n" m_nClassBelow=0 m_nClassOutside=0 ...}	CCutoffParms *
+		pCutoff->m_cutoffType	0	int
+		pCutoff->m_nClassAbove	12	int
+		pCutoff->m_nClassBelow	0	int
++		this	0x0000000ec42fba00 {hWnd=0x0000000000800b26 {unused=??? }}	CCrossPlotSettingsDlg *
++		txt	"Line"	ATL::CStringT<char,StrTraitMFC_DLL<char,ATL::ChTraitsCRT<char>>>
+    
+color = m_colorList[pCutoff->m_nClassBelow];
+    
+Where:
+    
+pCutoff->m_nClassAbove = 12
+i = 0    
+color = 9474192
+    
+Locals:
+
++		this	0x0000000ec42fa070 {hWnd=0x00000000006314ce {unused=??? }}	CCrossPlotSettingsDlg *
+		color	9474192	unsigned long
+		i	8	int
++		ibuf	0x0000000ec42f83a0 "0"	char[128]
++		pCutoff	0x00000148ee773b48 {m_strCutoffName="14-16%\n" m_nClassBelow=0 m_nClassOutside=0 ...}	CCutoffParms *
++		txt	"Polygon"	ATL::CStringT<char,StrTraitMFC_DLL<char,ATL::ChTraitsCRT<char>>>
+
+    
+pCutoff->m_cutoffType = 0
+    
+-----
+
+		txt = (pCutoff->m_cutoffType==eLINE)?_T("Line"):
+                      (pCutoff->m_cutoffType==ePOLY)?_T("Polygon"):
+                      (pCutoff->m_cutoffType==eELLIPSE)?_T("Ellipse"):_T("Undefined");
+
+    
+-----
+
+	m_colorList.RemoveAll();
+	for (int i = 0; i < pDoc->GetClassCount(); i++) {
+		m_colorList.Add(pColorbar[i]);
+		m_lstCutoffLines.SetSubitemColor(COL_CLASS_ABOVE_IN, i, pColorbar[i]);
+		m_lstCutoffLines.SetSubitemColor(COL_CLASS_BELOW_OUT, i, pColorbar[i]);
+		m_lstCutoffLines.SetSubitemColor(COL_APPLY, i, pColorbar[i]);
+	}
+
+pDoc->GetClassCount()
+25
+
+pColorbar[i] = 9474192
+    
+m_colorComboMap
+
+CString txt = m_lstCutoffLines.GetItemText(i, COL_TYPE);
+
+m_lstCutoffLines
+
+newCutoff
+{m_strCutoffName="Impedance Cutoff\n" m_nClassBelow=0 m_nClassOutside=0 ...}
+    CObject: {...}
+    m_strCutoffName: "Impedance Cutoff\n"
+    m_nClassBelow: 0
+    m_nClassOutside: 0
+    m_nClassAbove: 12
+    m_nClassInside: 12
+    m_localVersion: 12
+    m_applyTo: 0
+    m_fIntercept: 58.1595116
+    m_fSlope: -0.412269950
+    lx1: 171
+    ly1: 240
+    lx2: 502
+    ly2: 293
+    rlx1: 0.147173494
+    rly1: 0.412065446
+    rlx2: 0.825536072
+    rly2: 0.526584864
+    m_cutoffType: 0
+    m_nGroupID: 1
+    m_bEnabled: 1
+    m_nPolyData: 0
+    m_arrPolyData: {m_pData=0x00000148edc23540 {x=0 y=0} m_nSize=50 m_nMaxSize=50 ...}
+    m_arrScalars: {m_pData=0x00000148ee81c930 {x=-1.00000000 y=-1.00000000 } m_nSize=50 m_nMaxSize=50 ...}
+    polyRgn: {...}
+    m_bPolyCreated: 0
+    m_ellipse: {m_version=2 m_xOrigin=0.00000000 m_yOrigin=0.00000000 ...}
+    m_nVersion: -858993460
+    m_this: 0xcccccccccccccccc
+
+Not working:
+    
+    if (IsThirdAttributeMode(GetViewInstance())) {
+        pColorbar = GetColorBarPtr(GetViewInstance());
+    }
+
+BOOL CIMACDoc::IsThirdAttributeMode(int viewInstance)
+{
+	BOOL bReturn = FALSE;
+	CXplotParms *pXpParms;
+	if (viewInstance >= 0) {
+		pXpParms = GetXplotParms(viewInstance);
+
+		bReturn = pXpParms->IsThirdAttributeMode();
+	}
+
+	return bReturn;
+}
+
+Where:
+
+pXpParms
+0x00000148e714bb58 {m_cutoffParmsList={m_pNodeHead=0x00000148e71a1c38 {pNext=0x00000148e71a1d50 {pNext=...} ...} ...} ...}
+    CObject: {...}
+    m_cutoffParmsList: {m_pNodeHead=0x00000148e71a1c38 {pNext=0x00000148e71a1d50 {pNext=0x00000148e71a1e68 {pNext=0x00000148e71a1f80 {...} ...} ...} ...} ...}
+    m_version: 16
+    m_title: "porosity"
+    m_strXAttr: "lambda_rho"
+    m_strYAttr: "mu_rho"
+    m_strColorAttr: "angle_stack_15"
+    x1: 171
+    y1: 81
+    x2: 502
+    y2: 389
+    m_fXMin: 0.00000000
+    m_fXMax: 50.0000000
+    m_fYMin: 0.00000000
+    m_fYMax: 120.000000
+    m_xLabelInterval: 0.00000000
+    m_yLabelInterval: 0.00000000
+    m_xTickInterval: 0.00000000
+    m_yTickInterval: 0.00000000
+    m_dotSize: 1
+    m_nScatter: 1
+    m_nScatterMode: 2
+    m_binXsize: 0.00000000
+    m_binYsize: 0.00000000
+    m_colorBarMin: 0
+    m_colorBarMax: 0
+    m_bFineTuneMode: 0
+    m_bFirstWinPlacement: 0
+    m_rcParentWin: {LT(-8, -8) RB(1928, 1048)  [1936 x 1056]}
+    m_strImageFile: "C:\\QI-Pro Demo\\Horn River Demo\\Templates\\HornRiver_LMR_CrossPlot.bmp"
+    m_bDisableImage: 0
+    m_bGroupMove: 1
+    m_csiXstate: 0
+    m_csiYstate: 0
+    rcWinFrame: {LT(938, 287) RB(1752, 946)  [814 x 659]}
+    rcWinClient: {LT(0, 0) RB(637, 562)  [637 x 562]}
+    pSegyX: 0x00000148e70e6d70 {pInLine=0x00000148e71aa250 {5440} pXLine=0x00000148e71acb60 {1225} pXCoord=0x00000148e6f5c180 {...} ...}
+    segyXindex: 7
+    pSegyY: 0x00000148e70e2b40 {pInLine=0x00000148e71acff0 {5440} pXLine=0x00000148e71ab490 {1225} pXCoord=0x00000148e6f5d340 {...} ...}
+    segyYindex: 8
+    m_bDeleteUndoStack: 0
+    m_bNewAxisFlag: 0
+    m_densityModeUpdateFlag: 1
+    m_classSelectState: {m_pData=0x00000148e71f6e60 {1} m_nSize=50 m_nMaxSize=50 ...}
+    m_zoneSelectState: {m_pData=0x00000148e71f61a0 {0} m_nSize=50 m_nMaxSize=50 ...}
+    m_activeButton: 1
+    m_allButton: 0
+    m_attrColorBarMin: 0.00000000
+    m_attrColorBarMax: 0.00000000
+
+pXpParms->IsThirdAttributeMode()
+true
+bReturn = 1    
+GetViewInstance()
+1
+    
+pColorbar
+0x00000148e713d2a4 {255}
+
+    int  GetViewInstance() { return m_viewInstance; }
+    
+
+	COLORREF *pColorbar = NULL;
+	if (!bSeismicWindow) {
+		cbSize = GetColorBarSize();
+		pColorbar = GetColorBarPtr();
+	}
+	else {
+		cbSize = pDoc->GetColorBarSize(-1);
+		pColorbar = pDoc->GetColorBar();
+	}
+
+    
+Where:
+
+bSeismicWindow = 0
+
+pDoc->GetClassCount()
+25
+
+m_lstCutoffLines.m_colorComboMap.SetAt(COL_CLASS_ABOVE_IN, &m_colorList);
+
+Where:
+
+m_colorList
+{m_pData=0x00000148e6e63bd0 {255} m_nSize=25 m_nMaxSize=25 ...}
+    CObject: {...}
+    m_pData: 0x00000148e6e63bd0 {255}
+    m_nSize: 25
+    m_nMaxSize: 25
+    m_nGrowBy: 0
+
+-		m_pData	0x00000148e6e63bd0 {255}	unsigned long *
+			255	unsigned long
+		m_nSize	25	__int64
+		m_nMaxSize	25	__int64
+
+COLORREF *CIMACDoc::GetColorBarPtr() {
+
+    COLORREF *pColorbar = NULL;
+    if (IsThirdAttributeMode(GetViewInstance())) {
+        pColorbar = GetColorBarPtr(GetViewInstance());
+    }
+    else if (IsColorbarOpenedFromCSI()) {
+        pColorbar = GetCurrentColorBarPtr();
+    }
+    else {
+        pColorbar = GetColorBar();
+    }
+    return pColorbar;
+}
+
+Why is it wrong to call:
+
+pColorbar = GetColorBarPtr(GetViewInstance());    
+
+Where:
+
+COLORREF *CIMACDoc::GetColorBarPtr(int viewInstance)
+{
+	if (viewInstance < 0 || viewInstance >= NXPLOT) viewInstance = 0;
+
+	return &m_thirdAttributeBar[viewInstance*MAXCBSIZE];
+}
+
+enum eScatterMode { eCLASS, eDENSITY, eATTR };    
+
+-----
+    
+Works:
+
+Calls:
+
+    pColorbar = GetColorBar();
+
+Where:
+
++		pColorbar	0x00000148e713cea4 {9474192}	unsigned long *
+    
+Where:
+
+COLORREF * GetColorBar() { return m_colorbar; }    
+
+COLORREF *CIMACDoc::GetColorBarPtr() {
+
+    COLORREF *pColorbar = NULL;
+    if (IsThirdAttributeMode(GetViewInstance())) {
+        pColorbar = GetColorBarPtr(GetViewInstance());
+    }
+    else if (IsColorbarOpenedFromCSI()) {
+        pColorbar = GetCurrentColorBarPtr();
+    }
+    else {
+        pColorbar = GetColorBar();
+    }
+    return pColorbar;
+}
+
+Where:    
+    
+COLORREF *CIMACDoc::GetColorBarPtr(int viewInstance)
+{
+	if (viewInstance < 0 || viewInstance >= NXPLOT) viewInstance = 0;
+
+	return &m_thirdAttributeBar[viewInstance*MAXCBSIZE];
+}
+
+int  GetViewInstance() { return m_viewInstance; }
+
+-----
+
+			COLORREF *colorbar;
+			if (pXpParms->m_nScatterMode == eATTR) {
+				colorbar = pDoc->GetColorBarPtr(m_viewInstance);
+			}
+			else {
+				colorbar = pDoc->GetColorBar();
+			}
+
+    
+    
+void CCrossPlotSettingsDlg::OnClickedColormap()
+{
+	CIMACDoc *pDoc = CIMACDoc::GetIMACDocPtr();
+	pDoc->SetViewInstance(m_viewInstance);
+
+	//set the color flag, so the view can use the new colormap
+	DWORD theMagicBit = 0x1 << (m_viewInstance + 2);
+	pDoc->m_bNewColorFlag |= theMagicBit;		// turn on the update bit
+
+	AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_EDIT_COLORBAR);
+	OnOK();
+}
+
+pColorbar = GetColorBar();
+
+	COLORREF *pColorbar = NULL;
+	if (!bSeismicWindow) {
+		cbSize = GetColorBarSize();
+		pColorbar = GetColorBarPtr();
+	}
+	else {
+		cbSize = pDoc->GetColorBarSize(-1);
+		pColorbar = pDoc->GetColorBar();
+	}
+
+    
+2021.01.14
+I. Researching and implementing solution:    
+
+void CCrossPlotSettingsDlg::SaveActiveData()
+{	
+	for (int i=0; i<m_nCutoffs; i++) {
+		CCutoffParms newCutoff = m_cutoffParmsList.GetAt(m_cutoffParmsList.FindIndex(i));
+		newCutoff.m_strCutoffName = m_lstCutoffLines.GetItemText(i, COL_NAME);
+		newCutoff.m_nClassAbove = atoi(m_lstCutoffLines.GetItemText(i, COL_CLASS_ABOVE_IN));
+		newCutoff.m_nClassBelow = atoi(m_lstCutoffLines.GetItemText(i, COL_CLASS_BELOW_OUT));
+        newCutoff.m_applyTo     = atoi(m_lstCutoffLines.GetItemText(i, COL_APPLY));
+        newCutoff.m_nGroupID    = atoi(m_lstCutoffLines.GetItemText(i, COL_GROUP));
+		CString txt = m_lstCutoffLines.GetItemText(i, COL_TYPE);
+		newCutoff.m_cutoffType = (txt == "Line")? eLINE: (txt == "Polygon")? ePOLY: eELLIPSE;
+		txt = m_lstCutoffLines.GetItemText(i, COL_ENABLED);
+		newCutoff.m_bEnabled = (txt == "Yes") ? TRUE : FALSE;
+
+		
+		m_cutoffParmsList.SetAt(m_cutoffParmsList.FindIndex(i), newCutoff);
+	}
+}
+
+Where:
+
+newCutoff.m_cutoffType = 1    
+
+Called from:
+
+void CCrossPlotSettingsDlg::OnOK()
+{
+	UpdateData(TRUE);
+	SaveActiveData();
+	int xCurSel = m_xAttrCombo.GetCurSel();
+	int yCurSel = m_yAttrCombo.GetCurSel();
+	int cCurSel = m_thirdAttribute.GetCurSel();
+
+	m_strXAttr = _T("");
+	m_strYAttr = _T("");
+	m_strColorAttr = _T("");
+
+	if (xCurSel >= 0) {
+		m_xAttrCombo.GetLBText(xCurSel, m_strXAttr);
+	} 
+	if (yCurSel >= 0){
+		m_yAttrCombo.GetLBText(yCurSel, m_strYAttr);
+	}
+	if (cCurSel >= 0) {
+		m_thirdAttribute.GetLBText(cCurSel, m_strColorAttr);
+	}
+	CDialog::OnOK();
+}    
+
+--------------------------------------------------------------------------------
+
+ 
+
+From: Roger Moore 
+Sent: January 14, 2021 8:57 AM
+To: Kevin Lee <kevin@sound-qi.com>
+Subject: RE: question about getting color bar ptr "pColorBar = GetColorbar()" vs "IsThirdAttributeMode"
+
+I see, the GetColorBarPtr() need to be called to retrieve the custom color map.
+
+Then I just need to figure out how the m_cutoffType gets modified, because when the crossplot settings work it always has txt == "Polygon" but when it doesn’t work txt == "Line":
+
+                 txt = (pCutoff->m_cutoffType==eLINE)?_T("Line"):
+                               (pCutoff->m_cutoffType==ePOLY)?_T("Polygon"):
+                                              (pCutoff->m_cutoffType==eELLIPSE)?_T("Ellipse"):_T("Undefined");
+
+This is what I have found so far:
+
+newCutoff.m_cutoffType = (txt == "Line")? eLINE: (txt == "Polygon")? ePOLY: eELLIPSE;
+
+and,
+
+newCutoff.m_cutoffType    = dlg.m_cutoffType;
+
+
+From: Kevin Lee <kevin@sound-qi.com> 
+Sent: January 13, 2021 5:12 PM
+To: Roger Moore <roger@sound-qi.com>
+Subject: RE: question about getting color bar ptr "pColorBar = GetColorbar()" vs "IsThirdAttributeMode"
+
+I think it will fix the problem with the list control showing the wrong colors but what will happen to the Color Map button?  Will it stil bring up the correct color map?
+
+
+
+From: Roger Moore <roger@sound-qi.com> 
+Sent: Wednesday, January 13, 2021 5:07 PM
+To: Kevin Lee <kevin@sound-qi.com>
+Subject: RE: question about getting color bar ptr "pColorBar = GetColorbar()" vs "IsThirdAttributeMode"
+
+Okay thx, but I am still not sure the best way to resolve the bug.  Does it make sense to you if I simply change OnInitDialog() from:
+
+BOOL CCrossPlotSettingsDlg::OnInitDialog()
+{
+    // …
+    COLORREF* pColorbar = pDoc->GetColorBarPtr();
+    // …
+}
+
+To:
+
+BOOL CCrossPlotSettingsDlg::OnInitDialog()
+{
+    // …
+    COLORREF* pColorbar = pDoc->GetColorBar();
+    // …
+}
+
+??
+
+Feel free to let me know if you have any further questions, concerns or issues.
+
+All the best,
+
+Roger
+
+
+From: Kevin Lee <kevin@sound-qi.com> 
+Sent: January 13, 2021 4:43 PM
+To: Roger Moore <roger@sound-qi.com>
+Subject: RE: question about getting color bar ptr "pColorBar = GetColorbar()" vs "IsThirdAttributeMode"
+
+The function GetColorBar() returns the color bar used for the classified section.  That’s the one you want to use.  The other function GetColorBarPtr() tries to figure out the appropriate colorbar to return, if it’s third attribute or CSI.  
+The function GetColorBarPtr(int viewInstance)  always returns the third attribute color bar.  Maybe it should have been named something else, but it’s working now we should leave it as is.
+
+Does that help?
+
+
+From: Roger Moore <roger@sound-qi.com> 
+Sent: Wednesday, January 13, 2021 4:26 PM
+To: Kevin Lee <kevin@sound-qi.com>
+Subject: question about getting color bar ptr "pColorBar = GetColorbar()" vs "IsThirdAttributeMode"
+
+Kevin, when I check the code, the top portion with the GetViewInstance() is the one that is called when all of the Class Below/Out colors are red:
+
+COLORREF *CIMACDoc::GetColorBarPtr() {
+
+COLORREF *pColorbar = NULL;
+if (IsThirdAttributeMode(GetViewInstance())) {
+pColorbar = GetColorBarPtr(GetViewInstance());
+}
+else if (IsColorbarOpenedFromCSI()) {
+pColorbar = GetCurrentColorBarPtr();
+}
+else {
+pColorbar = GetColorBar();
+}
+return pColorbar;
+}
+When when the crossplot display settings open with the colors working, it calls the pColorBar = GetColorbar() code.
+
+So my question is, why is it necessary to call the IsThirdAttributeMode? What advantage does that provide? Why don`t we just have both cases call the pColorBar = GetColorbar()?
+
+All the best,
+
+Roger
+ 
+--------------------------------------------------------------------------------
+
+    

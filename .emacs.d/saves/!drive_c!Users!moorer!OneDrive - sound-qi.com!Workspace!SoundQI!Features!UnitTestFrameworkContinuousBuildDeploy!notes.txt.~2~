@@ -1,0 +1,16 @@
+Pipeline: Feature Requests and Defects
+Priority: High
+Name: Unit test framework and Continuous build and deployment
+Description: Configure the framework for unit testing, add a few example unit tests so developers can write appropriate unit tests as needed. Also as part of this ticket configure Continuous build / deployment. A new build should run every night on the current source with the resulting executable available for the support and testing group.
+Software Component: Crossplots
+Rank: 3 - Med
+Teams Video Link:
+
+TeamCity port: 8111
+Own port: 9090 
+
+-Run TeamCity under SYSTEM account (as opposed to User)
+
+TeamCity account:
+moorer
+

@@ -1,0 +1,1049 @@
+// EditListCtrl.cpp : implementation file
+//
+
+#include "stdafx.h"
+#include "EditListCtrl.h"
+#define  BUTTON_QUANTUM 100
+
+// CEditListCtrl
+
+IMPLEMENT_DYNAMIC(CEditListCtrl, CListCtrl)
+
+CEditListCtrl::CEditListCtrl()
+{
+	m_item = 0;
+	m_subitem = 0; 
+	m_erase = TRUE;
+	// user settings...
+	m_editItemFlag = FALSE;	// allow edit of item value (first column)
+	m_coloredSubitemLow = -1;  // which subitem to display in color. Colors from m_arrColors
+	m_coloredSubitemHi = -1;  // which subitem to display in color. Colors from m_arrColors
+	m_coloredTexMode = FALSE; // by default background is colored. Set this flag to color the text instead.
+	m_colorCount = 0;
+	m_comboWnd.pParent = this;
+	m_colorComboWnd.pParent = this;
+	m_bSetExtendedStyle = FALSE;
+	m_iClipboardItem = -1;
+	m_pArrButtons = new CButtonArray;
+	m_pArrButtons->SetSize(BUTTON_QUANTUM);
+	m_buttonsCreated.SetSize(BUTTON_QUANTUM, BUTTON_QUANTUM);
+	m_checkBoxState.SetSize(BUTTON_QUANTUM, BUTTON_QUANTUM);
+	for (int i = 0; i < m_buttonsCreated.GetSize(); i++) {
+		m_buttonsCreated[i] = 0;
+	}
+	m_checkboxCol = -1;
+	m_boldTextMode = FALSE;
+}
+
+CEditListCtrl::~CEditListCtrl()
+{
+	delete m_pArrButtons;
+}
+
+
+BEGIN_MESSAGE_MAP(CEditListCtrl, CListCtrl)
+	ON_WM_LBUTTONDOWN()
+	ON_NOTIFY_REFLECT(LVN_BEGINLABELEDIT, OnLvnBeginlabeledit)
+	ON_NOTIFY_REFLECT(LVN_ENDLABELEDIT, OnLvnEndlabeledit)
+	ON_WM_PAINT() 
+	ON_WM_ERASEBKGND()
+	ON_WM_KEYDOWN()
+	ON_WM_CHAR()
+	ON_NOTIFY_REFLECT(NM_CUSTOMDRAW, &CEditListCtrl::OnNMCustomdraw)
+END_MESSAGE_MAP()
+
+void  CEditListCtrl::SetSubitemColor(int column, int index, DWORD color) 
+{ 
+	int arrSize = (int) m_arrColors[column].GetSize();
+	const COLORREF whiteColor = RGB(255, 255, 255);
+	if (index >= arrSize) {
+		m_arrColors[column].SetSize(arrSize + 3);
+	}
+
+	if (color == NOCOLOR) {
+		m_arrColors[column][index] = whiteColor;
+
+		CRect rect;
+		GetSubItemRect(m_item, m_subitem, LVIR_LABEL, rect);
+		CDC* pDc = GetDC();
+		
+		ReleaseDC(pDc);
+	}
+	else {
+		m_arrColors[column][index] = color;
+	}
+}
+
+void CEditListCtrl::ResetSubItemColorArray()
+{
+	for (int i = 0; i < MAX_COL_COUNT; i++) {
+		m_arrColors[i].RemoveAll();
+	}
+}
+
+void CEditListCtrl::ReallocateCheckboxArrays()
+{
+	int count = (int) m_pArrButtons->GetSize();
+	int newQuantum = (count / BUTTON_QUANTUM + 1) * BUTTON_QUANTUM;
+	CButtonArray *pNewButtons = new CButtonArray;
+	pNewButtons->SetSize(newQuantum);
+
+	//create copies of the original buttons and copy the check state.
+	for (int i = 0; i < m_pArrButtons->GetSize(); i++) {
+		CRect rect;
+		m_pArrButtons->GetAt(i).GetWindowRect(&rect);
+		m_pArrButtons->GetAt(i).GetWindowRect(&rect);
+		ScreenToClient(&rect);
+		pNewButtons->GetAt(i).Create("", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, rect, this, 0);
+
+		int check = m_pArrButtons->GetAt(i).GetCheck();
+		pNewButtons->GetAt(i).SetCheck(check);
+	}
+
+	// flag the new buttons as not created
+	for (int i = (int) m_pArrButtons->GetSize(); i < newQuantum; i++) {
+		m_buttonsCreated.SetAtGrow(i, 0);
+		m_checkBoxState.SetAtGrow(i, 0);
+	}
+
+	// finally remove the old button array and switch the pointer to the new array.
+	delete m_pArrButtons;
+	m_pArrButtons = pNewButtons;
+
+}
+
+void CEditListCtrl::RemoveCheckbox(int index)
+{
+	int count = (int)m_pArrButtons->GetSize();
+	CButtonArray* pNewButtons = new CButtonArray;
+	pNewButtons->SetSize(count);
+
+
+	for (int i = 0; i < index; i++) {
+		m_buttonsCreated.SetAtGrow(i, m_buttonsCreated.GetAt(i));
+		m_checkBoxState.SetAtGrow(i, m_checkBoxState.GetAt(i));
+	}
+
+	// move up all elements after index
+	for (int i = index + 1; i < count; i++) {
+		m_buttonsCreated.SetAtGrow(i-1, m_buttonsCreated.GetAt(i));
+		m_checkBoxState.SetAtGrow(i-1, m_checkBoxState.GetAt(i));
+	}
+
+	// add last one as 0
+	m_buttonsCreated.SetAtGrow(count-1, 0);
+	m_checkBoxState.SetAtGrow(count-1, 0);
+
+
+	//create copies of the original buttons and copy the check state.
+	for (int i = 0; i < m_pArrButtons->GetSize(); i++) {
+		if (m_buttonsCreated.GetAt(i) == 1) {
+			CRect rect;
+			m_pArrButtons->GetAt(i).GetWindowRect(&rect);
+			m_pArrButtons->GetAt(i).GetWindowRect(&rect);
+			ScreenToClient(&rect);
+			pNewButtons->GetAt(i).Create("", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, rect, this, 0);
+
+			int check = m_checkBoxState.GetAt(i);
+			pNewButtons->GetAt(i).SetCheck(check);
+		}
+	}
+
+	// finally remove the old button array and switch the pointer to the new array.
+	delete m_pArrButtons;
+	m_pArrButtons = pNewButtons;
+}
+
+void CEditListCtrl::SetBoldTextMode(BOOL flag)
+{
+	m_boldTextMode = flag;
+	// create bold font
+	if (m_boldTextMode) {
+		CFont* pFont = GetFont();
+		if (pFont)
+		{
+			LOGFONT logfont;
+			pFont->GetLogFont(&logfont);
+			logfont.lfWeight = FW_BOLD;
+			m_fontBold.CreateFontIndirect(&logfont);
+		}
+	}
+}
+
+void CEditListCtrl::SetSubitemBold(int index, BOOL flag)
+{
+	int arrSize = (int)m_arrBold.GetSize();
+	if (index >= arrSize) {
+		m_arrBold.SetSize(index + 3);
+	}
+	m_arrBold[index] = flag;
+}
+
+void CEditListCtrl::SortByColumn(int index, bool isAscending, SortType type)
+{
+	// Get row and selected column
+	int row = GetItemCount();
+	int col = index;
+
+	SortData.SetCol(col, isAscending);
+
+	// iterate through the column items and create an item data object containing it's text 
+	while (row--) {
+		SetItemData(row, (LPARAM) new ItemData((DWORD)GetItemData(row), GetItemText(row, col)));
+	}
+
+	// call the SortItems function that will sort ascending or descending depending on
+	// the flag set in the SortData struct
+	if (type == SortType::TFloat)
+		SortItems(&CEditListCtrl::CompareFloatFunction, (LPARAM)this);
+	else
+		SortItems(&CEditListCtrl::CompareFunction, (LPARAM)this);
+
+	// set the sorted items back in the list control and delete the ItemData objects 
+	row = GetItemCount();
+	while (row--) {
+		ItemData* pid = (ItemData*)GetItemData(row);
+		if (pid) SetItemData(row, pid->dwData);
+		delete pid;
+	}
+}
+
+void CEditListCtrl::SetCheckboxState(int index, int state)
+{
+	if (index < m_checkBoxState.GetSize()) {		
+		m_checkBoxState.SetAt(index, state);
+	}
+}
+
+void CEditListCtrl::ResetCheckboxState()
+{
+	for (int i = 0; i < m_checkBoxState.GetCount(); i++) {
+		m_checkBoxState.SetAt(i, 0);
+	}
+
+	for (int i = 0; i < m_buttonsCreated.GetCount(); i++) {
+		m_buttonsCreated.SetAt(i, 0);
+	}
+
+	for (int i = 0; i < m_pArrButtons->GetCount(); i++) {
+		m_pArrButtons->GetAt(i).DestroyWindow();
+	}
+}
+
+int CEditListCtrl::GetCheckboxState(int index)
+{
+	BOOL state = FALSE;
+	if (index < m_pArrButtons->GetSize()) {
+		state = m_pArrButtons->GetAt(index).GetCheck();
+	}
+	return state;
+}
+void CEditListCtrl::MoveCheckboxes(int newX)
+{
+	int dx = newX - GetCheckboxOrigin();
+	SetCheckboxOrigin(newX);
+	for (int i = 0; i < m_pArrButtons->GetSize(); i++) {
+		if (m_buttonsCreated[i]) {
+			RECT rect;
+			m_pArrButtons->GetAt(i).GetWindowRect(&rect);
+			rect.left += dx;
+			rect.right += dx;
+			ScreenToClient(&rect);
+			m_pArrButtons->GetAt(i).MoveWindow(&rect);
+		}
+	}
+}
+
+void  CEditListCtrl::SetTextColRange(int min, int max)
+{
+	for (int i = min; i <= max; i++)
+	{
+		m_txtCol.Add(i);
+	}
+}
+
+void  CEditListCtrl::SetNumericColRange(int min, int max)
+{
+	for (int i = min; i <= max; i++)
+	{
+		m_numCol.Add(i);
+	}
+
+}
+
+// CEditListCtrl message handlers
+
+void CEditListCtrl::OnLButtonDown(UINT nFlags, CPoint point)
+{
+	LVHITTESTINFO lvhit;
+	lvhit.pt = point;
+	int item = SubItemHitTest(&lvhit);
+	
+	if (item != -1 && lvhit.iSubItem && (lvhit.flags & LVHT_ONITEM )) {
+		// over a subitem 
+		CListCtrl::OnLButtonDown(nFlags, point);
+		int subitem = lvhit.iSubItem;
+
+		m_edtFlag = FALSE;
+		m_txtFlag = TRUE;
+		for (int i = 0; i < m_numCol.GetCount(); i++){
+			if (subitem == m_numCol[i]){
+				m_edtFlag = TRUE;
+				m_txtFlag = FALSE;
+				break;
+		}
+		}
+		for (int i = 0; i < m_txtCol.GetCount(); i++){
+			if (subitem == m_txtCol[i]){
+				m_edtFlag = TRUE;
+				m_txtFlag = TRUE;
+				break;
+			}
+		}			
+
+		if (m_edtFlag) { 
+			m_subitem = lvhit.iSubItem;
+			m_item = item;
+			CStringArray* pComboStrings = NULL;
+			CColorArray* pComboColors = NULL;
+			if (!m_comboMap.Lookup(m_subitem, pComboStrings) && !m_colorComboMap.Lookup(m_subitem, pComboColors)) {
+				EditLabel(item);
+			}
+			else if (m_colorComboMap.Lookup(m_subitem, pComboColors)) {
+				CRect rect;
+				GetSubItemRect(m_item, m_subitem, LVIR_BOUNDS, rect);
+				m_colorComboWnd.Create(WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST  | WS_VSCROLL | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED, rect, this, 0);
+
+				int maxWidth = rect.Width();
+				for (int i=0; i < pComboColors->GetSize(); i++) {
+					COLORREF color = pComboColors->GetAt(i);
+					CString str;
+					str.Format("%d", i);
+					m_colorComboWnd.AddColor(str, color);
+				}
+				CString strItem = this->GetItemText(m_item, m_subitem);
+				int ix = m_colorComboWnd.FindStringExact(-1, strItem);
+				if (ix == CB_ERR) ix = 0;
+				m_colorComboWnd.SetCurSel(ix);
+				m_colorComboWnd.m_item = m_item;
+				m_colorComboWnd.m_subitem = m_subitem;
+				m_colorComboWnd.SetFont(GetFont());
+				m_colorComboWnd.ShowDropDown(TRUE);
+			}
+			else {
+				CRect rect;
+				GetSubItemRect( m_item, m_subitem, LVIR_BOUNDS , rect );				
+				m_comboWnd.Create(WS_CHILD|WS_VISIBLE|WS_BORDER|BS_AUTOCHECKBOX|WS_VSCROLL, rect, this, 0);
+
+				// Loop through the strings and add them to the combo box. Keep track of which is widest so we can 
+				// size the combo box appropriately. I don't have a device context here so I'm just guessing based 
+				// on the number of characters. It works for QI-Pro but this will need work if it going to be for 
+				// general use. cnelson 2013-10-28
+				int maxWidth = rect.Width();
+				for (int i=0; i < pComboStrings->GetSize(); i++) {
+					CString str = pComboStrings->GetAt(i);
+					maxWidth = max(maxWidth, str.GetLength() * 8);
+					m_comboWnd.AddString(str);
+				}
+				CString strItem = this->GetItemText(m_item, m_subitem);
+				int ix = m_comboWnd.FindStringExact(-1, strItem);
+				if (ix == CB_ERR) ix = 0;
+				m_comboWnd.SetCurSel(ix);
+				m_comboWnd.m_item = m_item;
+				m_comboWnd.m_subitem = m_subitem;
+				m_comboWnd.SetDroppedWidth(maxWidth);
+				m_comboWnd.SetFont(GetFont());
+				m_comboWnd.ShowDropDown(TRUE);
+			}
+		}
+	} else if (m_editItemFlag && item != -1 && lvhit.iSubItem==0 && (lvhit.flags & LVHT_ONITEMLABEL )) {
+			CListCtrl::OnLButtonDown(nFlags, point);
+			m_subitem = lvhit.iSubItem;
+			m_item = item;
+			EditLabel(item);
+	} else {
+		CListCtrl::OnLButtonDown(nFlags, point);
+	}
+
+	if (item >= 0){
+		SetItemState(item, LVNI_SELECTED, LVNI_SELECTED); // select the item no matter where you click on it
+		SetSelectionMark(item);
+	}
+}
+
+void CEditListCtrl::OnLvnBeginlabeledit(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	NMLVDISPINFO *pDispInfo = reinterpret_cast<NMLVDISPINFO*>(pNMHDR);
+	m_item = pDispInfo->item.iItem;
+
+	//if (subitem selected for editing)
+	if (m_subitem || m_editItemFlag)
+	{
+		// Fixes a bug where the selected item (column zero) gets erased while user edit a subitem.
+		// cnelson 2013-11-04
+		m_erase = false;
+
+		CRect subrect;
+		GetSubItemRect( pDispInfo->item.iItem, m_subitem, LVIR_BOUNDS , subrect );
+		//get edit control and subclass
+		HWND hWnd=(HWND)SendMessage(LVM_GETEDITCONTROL);
+		ASSERT(hWnd!=NULL);
+		VERIFY(m_editWnd.SubclassWindow(hWnd));
+		//move edit control text 1 pixel to the right of org label, as Windows does it...
+		m_editWnd.m_x = subrect.left + 6;
+		m_editWnd.SetWindowText(GetItemText (pDispInfo->item.iItem,m_subitem));
+		//hide subitem text so it doesn't show if we delete some text in the edit control
+		//OnPaint handles other issues also regarding this
+		CRect rect;
+		GetSubItemRect(pDispInfo->item.iItem,m_subitem, LVIR_LABEL ,rect);
+		CDC* hDc = GetDC();
+		hDc->FillRect(rect,&CBrush(::GetSysColor(COLOR_WINDOW)));
+		ReleaseDC(hDc);
+	} else {
+		SendMessage(LVM_CANCELEDITLABEL);
+	}
+
+	*pResult = 0;
+
+}
+//Saving the Changes
+void CEditListCtrl::OnLvnEndlabeledit(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	NMLVDISPINFO *pDispInfo = reinterpret_cast<NMLVDISPINFO*>(pNMHDR);
+	LV_ITEM *plvItem = &pDispInfo->item;
+
+	m_erase = true;
+
+	//if (end of sub-editing) do cleanup
+	if (m_subitem || m_editItemFlag) {
+		//plvItem->pszText is NULL if editing canceled
+		if (plvItem->pszText != NULL ) {
+			if (m_txtFlag) {
+				SetItemText(plvItem->iItem, m_subitem, plvItem->pszText);
+			} else {
+				int ivalue = atoi(plvItem->pszText);
+				CString strValue;
+				strValue.Format("%d", ivalue);
+				SetItemText(plvItem->iItem,m_subitem,strValue);
+			}
+		}
+		VERIFY(m_editWnd.UnsubclassWindow()!=NULL);
+		m_subitem = 0;
+		// always revert to org label (Windows thinks we are editing the leftmost item)
+		*pResult = 0;
+	} else {
+		//return: update label on leftmost item
+		*pResult = 1;
+	}
+
+	// send message to parent to inform editing is done
+	CString str = "EndEdit";
+	GetParent()->SendMessage(WM_UPDATEPARENT, (WPARAM)& str, 0);
+}
+
+
+void CEditListCtrl::OnPaint()
+{
+	// first time set the extended styles for this control.
+	if (!m_bSetExtendedStyle) {
+		SetExtendedStyle(GetExtendedStyle()|LVS_EX_GRIDLINES);
+		m_bSetExtendedStyle = TRUE;
+	}
+
+	CStringArray* pComboStrings = NULL;
+	CColorArray* pComboColors = NULL;
+	if (m_subitem && (!m_comboMap.Lookup(m_subitem, pComboStrings)) && (!m_colorComboMap.Lookup(m_subitem, pComboColors))) {
+		CRect rect;
+		CRect editrect;
+		GetSubItemRect(m_item,m_subitem,LVIR_LABEL, rect);
+		if (m_editWnd.m_hWnd == NULL) {
+			TRACE("m_editWnd.m_hWnd == NULL\n");
+			return;
+		}
+		m_editWnd.GetWindowRect(editrect);
+		ScreenToClient(editrect);
+		// Clean up the original text to the right of the edit control
+		if (editrect.right < rect.right) {
+			rect.left = editrect.right;
+			ValidateRect(rect);
+			CDC* hDc = GetDC();
+			hDc->FillRect(rect,&CBrush(::GetSysColor(COLOR_WINDOW)));
+			ReleaseDC(hDc);
+		}
+		//block filling redraw of leftmost item (caused by FillRect)
+		GetItemRect(m_item, rect,LVIR_LABEL );
+		ValidateRect(rect);
+	}
+
+	if (m_subitem >= m_coloredSubitemLow && m_subitem <= m_coloredSubitemHi && m_item < m_colorCount && m_arrColors[m_subitem][m_item] != COLOR_DEFAULT) {
+		COLORREF itemColor = m_arrColors[m_subitem][m_item];
+		CRect rect;
+		GetSubItemRect(m_item, m_subitem, LVIR_LABEL, rect);
+		CDC* hDc = GetDC();
+		hDc->FillRect(rect, &CBrush(itemColor));
+		ReleaseDC(hDc);
+	}
+
+	CListCtrl::OnPaint();
+}
+
+int CEditListCtrl::CompareFunction(LPARAM lParam1, LPARAM lParam2, LPARAM lParamData)
+{
+	if (!lParam1 || !lParam2) return 0;
+
+	CEditListCtrl* list = (CEditListCtrl*)lParamData;
+	ItemData* pid1 = (ItemData*)(list->SortData.Ascending ? lParam1 : lParam2);
+	ItemData* pid2 = (ItemData*)(list->SortData.Ascending ? lParam2 : lParam1);
+	return pid1->Text.CompareNoCase(pid2->Text);
+}
+
+int CEditListCtrl::CompareFloatFunction(LPARAM lParam1, LPARAM lParam2, LPARAM lParamData)
+{
+	if (!lParam1 || !lParam2) return 0;
+
+	CEditListCtrl* list = (CEditListCtrl*)lParamData;
+	ItemData* pid1 = (ItemData*)(list->SortData.Ascending ? lParam1 : lParam2);
+	ItemData* pid2 = (ItemData*)(list->SortData.Ascending ? lParam2 : lParam1);
+
+	float item1 = (float) atof(pid1->Text);
+	float item2 = (float) atof(pid2->Text);
+	if (item1 == item2) return 0;
+	else if (item1 < item2) return -1;
+	else return 1;
+}
+
+
+BOOL CEditListCtrl::OnEraseBkgnd(CDC* pDC)
+{
+//	TRACE("OnEraseBkgnd m_erase=%d\n", m_erase);
+	if (!m_erase)
+		return FALSE;
+	return CListCtrl::OnEraseBkgnd(pDC);
+}
+
+
+void CEditListCtrl::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
+{
+	if (nChar == 0x03) {
+		// ctrl + c pressed. Copy filename to clipboard
+		if ( !OpenClipboard() ) {
+			AfxMessageBox( "Cannot open the Clipboard" );
+			return;
+		}
+		// Remove the current Clipboard contents
+		if( !EmptyClipboard() ) {
+			AfxMessageBox( "Cannot empty the Clipboard" );
+			return;
+		}
+		// Get the currently selected data
+		int nItem = GetNextItem(-1, LVNI_SELECTED);
+		CString filename = GetItemText(nItem, 0);
+
+		HGLOBAL clipbuffer;
+		char *pCharBuffer;
+		clipbuffer  = GlobalAlloc(GMEM_DDESHARE, filename.GetLength()+1);
+		pCharBuffer = (char *) GlobalLock(clipbuffer);
+		strcpy(pCharBuffer,  LPCSTR(filename));
+		GlobalUnlock(clipbuffer);
+
+		if ( SetClipboardData( CF_TEXT, clipbuffer ) == NULL ) {
+			AfxMessageBox( "Unable to set Clipboard data" );
+		}
+		CloseClipboard();
+
+	}
+}
+
+
+void CEditListCtrl::OnNMCustomdraw(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	*pResult = CDRF_DODEFAULT;
+	NMLVCUSTOMDRAW* pCD = (NMLVCUSTOMDRAW*)pNMHDR;
+	int row = (int) pCD->nmcd.dwItemSpec;
+
+	if(row < 0 || row >= GetItemCount()) {
+		if(pCD->nmcd.dwDrawStage == CDDS_PREPAINT) {
+			*pResult = CDRF_NOTIFYSUBITEMDRAW;
+		}
+		return;
+	}
+
+	switch(pCD->nmcd.dwDrawStage)
+	{
+	case  CDDS_PREPAINT:  // First stage (for the whole control)
+	{
+		*pResult = CDRF_NOTIFYITEMDRAW|CDRF_NOTIFYPOSTPAINT;
+		break;
+	}
+	case CDDS_ITEMPREPAINT:
+		*pResult = CDRF_NOTIFYSUBITEMDRAW|CDRF_NOTIFYPOSTPAINT;
+		break;
+ 
+	case CDDS_ITEMPREPAINT|CDDS_SUBITEM:
+	{
+		// alternate row bg color
+		DWORD subitemColor = (row % 2  == 0) ? COLOR_EVEN : COLOR_ODD;
+		pCD->clrTextBk = subitemColor;
+		
+		// color selected row
+		if (IsSelected(row)) {
+			pCD->clrTextBk = GetSysColor(COLOR_HIGHLIGHT);// COLOR_SELECTED;
+			pCD->clrText = GetSysColor(COLOR_HIGHLIGHTTEXT);
+		}
+
+		// handle the color of a subitem
+		if (pCD->iSubItem >= m_coloredSubitemLow && pCD->iSubItem <= m_coloredSubitemHi && m_arrColors[pCD->iSubItem][row] != COLOR_DEFAULT) {
+			if (row < m_arrColors[pCD->iSubItem].GetCount()) {
+				if (m_coloredTexMode) {
+					if (!IsSelected(row)) {
+						DWORD highlightColor = m_arrColors[pCD->iSubItem][row];
+						pCD->clrText = m_arrColors[pCD->iSubItem][row];
+					}
+					else {
+						// if the row is selected, then brighten up the color.
+						DWORD highlightColor = m_arrColors[pCD->iSubItem][row];
+						DWORD red = GetRValue(highlightColor);
+						DWORD green = GetGValue(highlightColor);
+						DWORD blue = GetBValue(highlightColor);
+						red += (255 - red) / 2;
+						green += (255 - green) / 2;
+						blue += (255 - blue) / 2;
+						highlightColor = RGB(red, green, blue);
+						pCD->clrText = highlightColor;
+					}
+				}
+				else {
+					CDC* hDc = GetDC();
+					CRect rect;
+					GetSubItemRect(row, pCD->iSubItem, LVIR_LABEL, rect);
+					COLORREF crOldTextColor = hDc->GetTextColor();
+					COLORREF crColor = m_arrColors[pCD->iSubItem][row];
+					COLORREF crText = GetSysColor(COLOR_WINDOWTEXT);
+					CRect rBlockRect(rect);
+					CRect rTextRect(rBlockRect);
+					CBrush brFrameBrush;
+					int iBoxWidth = 0;
+					CString strItem = this->GetItemText(row, pCD->iSubItem);
+					iBoxWidth = (rBlockRect.Width() / 2);				// Get 1/2 Of Item Area
+					brFrameBrush.CreateStockObject(BLACK_PEN);			// Create Black Brush
+					hDc->SetTextColor(crText);					// Set Text Color
+					hDc->SetBkColor(subitemColor);					// Set BG Color
+					hDc->FillSolidRect(&rBlockRect, subitemColor);	// Erase Item
+
+					//	Calculate Text Area...
+					rTextRect.left += (iBoxWidth + 3);					// Set Start Of Text
+					rTextRect.top += 2;										// Offset A Bit
+
+					//	Calculate Color Block Area..
+					rBlockRect.DeflateRect(CSize(2, 2));				// Reduce Color Block Size
+					if (!strItem.IsEmpty()) rBlockRect.right -= iBoxWidth;						// Set Width Of Color Block
+
+					//	Draw Color Text And Block...
+					int iaTabStops[1] = { 50 };
+
+					hDc->TabbedTextOut(rTextRect.left,
+						rTextRect.top, strItem, (int)_tcslen(strItem), 1,
+						iaTabStops, 0);							// Draw Color Name
+
+					hDc->FillSolidRect(&rBlockRect, crColor);	// Draw Color
+					hDc->FrameRect(&rBlockRect, &brFrameBrush);	// Draw Frame
+					ReleaseDC(hDc);
+				}
+			}
+		}
+		if (m_checkboxCol >= 0 && pCD->iSubItem == m_checkboxCol) {
+			if (row >= m_pArrButtons->GetCount()) {
+				ReallocateCheckboxArrays();
+			}
+			if (m_buttonsCreated[row] == 0) {
+				CRect rect;
+				GetSubItemRect(row, pCD->iSubItem, LVIR_LABEL, rect);
+				rect.left = GetCheckboxOrigin();
+				m_pArrButtons->GetAt(row).Create("", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, rect, this, 0);
+				m_pArrButtons->GetAt(row).SetCheck(m_checkBoxState.GetAt(row));
+				m_buttonsCreated[row] = 1;
+			}
+		}
+
+		if (m_boldTextMode) {
+			if (row < m_arrBold.GetSize()) {
+				BOOL isBold = m_arrBold[row];
+				if (isBold) {
+					::SelectObject(pCD->nmcd.hdc, m_fontBold.GetSafeHandle());
+					*pResult = CDRF_NEWFONT;
+				}
+			}
+		}
+		*pResult = CDRF_NOTIFYSUBITEMDRAW | CDRF_NOTIFYPOSTPAINT;
+		break;
+	}
+	case CDDS_ITEMPOSTPAINT | CDDS_SUBITEM: // Stage four (called for each subitem of the focused item)
+	{
+		DWORD subitemColor = (row % 2 == 0) ? COLOR_EVEN : COLOR_ODD;
+		// handle the color of a subitem
+		if (pCD->iSubItem >= m_coloredSubitemLow && pCD->iSubItem <= m_coloredSubitemHi && m_arrColors[pCD->iSubItem][row] != COLOR_DEFAULT) {
+			if (row < m_arrColors[pCD->iSubItem].GetCount()) {
+				if (m_coloredTexMode) {
+					if (!IsSelected(row)) {
+						DWORD highlightColor = m_arrColors[pCD->iSubItem][row];
+						pCD->clrText = m_arrColors[pCD->iSubItem][row];
+					}
+					else {
+						// if the row is selected, then brighten up the color.
+						DWORD highlightColor = m_arrColors[pCD->iSubItem][row];
+						DWORD red = GetRValue(highlightColor);
+						DWORD green = GetGValue(highlightColor);
+						DWORD blue = GetBValue(highlightColor);
+						red += (255 - red) / 2;
+						green += (255 - green) / 2;
+						blue += (255 - blue) / 2;
+						highlightColor = RGB(red, green, blue);
+						pCD->clrText = highlightColor;
+					}
+				}
+				else {
+					CDC* hDc = GetDC();
+					CRect rect;
+					GetSubItemRect(row, pCD->iSubItem, LVIR_LABEL, rect);
+					COLORREF crOldTextColor = hDc->GetTextColor();
+					COLORREF crColor = m_arrColors[pCD->iSubItem][row];
+					COLORREF crText = GetSysColor(COLOR_WINDOWTEXT);
+					CRect rBlockRect(rect);
+					CRect rTextRect(rBlockRect);
+					CBrush brFrameBrush;
+					int iBoxWidth = 0;
+					CString strItem = this->GetItemText(row, pCD->iSubItem);
+					iBoxWidth = (rBlockRect.Width() / 2);				// Get 1/2 Of Item Area
+					brFrameBrush.CreateStockObject(BLACK_PEN);			// Create Black Brush
+					hDc->SetTextColor(crText);					// Set Text Color
+					hDc->SetBkColor(subitemColor);					// Set BG Color
+					hDc->FillSolidRect(&rBlockRect, subitemColor);	// Erase Item
+
+					//	Calculate Text Area...
+					rTextRect.left += (iBoxWidth + 3);					// Set Start Of Text
+					rTextRect.top += 2;										// Offset A Bit
+
+					//	Calculate Color Block Area..
+					rBlockRect.DeflateRect(CSize(2, 2));				// Reduce Color Block Size
+					if (!strItem.IsEmpty()) rBlockRect.right -= iBoxWidth;						// Set Width Of Color Block
+
+					//	Draw Color Text And Block...
+					int iaTabStops[1] = { 50 };
+
+					hDc->TabbedTextOut(rTextRect.left,
+						rTextRect.top, strItem, (int)_tcslen(strItem), 1,
+						iaTabStops, 0);							// Draw Color Name
+
+					hDc->FillSolidRect(&rBlockRect, crColor);	// Draw Color
+					hDc->FrameRect(&rBlockRect, &brFrameBrush);	// Draw Frame
+					ReleaseDC(hDc);
+				}
+			}
+		}
+		break;
+	}
+	case CDDS_POSTPAINT: // Stage four 
+	{
+		// Indicate the Clipboard item
+		CRect itemRect;
+		GetItemRect(m_iClipboardItem, &itemRect, LVIR_BOUNDS);
+		CDC* hDc = GetDC();
+		hDc->FrameRect(itemRect, &CBrush(COLOR_SELECTED));
+		ReleaseDC(hDc);
+		break;
+	}
+	default:// it wasn't a notification that was interesting to us.
+	{
+		*pResult = CDRF_DODEFAULT;
+		break;
+	}
+	}
+}
+
+BOOL  CEditListCtrl::IsSelected(int row)
+{
+	return GetItemState(row, LVIS_SELECTED) == LVIS_SELECTED;
+}
+
+void CEditListCtrl::SelectAll()
+{
+	for(int i=0; i < GetItemCount(); i++) {
+		SetItemState(i, LVIS_SELECTED, LVIS_SELECTED);
+	}
+	}
+
+void CEditListCtrl::SetClipboardItem(int index)
+{
+	m_iClipboardItem = index;
+	if(m_hWnd) Invalidate();
+}
+
+int CEditListCtrl::GetClipboardItem()
+{
+	return m_iClipboardItem;
+}
+
+BOOL CEditListCtrl::HasClipboardItem()
+{
+	return m_iClipboardItem >= 0;
+}
+
+//*****************************************
+// CLocalEdit
+//*****************************************
+ BEGIN_MESSAGE_MAP(CLocalEdit, CEdit)
+ ON_WM_WINDOWPOSCHANGING()
+ ON_WM_WINDOWPOSCHANGED()
+ ON_WM_ERASEBKGND()
+ ON_WM_KEYDOWN()
+ END_MESSAGE_MAP()
+
+void CLocalEdit::OnWindowPosChanging(WINDOWPOS* lpwndpos)
+{
+	CEdit::OnWindowPosChanging(lpwndpos);
+	lpwndpos->x = m_x;
+}
+
+
+//*****************************************
+// CLocalCombo
+//*****************************************
+ BEGIN_MESSAGE_MAP(CLocalCombo, CComboBox)
+ ON_WM_WINDOWPOSCHANGING()
+ ON_WM_WINDOWPOSCHANGED()
+ ON_WM_ERASEBKGND()
+ ON_WM_KILLFOCUS()
+ ON_CONTROL_REFLECT(CBN_KILLFOCUS, &CLocalCombo::OnCbnKillfocus)
+ ON_WM_CREATE()
+ END_MESSAGE_MAP()
+
+ CLocalCombo::CLocalCombo()
+ {
+	m_currSelect = 0;
+ }
+void CLocalCombo::OnWindowPosChanging(WINDOWPOS* lpwndpos)
+{
+	CComboBox::OnWindowPosChanging(lpwndpos);
+	lpwndpos->x = m_x;
+}
+
+
+void CLocalCombo::OnCbnKillfocus()
+{
+	CString txt;
+	this->GetLBText(this->GetCurSel(), txt);
+	pParent->SetItem(m_item, m_subitem, LVIF_TEXT, txt, 0, 0, 0, 0);
+	this->DestroyWindow();
+}
+
+
+int CLocalCombo::OnCreate(LPCREATESTRUCT lpCreateStruct)
+{
+	if (CComboBox::OnCreate(lpCreateStruct) == -1)
+		return -1;
+
+	this->SetFocus();
+
+	return 0;
+}
+
+
+//*****************************************
+// CColorCombo
+//*****************************************
+IMPLEMENT_DYNAMIC(CColorCombo, CComboBox)
+
+BEGIN_MESSAGE_MAP(CColorCombo, CComboBox)
+	ON_WM_LBUTTONDOWN()
+	ON_WM_KILLFOCUS()
+	ON_CONTROL_REFLECT(CBN_KILLFOCUS, &CColorCombo::OnCbnKillfocus)
+	ON_WM_CREATE()
+END_MESSAGE_MAP()
+CColorCombo::CColorCombo()
+{
+	m_currSelect = 0;
+}
+
+CColorCombo::~CColorCombo()
+{
+}
+
+void CColorCombo::PreSubclassWindow()
+{
+	CComboBox::PreSubclassWindow();	
+}
+
+void CColorCombo::OnWindowPosChanging(WINDOWPOS* lpwndpos)
+{
+	CComboBox::OnWindowPosChanging(lpwndpos);
+	lpwndpos->x = m_x;
+}
+
+void CColorCombo::OnCbnKillfocus()
+{
+	if (pParent == NULL) {
+		return;
+	}
+
+	CString txt;
+	this->GetLBText(this->GetCurSel(), txt);
+	pParent->SetItem(m_item, m_subitem, LVIF_TEXT, txt, 0, 0, 0, 0);
+	CEditListCtrl *ctrl = dynamic_cast<CEditListCtrl*>(pParent);
+	COLORREF color = ctrl->m_colorComboMap[m_subitem]->GetAt(atoi(txt));
+	ctrl->SetSubitemColor(m_subitem, m_item, color);
+	this->DestroyWindow();
+}
+
+void CColorCombo::OnLButtonDown(UINT nFlags, CPoint point)
+{
+	if (GetFocus() != this)						
+	{
+		SetFocus();									
+	}
+	CComboBox::OnLButtonDown(nFlags, point);			
+
+	return;													
+}
+
+int CColorCombo::OnCreate(LPCREATESTRUCT lpCreateStruct)
+{	
+
+
+	if (CComboBox::OnCreate(lpCreateStruct) == -1)
+		return -1;
+
+	this->SetFocus();
+
+	return 0;
+}
+
+
+
+void CColorCombo::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
+{
+	ASSERT(lpDrawItemStruct->CtlType == ODT_COMBOBOX);
+
+	int iItem = lpDrawItemStruct->itemID;
+	CString csHPName = _T("");
+	GetLBText(iItem, csHPName);		// Get Color Text
+
+	CDC dc;
+	if (!dc.Attach(lpDrawItemStruct->hDC)) return;	// Attach CDC Object
+
+	COLORREF	crColor = 0;
+	COLORREF crOldTextColor = dc.GetTextColor();
+	COLORREF crOldBkColor = (COLORREF)GetItemData(iItem);
+	COLORREF	crNormal = GetSysColor(COLOR_WINDOW);
+	COLORREF crSelected = GetSysColor(COLOR_HIGHLIGHT);
+	COLORREF crText = GetSysColor(COLOR_WINDOWTEXT);
+	CRect rItemRect(lpDrawItemStruct->rcItem);
+	CRect rBlockRect(rItemRect);
+	CRect rTextRect(rBlockRect);
+	int iState = lpDrawItemStruct->itemState;
+	CBrush brFrameBrush;
+	int iBoxWidth = 0;
+
+	iBoxWidth = (rBlockRect.Width() / 2);				// Get 1/2 Of Item Area
+	brFrameBrush.CreateStockObject(BLACK_BRUSH);			// Create Black Brush
+	
+	if (iState & ODS_SELECTED)								// If Selected
+	{														// Set Selected Attributes
+		dc.SetTextColor((0x00FFFFFF & ~(crText)));								// Set Inverted Text Color (With Mask)
+		dc.SetBkColor(crSelected);					// Set BG To Highlight Color
+		dc.FillSolidRect(&rBlockRect, crSelected);	// Erase Item
+	}
+	else													// If Not Selected
+	{														// Set Standard Attributes
+		dc.SetTextColor(crText);					// Set Text Color
+		dc.SetBkColor(crNormal);					// Set BG Color
+		dc.FillSolidRect(&rBlockRect, crNormal);	// Erase Item
+	}
+	if (iState & ODS_FOCUS)								// If Item Has The Focus
+	{
+		dc.DrawFocusRect(&rItemRect);				// Draw Focus Rect
+	}
+	
+	//	Calculate Text Area...
+	rTextRect.left += (iBoxWidth + 3);					// Set Start Of Text
+	rTextRect.top += 2;										// Offset A Bit
+
+	//	Calculate Color Block Area..
+	rBlockRect.DeflateRect(CSize(2, 2));				// Reduce Color Block Size
+	rBlockRect.right = iBoxWidth;						// Set Width Of Color Block
+
+	//	Draw Color Text And Block...
+	if (iItem != -1)										// If Not An Empty Item
+	{
+		int		iaTabStops[1] = { 50 };
+
+
+		if (iState & ODS_DISABLED)							// If Disabled
+		{
+			crColor = ::GetSysColor(COLOR_GRAYTEXT);		// Get Inactive Text Color
+			dc.SetTextColor(crColor);				// Set Text Color
+		}
+		else												// If Normal
+		{
+			crColor = (COLORREF)GetItemData(iItem);					// Get Color Value
+		}
+		dc.SetBkMode(TRANSPARENT);					// Transparent Background
+		dc.TabbedTextOut(rTextRect.left,
+			rTextRect.top, csHPName, (int)_tcslen(csHPName), 1,
+			iaTabStops, 0);							// Draw Color Name
+
+		dc.FillSolidRect(&rBlockRect, crColor);	// Draw Color
+		dc.FrameRect(&rBlockRect, &brFrameBrush);	// Draw Frame
+	}
+	dc.Detach();
+}
+
+void CColorCombo::MeasureItem(LPMEASUREITEMSTRUCT lpMeasureItemStruct)
+{
+	ASSERT(lpMeasureItemStruct->CtlType == ODT_COMBOBOX);
+
+	if (lpMeasureItemStruct->itemID != (UINT)-1)
+	{
+		lpMeasureItemStruct->itemHeight = 20;
+	}
+}
+
+COLORREF CColorCombo::GetSelectedColorValue(void)
+{
+	int		iSelectedItem = GetCurSel();					// Get Selected Item
+
+	if (iSelectedItem == CB_ERR)							// If Nothing Selected
+	{
+		return(RGB(0, 0, 0));							// Return Black
+	}
+	return((COLORREF)GetItemData(iSelectedItem));					// Return Selected Color
+}
+
+LPCTSTR CColorCombo::GetSelectedColorName(void)
+{
+	int		iSelectedItem = GetCurSel();					// Get Selected Item
+
+	if (iSelectedItem != CB_ERR)							// If Something Selected
+	{
+		GetLBText(iSelectedItem, m_cColorName);			// Store Name Of Color
+	}
+	else													// If Nothing Selected
+	{
+		m_cColorName[0] = _T('\0');						// Terminate Color Name Buffer (Zero Length String)
+	}
+	return(m_cColorName);									// Return Selected Color Name
+}
+
+int CColorCombo::AddColor(LPCTSTR cpColor, COLORREF crColor)
+{
+	int		iIndex = CB_ERR;
+
+	_ASSERTE(cpColor);									// Need This!
+
+	iIndex = AddString(cpColor);						// Insert Just The Color
+
+	if (iIndex != CB_ERR)									// If Inserted
+	{
+		SetItemData(iIndex, (DWORD)crColor);				// Set The Color Value
+	}
+	return(iIndex);										// Return Insertion Locatiom Or Failure Code
+}

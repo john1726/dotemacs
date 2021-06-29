@@ -1,0 +1,3709 @@
+// IMACView.cpp : implementation of the CIMACView class
+//
+
+#include "stdafx.h"
+#include <ShellScalingApi.h>
+#include "IMAC.h"
+
+#include "IMACDoc.h"
+#include "IMACView.h"
+#include "ClassifiedVolumeDisplaySettingsDlg.h"
+#include "../common/cppTemplate.h"
+#include "../common/CUtil.h"
+#include "ColorBarView.h"
+#include "WiggleOverlayDlg.h"
+
+// used for debugging, will draw the selected samples in the select color.
+#define SHOWSELECT 0
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+// CIMACView
+
+IMPLEMENT_DYNCREATE(CIMACView, CScrollView)
+
+BEGIN_MESSAGE_MAP(CIMACView, CScrollView)
+	ON_UPDATE_COMMAND_UI(ID_FILE_SAVE, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(ID_FILE_SAVE_AS, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(ID_FILE_EXPORT_SEGY, OnUpdateFileExport)
+	ON_UPDATE_COMMAND_UI(ID_VIRTUAL_VOLUMES, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(ID_WELL_PARMS, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(ID_VOLUME_PARAMETERS, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(ID_HRZ_PARMS, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(ID_VV_PARMS, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(ID_WIGGLE_OVERLAY, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(ID_SEISWARE_CONNECTOR, OnUpdateSeiswareMode)
+	ON_UPDATE_COMMAND_UI(ID_HEADWAVE_SETTINGS, OnUpdateHeadwaveMode)
+	ON_UPDATE_COMMAND_UI(ID_HEADWAVE_LAUNCH, OnUpdateHeadwaveMode)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_DISPLAY_PARMS, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_CURSORREPORT, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_FACIESHISTOGRAM, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_ATTRIBUTE_ADVISOR, OnUpdateAttributeAdvisor)
+	ON_UPDATE_COMMAND_UI(ID_MAP_SELECT, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_XPLOT_EDITOR, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_XPLOT1, OnUpdateViewXplot1)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_XPLOT2, OnUpdateViewXplot2)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_XPLOT3, OnUpdateViewXplot3)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_XPLOT4, OnUpdateViewXplot4)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_XPLOT5, OnUpdateViewXplot5)
+	ON_UPDATE_COMMAND_UI(IDC_RADIO_INLINE, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(IDC_COMBO_INLINE, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(IDC_SPIN_INLINE, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(IDC_RADIO_XLINE, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(IDC_COMBO_XLINE, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(IDC_SPIN_XLINE, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(IDC_RADIO_USERLINE, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(IDC_COMBO_USERLINE, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(IDC_SPIN_USERLINE, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(IDC_VOL_LABEL, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(IDC_VOL_TEXT, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(IDC_VOL_TYPE, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(IDC_VOL_COMBO, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(ID_PARM_TOOL, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(ID_QIPRO_MODE, OnUpdateQiproMode)
+	ON_UPDATE_COMMAND_UI(ID_CSI_MODE, OnUpdateCsiMode)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_COLORBAR, OnUpdateColorbar)
+	
+	// classified volume icons
+	ON_UPDATE_COMMAND_UI(ID_CV_SETTINGS, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(ID_CV_COLOR_SELECTOR, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(ID_CV_CURSOR_REPORT, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(ID_CV_WIGGLE_DISPLAY, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(ID_CV_HORIZONTAL_SCALE_INCREASE, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(ID_CV_HORIZONTAL_SCALE_DECREASE, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(ID_CV_VERTICAL_SCALE_INCREASE, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(ID_CV_VERTICAL_SCALE_DECREASE, OnUpdateCommandThatDependsOnAttributes)
+	ON_UPDATE_COMMAND_UI(ID_CV_LINE_DIRECTION_TOGGLE, OnUpdateCommandThatDependsOnAttributes)
+
+	ON_COMMAND(ID_CV_SETTINGS, &CIMACView::OnCVSettings)
+	ON_COMMAND(ID_CV_COLOR_SELECTOR, &CIMACView::OnCVColorSelector)
+	ON_COMMAND(ID_CV_CURSOR_REPORT, &CIMACView::OnCVCursorReport)
+	ON_COMMAND(ID_CV_WIGGLE_DISPLAY, &CIMACView::OnCVWiggleDisplay)
+	ON_COMMAND(ID_CV_WELL_TOGGLE, &CIMACView::OnCVWellDisplayUpdate)
+	ON_COMMAND(ID_CV_WELL_LOG_TOGGLE, &CIMACView::OnCVWellLogDisplayUpdate)
+	ON_COMMAND(ID_CV_WELL_TOP_TOGGLE, &CIMACView::OnCVWellTopDisplayUpdate)
+	ON_COMMAND(ID_CV_WIGGLE_TOGGLE, &CIMACView::OnCVWiggleDisplayUpdate)
+	ON_COMMAND(ID_CV_HORIZON_TOGGLE, &CIMACView::OnCVHorizonDisplayUpdate)
+	ON_COMMAND(ID_CV_FLATTENING_TOGGLE, &CIMACView::OnCVFlatteningDisplayUpdate)
+	ON_COMMAND(ID_CV_DISPLAYLINES_TOGGLE, &CIMACView::OnCVDisplayLinesDisplayUpdate)
+	ON_COMMAND(ID_CV_LINE_DIRECTION_TOGGLE, &CIMACView::OnCVLineDirectionDisplayUpdate)
+	ON_COMMAND(ID_CV_HORIZONTAL_SCALE_INCREASE, &CIMACView::OnCVScaleHorizontalIncreaseUpdate)
+	ON_COMMAND(ID_CV_HORIZONTAL_SCALE_DECREASE, &CIMACView::OnCVScaleHorizontalDecreaseUpdate)
+	ON_COMMAND(ID_CV_VERTICAL_SCALE_INCREASE, &CIMACView::OnCVScaleVerticalIncreaseUpdate)
+	ON_COMMAND(ID_CV_VERTICAL_SCALE_DECREASE, &CIMACView::OnCVScaleVerticalDecreaseUpdate)
+
+
+	ON_WM_ERASEBKGND()
+	ON_WM_RBUTTONUP()
+	ON_WM_MOUSEMOVE()
+	ON_WM_LBUTTONDOWN()
+	ON_WM_LBUTTONUP()
+	ON_WM_LBUTTONDBLCLK()
+	ON_WM_SETCURSOR()
+	ON_WM_KEYDOWN()
+	ON_WM_KEYUP()
+	ON_WM_CHAR()
+END_MESSAGE_MAP()
+
+/////////////////////////////////////////////////////////////////////////////
+// CIMACView construction/destruction
+
+CIMACView::CIMACView()
+{
+	m_boldBrush.lbStyle = BS_SOLID;
+	m_boldBrush.lbColor = RGB(0, 0, 0);
+	m_boldPen.CreatePen(PS_SOLID | PS_GEOMETRIC | PS_ENDCAP_SQUARE, 2, &m_boldBrush);
+
+	m_dotPen.CreatePen(PS_DOT, 1, RGB(0, 0, 0));
+	m_dashPen.CreatePen(PS_DASH, 1, RGB(0, 0, 0));
+	m_normPen.CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
+	m_redPen.CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
+	m_grnPen.CreatePen(PS_SOLID, 1, RGB(0, 255, 0));
+	m_bluPen.CreatePen(PS_SOLID, 1, RGB(0, 0, 255));
+	m_whitePen.CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+	m_pHighlitePen1 = NULL;
+	m_pHighlitePen2 = NULL;
+
+	m_dotBrush.lbColor = RGB(0, 0, 0);
+	m_dotBrush.lbStyle = BS_SOLID;
+	m_dotdotPen.CreatePen(PS_COSMETIC | PS_ALTERNATE, 1, &m_dotBrush);
+
+	for (int i = 0; i < MAXCLASS; i++) {
+		pTraceBrush[i] = NULL;
+	}
+	for (int i = 0; i < MAXHRZ; i++) {
+		pHorizonPen[i] = NULL;
+	}
+	m_pFontSmall = NULL;
+	m_pFontNorm = NULL;
+	m_mx = 0;
+	m_my = 0;
+	m_mflags = 0;
+	m_selectState = eSelectOff;
+	pCursorReport = NULL;
+	pFaciesHistogram = NULL;
+	m_deleteCursorDlgFlag = FALSE;
+	m_bDisplayMessage = TRUE;
+	m_cursorWindowSize.SetSize(0, 0);
+	m_faciesHistoWindowSize.SetSize(0, 0);
+	m_deleteFaciesHistoDlgFlag = FALSE;
+	arrNames.SetSize(50, 50);
+	arrTimes.SetSize(50, 50);
+	m_lButtonPressState = FALSE;
+	m_traceViewInfoArray.SetSize(500, 500);
+	pApp = NULL;
+}
+
+CIMACView::~CIMACView()
+{
+
+	for (int i = 0; i < MAXCLASS; i++) {
+		if (pTraceBrush[i]) delete pTraceBrush[i];
+	}
+	for (int i = 0; i < MAXHRZ; i++) {
+		if (pHorizonPen[i]) delete pHorizonPen[i];
+	}
+	if (m_pFontSmall) {
+		m_pFontSmall->DeleteObject();
+		delete m_pFontSmall;
+	}
+	if (m_pFontNorm) {
+		m_pFontNorm->DeleteObject();
+		delete m_pFontNorm;
+	}
+	if (pCursorReport) {
+		pCursorReport->DestroyWindow();
+		delete pCursorReport;
+	}
+	if (pFaciesHistogram) {
+		pFaciesHistogram->DestroyWindow();
+		delete pFaciesHistogram;
+	}
+
+	GetDocument()->SetMainViewPtr(NULL);
+	pApp->SetMainViewPtr(NULL);
+}
+
+BOOL CIMACView::PreCreateWindow(CREATESTRUCT& cs)
+{
+	return CView::PreCreateWindow(cs);
+}
+
+void CIMACView::OnInitialUpdate()
+{
+	CRect rcItem;
+	GetClientRect(&rcItem);
+	CSize sizetotal;
+	sizetotal.cx = rcItem.right;
+	sizetotal.cy = rcItem.bottom;
+	SetScrollSizes(MM_TEXT, sizetotal);
+	m_rc.SetRectEmpty();
+	m_bReady = FALSE;
+	m_scrollSize = sizetotal;
+
+	m_cursor = 0;
+	m_legendBox.SetRectEmpty();
+	m_bCtrlDown = FALSE;
+
+	pApp = (CIMACApp*)AfxGetApp();
+	if (pApp->IsServerMode()) {
+		CIMACDoc* pDoc = GetDocument();
+		pDoc->SetPetrelTimeMode(TRUE);
+	}
+	pApp->SetMainViewPtr(this);
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+// CIMACView drawing
+
+void CIMACView::OnDraw(CDC* pDCin)
+{
+#define DXY 20
+#define NLABELS 3
+#define SIDE 150
+#define LEGEND 100
+#define TOP (DXY*(NLABELS+1))
+#define BOTTOM 20
+
+	clock_t start = clock();
+	//	TRACE("IMACView::onDraw() enter\n");
+
+	CIMACDoc* pDoc = GetDocument();
+	pDoc->SetMainViewPtr(this);
+
+	CSegy* pOutputSegy = pDoc->GetSegyOutPtr();
+	m_nTrace = 0;
+	if (pOutputSegy) m_nTrace = pOutputSegy->GetTraceCount();
+
+	// no data yet. Just erase the screen.
+	if (!pDoc->m_bDrawFlag || m_nTrace == 0) {
+		CRect rc;
+		GetClientRect(&rc);
+		CBrush hbrBkGnd;
+		hbrBkGnd.CreateSolidBrush(GetSysColor(COLOR_WINDOW));
+		pDCin->FillRect(&rc, &hbrBkGnd);
+		return;
+	}
+
+	// Update the output data set.
+	pDoc->ComputeEngine();
+
+	int si = pDoc->GetSI();			// note: si in MICRO seconds. 
+	if (si == 0) {
+		// this is a show stopper, we need si
+		if (m_bDisplayMessage) {
+			AfxMessageBox("The sample rate is 0. Please examine the input segy files and fix this problem.");
+		}
+		m_bDisplayMessage = FALSE;
+		return;
+	}
+
+	int labelInterval = pDoc->GetLabelInterval();
+	int b10msTLines = pDoc->Get10msTLineMode();
+	int b10msTLineLabel = pDoc->Get10msLineLabels();
+	int b100msTLines = pDoc->Get100msTLineMode();
+	int b100msTLineLabel = pDoc->Get100msLineLabels();
+	int b500msTLines = pDoc->Get500msTLineMode();
+	int b500msTLineLabel = pDoc->Get500msLineLabels();
+
+	// Get start and end times. If they fall outside the data range then adjust them.
+	int segySampCount = pOutputSegy->GetSampleCount();
+	int segyStartTime = pOutputSegy->GetStartTime();
+	int segyEndTime = segyStartTime + Index2Time((segySampCount - 1), si);
+	m_startTime = max(pDoc->GetStartTime(), segyStartTime);
+	m_endTime = min(pDoc->GetEndTime(), segyEndTime);
+	pDoc->SetStartEndTimes(m_startTime, m_endTime);
+
+	m_sampCount = Time2Index((m_endTime - m_startTime), si) + 1;
+	if (m_sampCount > segySampCount) m_sampCount = segySampCount;
+
+	// mouse move code needs this stuff 
+	m_hScale = DPI / pDoc->GetHScale();					// pixels per trace
+	m_vScale = DPI * pDoc->GetVScale() * si / 1.0e6f;	// pixels per sample
+
+	// get the leftmost trace # and the increment. Drawing is always left to right.
+	int firstTr, incrementTr;
+	GetPlotDirection(firstTr, incrementTr);
+
+	// Count the number of wells that will be displayed. Embedded traces have a one trace gap on each side
+	// Make a sorted list of their trace numbers for use later on.
+	m_nTotalTrace = m_nTrace;
+	m_wellCount = 0;
+	WellList* pWellList = pDoc->GetWellListPtr();
+	for (int i = 0; i < m_nTrace; i++) {
+		int xLine = pOutputSegy->GetCrossline(i);
+		int inLine = pOutputSegy->GetInline(i);
+		for (int j = 0; j < pWellList->GetCount(); j++) {
+			CWell* pWell = pWellList->GetAt(pWellList->FindIndex(j));
+			if (pWell->m_xline == xLine && pWell->m_inline == inLine) {
+				if (pWell->GetColorDepthLogIndex() >= 0 && pWell->GetDeviatedPointCount() == 0) {
+					m_listWellTraces.SetAtGrow(m_wellCount, i);
+					m_listWellIndex.SetAtGrow(m_wellCount++, j);
+					m_nTotalTrace += pDoc->GetColorTrackWidth() + 2;
+				}
+			}
+		}
+	}
+
+	int nClass, inc, inc2, inc3;
+	CString strItem;
+	CRect rc;
+	CRect rcItem;
+	CSize sizetotal;
+
+	// Save the dimensions of this window
+	GetParentFrame()->GetWindowRect(&rc);
+	pDoc->SetClassifiedWinRect(rc);
+	//TRACE("IMACView top=%d left=%d width=%d height=%d\n", rc.top, rc.left, rc.Width(), rc.Height());
+
+	sizetotal.cx = (SIDE * 2) + (m_nTotalTrace * m_hScale) + LEGEND;
+	sizetotal.cy = TOP + BOTTOM + (int)(m_sampCount * m_vScale);
+
+	// if the size of the DC has changed then return and reenter with proper size.
+	if (sizetotal != m_scrollSize) {
+		SetScrollSizes(MM_TEXT, sizetotal);
+		m_scrollSize = sizetotal;
+		Invalidate();
+		return;
+	}
+
+	GetClientRect(&rcItem);
+	rc.left = rc.top = 0;
+	rc.right = (rcItem.right > sizetotal.cx) ? rcItem.right : sizetotal.cx;
+	rc.bottom = (rcItem.bottom > sizetotal.cy) ? rcItem.bottom : sizetotal.cy;
+
+	// if the window size hasn't changed, and we're not displaying anything new then
+	// just use the previous bitmap. No need to redraw the same thing again.
+	if (rc == m_rc && !pDoc->GetReadyToDisplay(0)) {
+		//TRACE("IMACView::onDraw()  using bitmap\n");
+		CDC* pDC;
+		pDC = &m_tempDC;
+
+		m_tempDC.BitBlt(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
+			&m_memDC, 0, 0, SRCCOPY);
+
+		// draw the selection box on the bitmap
+		DrawHighliteBoxes(pDC);
+
+		//  draw trace tracking icon on the bitmap
+		DWORD trackInline, trackXline;
+		pDoc->GetTrackTrace(trackInline, trackXline);
+		for (int i = 0, trnum = firstTr; i < m_nTrace; i++, trnum += incrementTr) {
+			int inLine = pOutputSegy->GetInline(trnum);
+			int xLine = pOutputSegy->GetCrossline(trnum);
+			if (trackInline == inLine && trackXline == xLine) {
+				CRgn  trackIcon;
+				CPoint ptVertex[3];
+				int tmp1 = i;
+				for (int iWell = 0; iWell < m_wellCount; iWell++) {
+					int wellTrace = m_listWellTraces[iWell];
+					if (incrementTr > 0) {
+						if (wellTrace <= i) tmp1 += pDoc->GetColorTrackWidth() + 2;
+					} else {
+						if (wellTrace >= firstTr - i) tmp1 += pDoc->GetColorTrackWidth() + 2;
+					}
+				}
+				ptVertex[0].x = SIDE + tmp1 * m_hScale + m_hScale / 2 - DXY / 4;
+				ptVertex[0].y = TOP - DXY / 2;
+				ptVertex[1].x = SIDE + tmp1 * m_hScale + m_hScale / 2;
+				ptVertex[1].y = TOP;
+				ptVertex[2].x = SIDE + tmp1 * m_hScale + m_hScale / 2 + DXY / 4;
+				ptVertex[2].y = TOP - DXY / 2;
+				trackIcon.CreatePolygonRgn(ptVertex, 3, ALTERNATE);
+				pDC->FillRgn(&trackIcon, &CBrush(RGB(0, 0, 0)));
+				break;
+			}
+		}
+		CMapSelectDlg* pMap = pDoc->GetMapSelectPtr();
+		if (pMap && pMap->m_hWnd) {
+			pMap->Invalidate(FALSE);
+		}
+
+		pDCin->BitBlt(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, pDC, 0, 0, SRCCOPY);
+
+		return;
+	}
+
+	//	TRACE("IMACView::onDraw()  Drawing from scratch\n");
+
+		// looks like we'll be redrawing the entire screen, no need to keep the old one.
+	if (!m_rc.IsRectNull()) {
+		m_memDC.SelectObject(m_pBM);
+		m_memBM.DeleteObject();
+		m_memDC.DeleteDC();
+		// do the same to the temporary bitmap
+		m_tempDC.SelectObject(m_ptempBM);
+		m_tempBM.DeleteObject();
+		m_tempDC.DeleteDC();
+	}
+	// save the window rectangle, we'll check it next OnDraw
+	m_rc = rc;
+
+	// make a device context and bitmap in memory. Copy it to the screen once complete.
+	// This eliminates flashing, and we'll reuse it if there is nothing new to draw.
+	CDC* pDC;
+	CBrush	hbrBkGnd;
+	m_memDC.CreateCompatibleDC(pDCin);
+	m_memBM.CreateCompatibleBitmap(pDCin, rc.right, rc.bottom);
+	m_pBM = m_memDC.SelectObject(&m_memBM);
+
+	// create a corresponding temporary memory dc and bm for use when not redrawing everything.
+	m_tempDC.CreateCompatibleDC(pDCin);
+	m_tempBM.CreateCompatibleBitmap(pDCin, rc.right, rc.bottom);
+	m_ptempBM = m_tempDC.SelectObject(&m_tempBM);
+
+	pDC = &m_memDC;
+
+	// clear the background
+	hbrBkGnd.CreateSolidBrush(GetSysColor(COLOR_WINDOW));
+	pDC->FillRect(&rc, &hbrBkGnd);
+
+	CPoint pntScrollPosition = GetScrollPosition();
+	nClass = pDoc->GetClassCount();
+
+	if (pDoc->m_bNewColorFlag & 0x1) {
+		pDoc->m_bNewColorFlag ^= 0x1;		// xor the bit off
+		try {
+			COLORREF* colorbar = pDoc->GetColorBar();
+			for (int i = 0; i < nClass; i++) {
+				if (pTraceBrush[i] != NULL) delete pTraceBrush[i];
+				pTraceBrush[i] = new CBrush(colorbar[i]);
+				if (pTraceBrush[i] == NULL) {
+					AfxMessageBox("Error allocating trace brush in IMACView");
+					return;
+				}
+			}
+		}
+		catch (...) {
+			AfxMessageBox("Error allocating memory for color brush in IMACView");
+			return;
+		}
+	}
+
+	// Define some fonts
+	if (m_pFontNorm == NULL) {
+
+		CFont* defaultFont = pDC->GetCurrentFont();
+		LOGFONT lf;
+		defaultFont->GetLogFont(&lf);
+
+		int height = lf.lfHeight;
+		int width = lf.lfWidth;
+
+		// Create a new font exactly like the original but scaled according to the display scale
+		m_pFontNorm = new CFont;
+		if (m_pFontNorm->CreateFont(
+			height,
+			width,
+			lf.lfEscapement,
+			lf.lfOrientation,      // nOrientation
+			lf.lfWeight,           // nWeight
+			lf.lfItalic,           // bItalic
+			lf.lfUnderline,        // bUnderline
+			lf.lfStrikeOut,        // cStrikeOut
+			lf.lfCharSet,          // nCharSet
+			lf.lfOutPrecision,     // nOutPrecision
+			lf.lfClipPrecision,    // nClipPrecision
+			lf.lfQuality,          // nQuality
+			lf.lfPitchAndFamily,	  // nPitchAndFamily
+			"fontNorm") == 0) {        // lpszFacename
+			AfxMessageBox("Cannot create primary font");
+			delete m_pFontNorm;
+			m_pFontNorm = defaultFont;
+		}
+
+		// Create a new font exactly like the original but scale to 3/4 size
+		m_pFontSmall = new CFont;
+		if (m_pFontSmall->CreateFont(
+			MulDiv(height, 3, 4),
+			MulDiv(width, 3, 4),
+			lf.lfEscapement,
+			lf.lfOrientation,      // nOrientation
+			lf.lfWeight,           // nWeight
+			lf.lfItalic,           // bItalic
+			lf.lfUnderline,        // bUnderline
+			lf.lfStrikeOut,        // cStrikeOut
+			lf.lfCharSet,          // nCharSet
+			lf.lfOutPrecision,     // nOutPrecision
+			lf.lfClipPrecision,    // nClipPrecision
+			lf.lfQuality,          // nQuality
+			lf.lfPitchAndFamily,	  // nPitchAndFamily
+			"fontSmall") == 0) {        // lpszFacename
+			AfxMessageBox("Cannot create small font");
+			delete m_pFontSmall;
+			m_pFontSmall = defaultFont;
+		}
+	}
+
+	//	Draw the annotation labels in the top right and top left corners
+	pDC->SelectObject(m_pFontNorm);
+	rcItem.left = 0;
+	rcItem.right = SIDE - DXY;
+	rcItem.top = 0;
+	rcItem.bottom = DXY;
+	pDC->DrawText("Inline", -1, rcItem, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
+	rcItem.top += DXY;
+	rcItem.bottom += DXY;
+	pDC->DrawText("Crossline", -1, rcItem, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
+	rcItem.top += DXY;
+	rcItem.bottom += DXY;
+	pDC->DrawText("Trace#", -1, rcItem, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
+	rcItem.left = SIDE + m_nTotalTrace * m_hScale + DXY;
+	rcItem.right = rcItem.left + SIDE;
+	rcItem.top = 0;
+	rcItem.bottom = DXY;
+	pDC->DrawText("Inline", -1, rcItem, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+	rcItem.top += DXY;
+	rcItem.bottom += DXY;
+	pDC->DrawText("Crossline", -1, rcItem, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+	rcItem.top += DXY;
+	rcItem.bottom += DXY;
+	pDC->DrawText("Trace#", -1, rcItem, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+
+	//	Draw the trace annotation along the top
+	pDC->SelectObject(m_pFontSmall);
+	for (int i = 0, j = 0, trnum = firstTr; i < m_nTrace; i += labelInterval, j += labelInterval, trnum += labelInterval * incrementTr) {
+
+		// check if we have to leave a space for a well.
+		for (int iWell = 0; iWell < m_wellCount; iWell++) {
+			int wellTrace = m_listWellTraces[iWell];
+			if ((incrementTr == 1 && (trnum >= wellTrace && trnum < (wellTrace + labelInterval))) ||
+				(incrementTr == -1 && (trnum <= wellTrace && trnum > (wellTrace - labelInterval)))) {
+				j += pDoc->GetColorTrackWidth() + 2;
+			}
+		}
+
+		rcItem.left = SIDE - DXY + j * m_hScale;
+		rcItem.right = SIDE + DXY + j * m_hScale + m_hScale;
+		rcItem.top = 0;
+		rcItem.bottom = DXY;
+		int inLine = pOutputSegy->GetInline(trnum);
+		strItem.Format("%d", inLine);
+		pDC->DrawText(strItem, -1, rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+		rcItem.top += DXY;
+		rcItem.bottom += DXY;
+		int xLine = pOutputSegy->GetCrossline(trnum);
+		strItem.Format("%d", xLine);
+		pDC->DrawText(strItem, -1, rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+		rcItem.top += DXY;
+		rcItem.bottom += DXY;
+		strItem.Format("%d", trnum + 1);
+		pDC->DrawText(strItem, -1, rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+		pDC->MoveTo(SIDE + j * m_hScale + m_hScale / 2, TOP - DXY / 2);
+		pDC->LineTo(SIDE + j * m_hScale + m_hScale / 2, TOP);
+	}
+
+	// draw the control points if it's a user line
+	if (pDoc->GetInlineXlineMode() == eUSERLINE) {
+		for (int i = 0, trnum = firstTr; i < m_nTrace; i++, trnum += incrementTr) {
+			int inLine = pOutputSegy->GetInline(trnum);
+			int xLine = pOutputSegy->GetCrossline(trnum);
+			int ptNum = pDoc->GetUserLineControlPoint(inLine, xLine);
+			if (ptNum >= 0) {
+				CRgn  trackIcon;
+				CPoint ptVertex[3];
+				ptVertex[0].x = SIDE + i * m_hScale + m_hScale / 2 - DXY / 4;
+				ptVertex[0].y = TOP - DXY / 2;
+				ptVertex[1].x = SIDE + i * m_hScale + m_hScale / 2;
+				ptVertex[1].y = TOP;
+				ptVertex[2].x = SIDE + i * m_hScale + m_hScale / 2 + DXY / 4;
+				ptVertex[2].y = TOP - DXY / 2;
+				trackIcon.CreatePolygonRgn(ptVertex, 3, ALTERNATE);
+				pDC->FillRgn(&trackIcon, &CBrush(RGB(0, 0, 0)));
+				strItem.Format("%d", ptNum + 1);
+				rcItem.top = TOP - DXY - DXY / 2;
+				rcItem.bottom = rcItem.top + DXY;
+				rcItem.left = SIDE + i * m_hScale + m_hScale / 2 - DXY;
+				rcItem.right = rcItem.left + 2 * DXY;
+				pDC->DrawText(strItem, -1, rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			}
+		}
+	}
+
+	//	10 ms and 100 ms timing line labels.  
+	int ixs = Time2Index(m_startTime, si);
+	int ixe = Time2Index(m_endTime, si);
+	pDC->SelectObject(m_pFontNorm);
+	inc = Time2Index(10, si);
+	inc2 = Time2Index(100, si);
+	inc3 = Time2Index(500, si);
+	int displayTime = 0;
+	// 10ms labels
+	if (b10msTLineLabel && inc > 0) {
+		DrawTimingLineLabels(pDC, 10);
+	}
+	// 100ms labels
+	if (b100msTLineLabel && inc2 > 0) {
+		DrawTimingLineLabels(pDC, 100);
+	}
+	// 500ms labels unless they're already drawn by the 100 ms option.
+	if (b500msTLineLabel && !b100msTLineLabel && inc3 > 0) {
+		DrawTimingLineLabels(pDC, 500);
+	}
+
+	//	The start time...
+	rcItem.left = 0;
+	rcItem.right = SIDE - DXY;
+	rcItem.top = TOP - DXY;
+	rcItem.bottom = TOP + DXY;
+	float junk = Index2TimeFloat(ixs, si);
+	displayTime = (int)Index2TimeFloat(ixs, si);
+	if (pDoc->IsPetrelTimeMode()) {
+		displayTime = -(displayTime - (int) pDoc->CalculatePetrelOffset(pDoc->GetPetrelDatum()));
+	}
+	strItem.Format("%d", displayTime);
+	pDC->DrawText(strItem, -1, rcItem, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
+	rcItem.left = SIDE + m_nTotalTrace * m_hScale + DXY;
+	rcItem.right = rcItem.left + SIDE;
+	pDC->DrawText(strItem, -1, rcItem, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+
+	//	The end time...
+	int iy = TOP + (int)(m_sampCount * m_vScale);
+	rcItem.left = 0;
+	rcItem.right = SIDE - DXY;
+	rcItem.top = iy - DXY;
+	rcItem.bottom = iy + DXY;
+	displayTime = Index2Time(ixe, si);
+	if (pDoc->IsPetrelTimeMode()) {
+		displayTime = -(displayTime - (int) pDoc->CalculatePetrelOffset(pDoc->GetPetrelDatum()));
+	}
+	strItem.Format("%d", displayTime);
+	pDC->DrawText(strItem, -1, rcItem, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
+	rcItem.left = SIDE + m_nTotalTrace * m_hScale + DXY;
+	rcItem.right = rcItem.left + SIDE;
+	pDC->DrawText(strItem, -1, rcItem, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+
+
+	// get some horizon info
+	pDC->SelectObject(m_pFontSmall);
+	CHorizon* pHorizon = pDoc->GetHorizonDataPtr();
+	int horizonCount = pHorizon->GetHorizonCount();
+	int horizonRecordCount = pHorizon->GetRecordCount();
+	int currIndex = 0;
+	int prevIndex = -1;
+	int tstart = pDoc->GetStartTime();
+	int tend = pDoc->GetEndTime();
+
+	// create color pens for the corresponding horizons.
+	for (int i = 0; i < horizonCount; i++) {
+		if (pHorizonPen[i] != NULL) delete pHorizonPen[i];
+		COLORREF horizonColor = pHorizon->GetLineColor(i);
+		horizonColor &= 0x00FFFFFF; // color bits only.
+		pHorizonPen[i] = new CPen(PS_SOLID, 1, horizonColor);
+		if (pHorizonPen[i] == NULL) {
+			CString txt;
+			txt.Format("Error allocating color pen for horizon %d", i);
+			AfxMessageBox(txt);
+			return;
+		}
+	}
+
+	// declare some arrays to save the horizon annotation
+	struct HorizonLabelData
+	{
+		CString	name;
+		int		firstY;
+		int		lastY;
+		BOOL	firstFound = FALSE;
+		BOOL	lastFound = FALSE;
+	};
+	std::vector<HorizonLabelData> horizonLabelData(horizonCount);
+	int     leftHorizonPt[1000];
+	CString leftHorizonName[1000];
+	int     leftCount = 0;
+	int     rightHorizonPt[1000];
+	CString rightHorizonName[1000];
+	int     rightCount = 0;
+
+	// if this is the first draw after the project was opened then we may have to set the selection bias 
+	if (pDoc->GetInitialSelect() && pDoc->IsHighliteRegionOnCurrentLine()) {
+		if (!pDoc->IsHighliteRegion1Null()) {
+			CRect select = pDoc->GetHighliteRegion1();
+			SelectData(select, 0);
+		}
+		if (!pDoc->IsHighliteRegion2Null()) {
+			CRect select = pDoc->GetHighliteRegion2();
+			SelectData(select, 1);
+		}
+		pDoc->SetInitialSelect(FALSE);
+	}
+	
+	// If flatten on, get flatten offset values
+	std::vector<float> flatteningOffsets = pDoc->GetFlatteningOffsets(pOutputSegy, firstTr, m_nTrace, incrementTr);
+
+	//	Draw the trace data.
+	for (int i = 0, jtr = 0, trnum = firstTr; i < m_nTrace; i++, jtr++, trnum += incrementTr) {
+
+		// check if we have an embedded well to plot, if so open a space.
+		int wellTrace = -1;
+		for (int iWell = 0; iWell < m_wellCount; iWell++) {
+			wellTrace = m_listWellTraces[iWell];
+			if (trnum == wellTrace) {
+				jtr += pDoc->GetColorTrackWidth() + 2;
+				break;
+			}
+		}
+
+		if (flatteningOffsets[i] == NULL_HORIZON_VALUE) continue;
+
+		float vAccumulator = TOP + ((flatteningOffsets[i]*1000/si)*m_vScale);
+		rcItem.left = SIDE + jtr * m_hScale;
+		rcItem.right = rcItem.left + m_hScale;
+		rcItem.top = (int)vAccumulator;
+		vAccumulator += m_vScale;
+		rcItem.bottom = (int)vAccumulator;
+		DWORD traceOriginX = rcItem.left;
+
+		float* pData = pOutputSegy->GetTraceDataPtr(trnum, m_startTime);
+
+		//  Save the location and coordinates of each trace. To be used for plotting deviated wells.
+		CTraceViewInfo traceViewInfo;
+		traceViewInfo.traceNumber = trnum;
+		traceViewInfo.inLine = pOutputSegy->GetInline(trnum);
+		traceViewInfo.xLine = pOutputSegy->GetCrossline(trnum);
+		if (pDoc->GetInlineXlineMode() != eUSERLINE) {
+			traceViewInfo.xCoord = pOutputSegy->GetXCoord(trnum);
+			traceViewInfo.yCoord = pOutputSegy->GetYCoord(trnum);
+		} else {
+			CDoublePoint smoothPoint = pDoc->GetSmoothedUserLineCoordinates(traceViewInfo.inLine, traceViewInfo.xLine);
+			traceViewInfo.xCoord = smoothPoint.x;
+			traceViewInfo.yCoord = smoothPoint.y;
+		}
+		traceViewInfo.xPixel = (rcItem.left + rcItem.right) / 2;
+		m_traceViewInfoArray.SetAtGrow(trnum, traceViewInfo);
+		//TRACE("%d %f %f %d\n", trnum, traceViewInfo.xCoord, traceViewInfo.yCoord, traceViewInfo.xPixel);
+
+		// plot the trace
+		for (int j = 0; j < m_sampCount; j++) {
+			int k = (int)pData[j];
+
+			if (k >= SELECTION_BIAS) {
+#if (SHOWSELECT == 0)
+				while (k >= SELECTION_BIAS) {
+					k -= SELECTION_BIAS;
+				}
+#else
+				if (k >= (SELECTION_BIAS * 2)) {
+					k = pDoc->GetHighliteColor2();
+				} else {
+					k = pDoc->GetHighliteColor1();
+				}
+#endif
+			}
+
+			if (k >= nClass) {
+				k = 0;	// Check for UNCLASSIFIED
+			}
+			if (vAccumulator - m_vScale< TOP) {
+				rcItem.top = (int)vAccumulator;
+				vAccumulator += m_vScale;
+				rcItem.bottom = (int)vAccumulator;
+				continue;
+			}
+			else if ( vAccumulator - m_vScale > TOP + ((m_endTime * 1000 / si) * m_vScale)) {
+				continue;
+			}
+			pDC->FillRect(rcItem, pTraceBrush[k]);
+			rcItem.top = (int)vAccumulator;
+			vAccumulator += m_vScale;
+			rcItem.bottom = (int)vAccumulator;	
+		}
+	}
+
+	// Set up for wiggle overlay.
+	float excursion = 0;
+	double meanAllTraces = 0;
+	CSegy* pWiggleSegy = NULL;
+	if (pDoc->GetWiggleDisplayToggle()) {
+		if (pDoc->GetWiggleDrawingMode() != eNO_WIGGLE) {
+			// get a pointer to the Wiggle overlay data
+			if (pDoc->GetWiggleClassifiedVolumeCheck()) {
+				pWiggleSegy = pOutputSegy;
+			}
+			else {
+				CString wiggleName = pDoc->GetWiggleSelectedAttribute();
+				pWiggleSegy = pDoc->GetSegyPtrFromAttrName(wiggleName);
+			}
+			if (pWiggleSegy != NULL) {
+				// compute the drawing scalar.
+				excursion = m_hScale * pDoc->GetWiggleTraceExcursion();
+				for (int i = 0; i < m_nTrace; i++) {
+					float* pWiggleData = pWiggleSegy->GetTraceDataPtr(i, m_startTime);
+					// if we're viewing the classified volume we have to handle the unclassified samples and selection bias
+					if (pDoc->GetWiggleClassifiedVolumeCheck()) {
+						meanAllTraces += (double)MeanWithIgnore(pWiggleData, m_sampCount, UNCLASSIFIED);
+					}
+					else {
+						meanAllTraces += (double)absMeanf(pWiggleData, m_sampCount);
+					}
+				}
+				meanAllTraces /= m_nTrace;
+				if (meanAllTraces < 0) meanAllTraces = -meanAllTraces;
+			}
+		}
+	}
+	//	Draw the horizons and wiggle overlay
+	for (int i = 0, jtr = 0, trnum = firstTr; i < m_nTrace; i++, jtr++, trnum += incrementTr) {
+
+		if (flatteningOffsets[i] == NULL_HORIZON_VALUE) continue;
+
+		// check if we have an embedded well to plot, if so open a space.
+		int wellTrace = -1;
+		for (int iWell = 0; iWell < m_wellCount; iWell++) {
+			wellTrace = m_listWellTraces[iWell];
+			if (trnum == wellTrace) {
+				jtr += pDoc->GetColorTrackWidth() + 2;
+				break;
+			}
+		}
+
+		float vAccumulator;
+		DWORD traceOriginX = SIDE + jtr * m_hScale + (DWORD)(m_hScale / 2.0);
+
+		if (pDoc->GetWiggleDisplayToggle()) {
+			// plot the wiggle, scale to proper excursion
+			if (pDoc->GetWiggleDrawingMode() > eNO_WIGGLE && pWiggleSegy && i % pDoc->GetWiggleTraceDecimation() == 0) {
+				float* pWiggleData = pWiggleSegy->GetTraceDataPtr(trnum, m_startTime);
+				vAccumulator = TOP + ((flatteningOffsets[i] * 1000 / si) * m_vScale);
+				DWORD plotY = (DWORD)vAccumulator;
+				pDC->SelectObject(m_normPen);
+
+				int dx = 0;
+				int prevDx = 0;
+
+				// Wiggle Sinc Interpolation
+				if (pDoc->GetWiggleInterpolationMode() == eWIGGLE_SINC) {
+					double indPercentage = (double)(m_sampCount) / ((m_vScale * m_sampCount));
+
+					for (int ind = 0; ind < m_vScale * m_sampCount; ind++) {
+						double interpolatedSample = 0.0;
+						for (int j = 0; j < m_sampCount; j++) {
+							float sampleValue = pWiggleData[j];
+							if (pDoc->GetWiggleClassifiedVolumeCheck()) {
+								if (sampleValue == UNCLASSIFIED) {
+									sampleValue = 0;
+								}
+								while (sampleValue >= SELECTION_BIAS) {
+									sampleValue -= SELECTION_BIAS;
+								}
+							}
+							interpolatedSample += sampleValue * sinc((ind * indPercentage) - j);
+						}
+
+						float dx_f = (float)(interpolatedSample * excursion / meanAllTraces);
+						if (std::abs(dx_f) > m_hScale * pDoc->GetWiggleTraceClip()) { // check for trace clip
+							if (dx_f > 0) dx_f = m_hScale * pDoc->GetWiggleTraceClip();
+							else dx_f = -(m_hScale * pDoc->GetWiggleTraceClip());
+						}
+						dx = (int)std::round(dx_f);
+
+						if (ind == 0) {
+							pDC->MoveTo(traceOriginX + dx, plotY);
+							prevDx = dx;
+						}
+						plotY = (DWORD)(vAccumulator++);  // increment vAccumulator here
+						if (vAccumulator < TOP || vAccumulator + m_vScale > TOP + ((m_endTime * 1000 / si) * m_vScale)) {
+							//pDC->LineTo(traceOriginX + dx, plotY);	// draw line to this point from previous point
+							pDC->MoveTo(traceOriginX + dx, plotY);	// go back to where we started 
+							continue;
+						}
+
+						pDC->LineTo(traceOriginX + dx, plotY);	// draw line to this point from previous point
+
+						// draw the fill
+						if (pDoc->GetWiggleDrawingMode() == eWIGGLE_FILL) {
+							if (dx > 0) {
+								pDC->LineTo(traceOriginX, plotY);  // draw line to origin
+								pDC->MoveTo(traceOriginX + dx, plotY);	// go back to where we started 
+							}
+						}
+					}
+				}
+
+				// Wiggle Linear Interpolation
+				else if (pDoc->GetWiggleInterpolationMode() == eWIGGLE_LINEAR) {
+
+					for (int ind = 0; ind < m_sampCount; ind++) {
+						float sampleValue = pWiggleData[ind];
+						if (pDoc->GetWiggleClassifiedVolumeCheck()) {
+							if (sampleValue == UNCLASSIFIED) {
+								sampleValue = 0;
+							}
+							while (sampleValue >= SELECTION_BIAS) {
+								sampleValue -= SELECTION_BIAS;
+							}
+						}
+
+						float dx_f = 0;
+						if (meanAllTraces != 0.0) dx_f = (float)(sampleValue * excursion / meanAllTraces);
+						if (std::abs(dx_f) > m_hScale * pDoc->GetWiggleTraceClip()) { // check for trace clip
+							if (dx_f > 0) dx_f = m_hScale * pDoc->GetWiggleTraceClip();
+							else dx_f = -(m_hScale * pDoc->GetWiggleTraceClip());
+						}
+						dx = (int)std::round(dx_f);
+
+						if (ind == 0) {
+							pDC->MoveTo(traceOriginX + dx, plotY);
+							prevDx = dx;
+						}
+						plotY = (DWORD)(vAccumulator);  // point to the center pixel of the sample.
+
+						// don't draw above or below classified area
+						if (vAccumulator < TOP || vAccumulator + m_vScale > TOP + ((m_endTime * 1000 / si) * m_vScale)) {
+							pDC->MoveTo(traceOriginX + dx, plotY);	// go back to where we started 
+							vAccumulator += m_vScale;
+							prevDx = dx;
+							continue;
+						}
+
+						pDC->LineTo(traceOriginX + dx, plotY);
+
+						// draw the fill
+						if (pDoc->GetWiggleDrawingMode() == eWIGGLE_FILL && ind > 0) {
+							int fillStart = (DWORD)(vAccumulator - m_vScale);
+							int fillEnd = (DWORD)vAccumulator;
+							plotY -= (DWORD)m_vScale; // move y back one sample
+							float xIncrement = (float)(dx - prevDx) / (float)(fillEnd - fillStart);
+							if (dx > 0 || prevDx > 0) {
+								for (int isamp = fillStart; isamp < fillEnd; isamp++) {
+									int yIncrement = (isamp - fillStart);
+									int fillx = (int)std::round(((float)(isamp - fillStart) * xIncrement) + prevDx);
+									if (fillx > 0) {
+										pDC->MoveTo(traceOriginX, plotY + yIncrement);
+										pDC->LineTo(traceOriginX + fillx, plotY + yIncrement);
+									}
+								}
+							}
+							plotY = (DWORD)(vAccumulator); // go back to correct y pos
+							pDC->MoveTo(traceOriginX + dx, plotY);
+						}
+						vAccumulator += m_vScale;
+						prevDx = dx;
+					}
+				}
+
+				//	Wiggle Block Interpolation
+				else if (pDoc->GetWiggleInterpolationMode() == e_WIGGLE_BLOCKY) {
+
+					for (int ind = 0; ind < m_sampCount; ind++) {
+						float sampleValue = pWiggleData[ind];
+						if (pDoc->GetWiggleClassifiedVolumeCheck()) {
+							if (sampleValue == UNCLASSIFIED) {
+								sampleValue = 0;
+							}
+							while (sampleValue >= SELECTION_BIAS) {
+								sampleValue -= SELECTION_BIAS;
+							}
+						}
+
+						// don't draw above or below classified area
+						if (vAccumulator < TOP || vAccumulator + m_vScale > TOP + ((m_endTime * 1000 / si) * m_vScale)) {
+							pDC->MoveTo(traceOriginX, plotY + (int)m_vScale);
+							vAccumulator += m_vScale;
+							prevDx = dx;
+							continue;
+						}
+
+						float dx_f = (float)(sampleValue * excursion / meanAllTraces);
+						if (std::abs(dx_f) > m_hScale * pDoc->GetWiggleTraceClip()) { // check for trace clip
+							if (dx_f > 0) dx_f = m_hScale * pDoc->GetWiggleTraceClip();
+							else dx_f = -(m_hScale * pDoc->GetWiggleTraceClip());
+						}
+						dx = (int)std::round(dx_f);
+
+						if (ind == 0) {
+							pDC->MoveTo(traceOriginX + dx, plotY);
+							prevDx = dx;
+						}
+						pDC->LineTo(traceOriginX + dx, plotY);  // draw horizontal line
+						pDC->LineTo(traceOriginX + dx, plotY + (int)m_vScale);
+						vAccumulator += m_vScale;
+
+						// draw the fill
+						if (pDoc->GetWiggleDrawingMode() == eWIGGLE_FILL) {
+							int fillStart = (DWORD)std::round(vAccumulator - m_vScale);
+							int fillEnd = (DWORD)vAccumulator;
+
+							if (dx > 0 || prevDx > 0) {
+								for (int isamp = fillStart; isamp < fillEnd; isamp++) {
+									int yIncrement = isamp - fillStart;
+									pDC->MoveTo(traceOriginX, plotY + yIncrement);
+									pDC->LineTo(traceOriginX + dx, plotY + yIncrement);
+								}
+							}
+
+							pDC->MoveTo(traceOriginX + dx, plotY + (int)m_vScale);
+						}
+						plotY = (DWORD)(vAccumulator);
+						prevDx = dx;
+					}
+				}
+			}
+		}
+
+		// Draw the horizon data
+		if (pDoc->GetHorizonDisplayToggle() && horizonCount > 0 && horizonRecordCount > 0) {
+			int inLine = pOutputSegy->GetInline(trnum);
+			int xLine = pOutputSegy->GetCrossline(trnum);
+			if (prevIndex == -1) {
+				prevIndex = 0;
+				if (pHorizon->FindIndex(inLine, xLine, prevIndex) < 0) prevIndex = -1;
+			} else {
+				if (pHorizon->FindIndex(inLine, xLine, currIndex) < 0) {
+					currIndex = 0;
+					prevIndex = -1;
+				} else {
+					// at each trace draw all the horizons from the previous trace to this one.
+					if (trnum != wellTrace) {
+						for (int j = 0; j < horizonCount; j++) {
+							if (pHorizon->GetDisplayMode(j) == FALSE) continue;
+							float* pHor = pHorizon->GetHorizonDataPtr(j);
+							if (pHor[prevIndex] == NULL_HORIZON_VALUE || pHor[currIndex] == NULL_HORIZON_VALUE) {
+								// TRACE("skipping j=%d previndex=%d currindex=%d\n", j, prevIndex, currIndex);
+								continue;
+							}
+							if (flatteningOffsets[i - 1] == NULL_HORIZON_VALUE || flatteningOffsets[i] == NULL_HORIZON_VALUE) {
+								continue;
+							}
+
+							float prevTime = 0;
+							float currTime = 0;
+							int yPrev;
+							int yCurr;
+							int xPrev;
+							int xCurr;
+							if (!pDoc->IsPetrelTimeMode()) {
+								prevTime = pHor[prevIndex];
+								currTime = pHor[currIndex];
+							} else {
+								prevTime = (int)pDoc->CalculatePetrelOffset(pDoc->GetPetrelDatum()) - pHor[prevIndex];
+								currTime = (int)pDoc->CalculatePetrelOffset(pDoc->GetPetrelDatum()) - pHor[currIndex];
+							}
+							if (currTime < tstart || (tend && currTime > tend)) continue;
+							prevTime -= tstart;
+							currTime -= tstart;
+							yPrev = TOP + ((int)((std::round(flatteningOffsets[i-1]) * 1000 / si) * m_vScale)) + (int)(prevTime / si * 1000 * m_vScale) + (int)(m_vScale / 2.0);
+							yCurr = TOP + ((int)((std::round(flatteningOffsets[i]) * 1000 / si) * m_vScale)) + (int)(currTime / si * 1000 * m_vScale) + (int)(m_vScale / 2.0);
+							xPrev = traceOriginX - m_hScale / 2;
+							xCurr = xPrev + m_hScale;
+
+							// to get straight line for flattened horizon
+							if (pDoc->GetFlatteningDisplayToggle() && pDoc->GetFlattenHorizonCheck() && pHorizon->GetName(j) == pDoc->GetFlatteningHorizon()) {
+								if (pDoc->IsPetrelTimeMode()) {
+									prevTime = (float)pDoc->CalculatePetrelOffset(pDoc->GetPetrelDatum()) - pDoc->GetFlatteningDatum();
+									currTime = (float)pDoc->CalculatePetrelOffset(pDoc->GetPetrelDatum()) - pDoc->GetFlatteningDatum();
+								}
+								else {
+									prevTime = (float)pDoc->GetFlatteningDatum();
+									currTime = (float)pDoc->GetFlatteningDatum();
+								}
+								if (currTime < tstart || (tend && currTime > tend)) continue;
+								prevTime -= tstart;
+								currTime -= tstart;
+								yPrev = TOP + (int)(prevTime / si * 1000 * m_vScale) + (int)(m_vScale / 2.0);
+								yCurr = TOP + (int)(currTime / si * 1000 * m_vScale) + (int)(m_vScale / 2.0);
+							}
+
+							// don't draw above or below classified area
+							if (yPrev < TOP || yCurr < TOP || 
+								yPrev > TOP + ((m_endTime * 1000 / si) * m_vScale) + (int)(m_vScale / 2.0) || 
+								yCurr > TOP + ((m_endTime * 1000 / si) * m_vScale) + (int)(m_vScale / 2.0))
+							{
+								continue;
+							}
+
+							// save the label coords for later
+							if (horizonLabelData[j].firstFound) {
+								CString horName = pHorizon->GetName(j);
+								horizonLabelData[j].name = horName;
+								horizonLabelData[j].lastY = yPrev;
+								horizonLabelData[j].lastFound = TRUE;
+							}
+							else if (!horizonLabelData[j].firstFound) {
+								CString horName = pHorizon->GetName(j);
+								horizonLabelData[j].name = horName;
+								horizonLabelData[j].firstFound = TRUE;
+								horizonLabelData[j].firstY = yPrev;
+							}
+							
+							int lineWidth = pHorizon->GetLineWidth(j);
+							yPrev -= lineWidth / 2;
+							yCurr -= lineWidth / 2;
+							// white
+							pDC->SelectObject(m_whitePen);
+							pDC->MoveTo(xPrev, yPrev - 1);
+							pDC->LineTo(xCurr, yCurr - 1);
+							// draw color the correct width
+							pDC->SelectObject(pHorizonPen[j]);
+							for (int k = 0; k < lineWidth; k++) {
+								pDC->MoveTo(xPrev, yPrev++);
+								pDC->LineTo(xCurr, yCurr++);
+							}
+							// white
+							pDC->SelectObject(m_whitePen);
+							pDC->MoveTo(xPrev, yPrev);
+							pDC->LineTo(xCurr, yCurr);
+						}
+
+						// Draw TimeSlice from Maps & Timeslices dialog
+						for (int j = 0; j < horizonCount; j++) {
+							if (pHorizon->GetDisplayMode(j) == FALSE) continue;
+							float* pHor = pHorizon->GetHorizonDataPtr(j);
+							if (pHor[prevIndex] == NULL_HORIZON_VALUE || pHor[currIndex] == NULL_HORIZON_VALUE) {
+								// TRACE("skipping j=%d previndex=%d currindex=%d\n", j, prevIndex, currIndex);
+								continue;
+							}
+							if (flatteningOffsets[i - 1] == NULL_HORIZON_VALUE || flatteningOffsets[i] == NULL_HORIZON_VALUE) {
+								continue;
+							}
+
+							// Get values from Maps & Timeslices dialog
+							BOOL bShowSliceFlag;
+							BOOL bLoadSliceFlag;
+							int sliceTime;
+							CString selectedHorizon;
+							pDoc->GetSliceParms(bShowSliceFlag, bLoadSliceFlag, sliceTime, selectedHorizon);
+
+							// Start drawing time slice in parallel to horizon
+							float prevTime = 0;
+							float currTime = 0;
+							int yPrev;
+							int yCurr;
+							int xPrev;
+							int xCurr;
+							if (!pDoc->IsPetrelTimeMode()) {
+								prevTime = pHor[prevIndex];
+								currTime = pHor[currIndex];
+							}
+							else {
+								prevTime = (int)pDoc->CalculatePetrelOffset(pDoc->GetPetrelDatum()) - pHor[prevIndex];
+								currTime = (int)pDoc->CalculatePetrelOffset(pDoc->GetPetrelDatum()) - pHor[currIndex];
+							}
+							if (currTime < tstart || (tend && currTime > tend)) continue;
+							prevTime -= tstart;
+							currTime -= tstart;
+							yPrev = TOP + ((int)((std::round(flatteningOffsets[i - 1]) * 1000 / si) * m_vScale)) + (int)(prevTime / si * 1000 * m_vScale) + (int)(m_vScale / 2.0);
+							yCurr = TOP + ((int)((std::round(flatteningOffsets[i]) * 1000 / si) * m_vScale)) + (int)(currTime / si * 1000 * m_vScale) + (int)(m_vScale / 2.0);
+							xPrev = traceOriginX - m_hScale / 2;
+							xCurr = xPrev + m_hScale;
+
+							// to get straight line for flattened horizon
+							if (pDoc->GetFlatteningDisplayToggle() && pDoc->GetFlattenHorizonCheck() && pHorizon->GetName(j) == pDoc->GetFlatteningHorizon()) {
+								if (pDoc->IsPetrelTimeMode()) {
+									prevTime = (float)pDoc->CalculatePetrelOffset(pDoc->GetPetrelDatum()) - pDoc->GetFlatteningDatum();
+									currTime = (float)pDoc->CalculatePetrelOffset(pDoc->GetPetrelDatum()) - pDoc->GetFlatteningDatum();
+								}
+								else {
+									prevTime = (float)pDoc->GetFlatteningDatum();
+									currTime = (float)pDoc->GetFlatteningDatum();
+								}
+								if (currTime < tstart || (tend && currTime > tend)) continue;
+								prevTime -= tstart;
+								currTime -= tstart;
+								yPrev = TOP + (int)(prevTime / si * 1000 * m_vScale) + (int)(m_vScale / 2.0);
+								yCurr = TOP + (int)(currTime / si * 1000 * m_vScale) + (int)(m_vScale / 2.0);
+							}
+
+							// don't draw above or below classified area
+							if (yPrev < TOP || yCurr < TOP ||
+								yPrev > TOP + ((m_endTime * 1000 / si) * m_vScale) + (int)(m_vScale / 2.0) ||
+								yCurr > TOP + ((m_endTime * 1000 / si) * m_vScale) + (int)(m_vScale / 2.0))
+							{
+								continue;
+							}
+
+							// save the label coords for later
+							if (horizonLabelData[j].firstFound) {
+								CString horName = pHorizon->GetName(j);
+								horizonLabelData[j].name = horName;
+								horizonLabelData[j].lastY = yPrev;
+								horizonLabelData[j].lastFound = TRUE;
+							}
+							else if (!horizonLabelData[j].firstFound) {
+								CString horName = pHorizon->GetName(j);
+								horizonLabelData[j].name = horName;
+								horizonLabelData[j].firstFound = TRUE;
+								horizonLabelData[j].firstY = yPrev;
+							}
+
+							int lineWidth = pHorizon->GetLineWidth(j);
+							yPrev -= 25;
+							yPrev -= lineWidth / 2;
+							yCurr -= 25;
+							yCurr -= lineWidth / 2;
+							// white
+							pDC->SelectObject(m_whitePen);
+							pDC->MoveTo(xPrev, yPrev - 1);
+							pDC->LineTo(xCurr, yCurr - 1);
+							// draw color the correct width
+							pDC->SelectObject(pHorizonPen[j]);
+							for (int k = 0; k < lineWidth; k++) {
+								pDC->MoveTo(xPrev, yPrev++);
+								pDC->LineTo(xCurr, yCurr++);
+							}
+							// white
+							pDC->SelectObject(m_whitePen);
+							pDC->MoveTo(xPrev, yPrev);
+							pDC->LineTo(xCurr, yCurr);
+						}
+					}
+					prevIndex = currIndex;
+				}
+			}
+		}
+	}
+
+	// draw the horizon labels, sort them and plot them in order with no overlap
+	for (int m = 0; m < horizonCount; m++) {
+		if (horizonLabelData[m].firstFound) {
+			leftHorizonPt[leftCount] = horizonLabelData[m].firstY;
+			leftHorizonName[leftCount++] = horizonLabelData[m].name;
+		}
+		if (horizonLabelData[m].lastFound) {
+			rightHorizonPt[rightCount] = horizonLabelData[m].lastY;
+			rightHorizonName[rightCount++] = horizonLabelData[m].name;
+		}
+	}
+	QuickSort2ArgInplace(leftHorizonPt, leftHorizonName, leftCount);
+	QuickSort2ArgInplace(rightHorizonPt, rightHorizonName, rightCount);
+
+	for (int j = 0; j < 2; j++) {
+		int horizonMaxY = TOP;  // to prevent over plotting of the label.
+		int horizonX = SIDE;
+		int count;
+		int* pData;
+		CString* pName;
+		if (j == 0) {
+			// left side
+			count = leftCount;
+			pData = leftHorizonPt;
+			pName = leftHorizonName;
+		} else {
+			// right side
+			count = rightCount;
+			pData = rightHorizonPt;
+			pName = rightHorizonName;
+		}
+		for (int i = 0; i < count; i++) {
+			int horizonY = pData[i];
+			CString horName = pName[i];
+			CSize extent = pDC->GetTextExtent(horName);
+			CRect horItem;
+			horItem.top = horizonY - DXY / 2;
+			if (horItem.top < horizonMaxY) horItem.top = horizonMaxY;
+			horItem.bottom = horItem.top + DXY;
+			horizonMaxY = horItem.bottom;
+			if (j == 0) {
+				horItem.left = SIDE - extent.cx - 15;
+				horItem.right = SIDE - 10;
+				pDC->SelectObject(m_normPen);
+				pDC->MoveTo(horItem.right, horItem.top + DXY / 2);
+				pDC->LineTo(SIDE, horizonY);
+			} else {
+				horItem.left = SIDE + (m_nTotalTrace * m_hScale) + 10;
+				horItem.right = horItem.left + extent.cx + 10;
+				pDC->SelectObject(m_normPen);
+				pDC->MoveTo(horItem.left, horItem.top + DXY / 2);
+				pDC->LineTo(horItem.left - 10, horizonY);
+			}
+			CBrush hbrBkGnd;
+			hbrBkGnd.CreateSolidBrush(GetSysColor(COLOR_WINDOW));
+			pDC->SetBkColor(GetSysColor(COLOR_WINDOW));
+			pDC->FillRect(horItem, &hbrBkGnd);
+			pDC->FrameRect(horItem, &CBrush(RGB(0, 0, 0)));
+			pDC->DrawText(horName, -1, horItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+		}
+	}
+
+
+	// Draw the well overlay...
+	if (pDoc->GetWellDisplayToggle())
+		DrawWellOverlay_Depth(pDC);
+
+	//	Draw the timing lines, end labels are already done
+	//	10ms timing lines
+	pDC->SelectObject(m_normPen);
+	if (b10msTLines) {
+		DrawTimingLines(pDC, 10);
+	}
+	//	100ms timing lines
+	if (b100msTLines) {
+		DrawTimingLines(pDC, 100);
+	}
+	//	500ms timing lines, unless they're already drawn by the 100 ms option
+	if (b500msTLines && !b100msTLines) {
+		DrawTimingLines(pDC, 500);
+	}
+
+	// draw the colorbar legend
+	int height = (int)(m_sampCount * m_vScale) + TOP;
+	CColorBarView::DrawLegend(pDC, pDoc, DXY, height, CPoint(LEGEND + SIDE + m_nTotalTrace * m_hScale, TOP - DXY), -1, -1, TRUE);
+
+	m_legendBox.left = LEGEND + SIDE + m_nTotalTrace * m_hScale;
+	m_legendBox.top = TOP;
+	m_legendBox.right = m_legendBox.left + (8 * DXY);
+	m_legendBox.bottom = height;
+
+	//	Draw a solid border around the entire section.
+	pDC->SelectObject(m_boldPen);
+	iy = TOP + (int)(m_sampCount * m_vScale);
+	pDC->MoveTo(SIDE, TOP);
+	pDC->LineTo(SIDE, iy);
+	pDC->LineTo(SIDE + m_nTotalTrace * m_hScale, iy);
+	pDC->LineTo(SIDE + m_nTotalTrace * m_hScale, TOP);
+	pDC->LineTo(SIDE, TOP);
+
+	// draw the highlight box, aka "the select box"
+	DrawHighliteBoxes(pDC);
+
+	pDCin->BitBlt(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, &m_memDC, 0, 0, SRCCOPY);
+	pDoc->SetReadyToDisplay(0, FALSE);
+	m_bReady = TRUE;
+
+	// Update the histogram
+	UpdateFaciesHistogram();
+
+#if TIMERS == 1
+	TRACE("CIMACView::OnDraw computed in %5.3f seconds\n", (double)(clock() - start) / CLOCKS_PER_SEC);
+#endif
+
+}
+
+// Draw the timing line labels at the specified "timingLine" interval.
+void CIMACView::DrawTimingLineLabels(CDC *pDC, int timingLine)
+{
+
+	CRect rcItem;
+	CString strItem;
+	CIMACDoc* pDoc = GetDocument();
+	if (!pDoc->GetDisplayLinesDisplayToggle()) return;
+	int si = pDoc->GetSI();
+	int ixs = Time2Index(m_startTime, si);
+	int ixe = Time2Index(m_endTime, si);
+	for (int i = m_startTime; i <= m_endTime; i++) {
+		int displayTime = i;
+		if (pDoc->IsPetrelTimeMode()) {
+			displayTime = -(displayTime - (int) pDoc->CalculatePetrelOffset(pDoc->GetPetrelDatum()));
+		}
+		if (displayTime != displayTime / timingLine * timingLine) continue;
+		float ixLabel = Time2IndexFloat(i, si);
+		rcItem.left = 0;
+		rcItem.right = SIDE - DXY;
+		int iy = TOP + (int)((ixLabel - ixs) * m_vScale);
+		rcItem.top = iy - DXY;
+		rcItem.bottom = iy + DXY;
+		
+		
+		if (pDoc->IsPetrelTimeMode() && pDoc->GetFlatteningDisplayToggle() && pDoc->GetFlattenHorizonCheck())  strItem.Format("%d (%d)", displayTime, displayTime - (pDoc->GetFlatteningDatum()));
+		else if (pDoc->GetFlatteningDisplayToggle() && pDoc->GetFlattenHorizonCheck())  strItem.Format("%d (%d)", displayTime, displayTime - pDoc->GetFlatteningDatum());
+		else strItem.Format("%d", displayTime);
+
+		pDC->DrawText(strItem, -1, rcItem, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
+		rcItem.left = SIDE + m_nTotalTrace * m_hScale + DXY;
+		rcItem.right = rcItem.left + SIDE;
+		pDC->DrawText(strItem, -1, rcItem, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+	}
+}
+
+// Draw the timing lines at the specified "timingLine" interval.
+void CIMACView::DrawTimingLines(CDC *pDC, int timingLine)
+{
+	CIMACDoc* pDoc = GetDocument();
+	if (!pDoc->GetDisplayLinesDisplayToggle()) return;
+	int si = pDoc->GetSI();
+	int ixs = Time2Index(m_startTime, si);
+	if (timingLine == 10) {
+		pDC->SelectObject(m_normPen);
+	} else {
+		pDC->SelectObject(m_dotPen);
+	}
+	for (int i = m_startTime; i <= m_endTime; i++) {
+		int displayTime = i;
+		if (pDoc->IsPetrelTimeMode()) {
+			displayTime = -(displayTime - (int) pDoc->CalculatePetrelOffset(pDoc->GetPetrelDatum()));
+		}
+		if (displayTime != displayTime / timingLine * timingLine) continue;
+		float ixLine = Time2IndexFloat(i, si);
+		int iy = TOP + (int)((ixLine - ixs) * m_vScale);
+		if (timingLine == 10) {
+			// for 10 mil timing lines, draw our own dotted line
+			for (int j = SIDE; j < SIDE + m_nTotalTrace * m_hScale; j += 6) {
+				pDC->MoveTo(j, iy);
+				pDC->LineTo(j + 2, iy);
+			}
+		} else {
+			// draw the line using the DotPen
+			pDC->MoveTo(SIDE, iy);
+			pDC->LineTo(SIDE + m_nTotalTrace * m_hScale, iy);
+		}
+	}
+}
+
+void CIMACView::DrawHighliteBoxes(CDC * pDC)
+{
+	CIMACDoc* pDoc = GetDocument();
+
+	// if no data bail out.
+	if (pDoc->GetSegyOutPtr()->GetTraceCount() == 0) return;
+
+	if (pDoc->IsHighliteRegionOnCurrentLine()) {
+		pDC->SelectObject(m_boldPen);
+		if (!pDoc->IsHighliteRegion1Null()) {
+			DrawHighliteBox(pDC, pDoc->GetHighliteRegion1(), pDoc->GetSelectColor1());
+		}
+		if (!pDoc->IsHighliteRegion2Null()) {
+			DrawHighliteBox(pDC, pDoc->GetHighliteRegion2(), pDoc->GetSelectColor2());
+		}
+		// if necessary draw the temp box if the user is just beginning to select
+		if (m_selectState == eBeginSelecting1) {
+			DrawHighliteBox(pDC, pDoc->GetHighliteRegionTemp(), pDoc->GetSelectColor1());
+		} else if (m_selectState == eBeginSelecting2) {
+			DrawHighliteBox(pDC, pDoc->GetHighliteRegionTemp(), pDoc->GetSelectColor2());
+		}
+	}
+}
+
+void CIMACView::DrawHighliteBox(CDC * pDC, CRect highlite, COLORREF color)
+{
+	CPen highlitePen, whitePen;
+	LOGBRUSH logbrush;
+	CIMACDoc* pDoc = CIMACDoc::GetIMACDocPtr();
+	
+	CBrush br(color);
+	br.GetLogBrush(&logbrush);
+	highlitePen.CreatePen(PS_SOLID, 1, &logbrush);
+	whitePen.CreatePen(PS_SOLID, 3, RGB(0xff, 0xff, 0xff));
+
+	// ensure the selection is "in bounds"
+	CRect plot = ClipToBounds(highlite);
+
+	// draw box white, 3 pixels wide
+	pDC->SelectObject(whitePen);
+	pDC->MoveTo(plot.left, plot.top);
+	pDC->LineTo(plot.right, plot.top);
+	pDC->LineTo(plot.right, plot.bottom);
+	pDC->LineTo(plot.left, plot.bottom);
+	pDC->LineTo(plot.left, plot.top);
+
+	// draw actual box 1 pixel in highlight color
+	pDC->SelectObject(highlitePen);
+	pDC->MoveTo(plot.left, plot.top);
+	pDC->LineTo(plot.right, plot.top);
+	pDC->LineTo(plot.right, plot.bottom);
+	pDC->LineTo(plot.left, plot.bottom);
+	pDC->LineTo(plot.left, plot.top);
+}
+
+// ensure the selection is "in bounds"
+CRect CIMACView::ClipToBounds(CRect selectBox)
+{
+	CRect plotBox;
+	plotBox.left = (selectBox.left < SIDE) ? SIDE : selectBox.left;
+	plotBox.right = (selectBox.right < SIDE) ? SIDE : selectBox.right;
+	plotBox.left = (selectBox.left > SIDE + m_nTotalTrace * m_hScale) ? SIDE + m_nTotalTrace * m_hScale : plotBox.left;
+	plotBox.right = (selectBox.right > SIDE + m_nTotalTrace * m_hScale) ? SIDE + m_nTotalTrace * m_hScale : plotBox.right;
+
+	plotBox.top = (selectBox.top < TOP) ? TOP : selectBox.top;
+	plotBox.bottom = (selectBox.bottom < TOP) ? TOP : selectBox.bottom;
+	plotBox.top = (selectBox.top > (int)(TOP + m_sampCount * m_vScale)) ? (int)(TOP + m_sampCount * m_vScale) : plotBox.top;
+	plotBox.bottom = (selectBox.bottom > (int)(TOP + m_sampCount * m_vScale)) ? (int)(TOP + m_sampCount * m_vScale) : plotBox.bottom;
+	return plotBox;
+}
+
+// convert from screen coordinates to actual trace # and sample indexes.
+CRect CIMACView::ConvertToIndexes(CRect plotBox)
+{
+	int itr1 = (plotBox.left - SIDE) / m_hScale;
+	int itr2 = (plotBox.right - SIDE) / m_hScale;
+
+	itr1 = ComputeTraceNumber(itr1);
+	itr2 = ComputeTraceNumber(itr2);
+
+	int isamp1 = (int)((plotBox.top - TOP) / m_vScale);
+	int isamp2 = (int)((plotBox.bottom - TOP) / m_vScale);
+	if (itr1 > itr2) {
+		int itmp = itr1;
+		itr1 = itr2;
+		itr2 = itmp;
+	}
+	if (isamp1 > isamp2) {
+		int itmp = isamp1;
+		isamp1 = isamp2;
+		isamp2 = itmp;
+	}
+	if (itr1 < 0) itr1 = 0;
+	if (itr2 >= m_nTrace) itr2 = m_nTrace - 1;
+	if (isamp1 < 0) isamp1 = 0;
+	if (isamp2 > m_sampCount) isamp2 = m_sampCount;
+
+	CRect traceIndex;
+	traceIndex.left = itr1;
+	traceIndex.right = itr2;
+	traceIndex.top = isamp1;
+	traceIndex.bottom = isamp2;
+
+	return traceIndex;
+}
+
+// draw the well overlay in Depth.
+void CIMACView::DrawWellOverlay_Depth(CDC * pDC)
+{
+	CRect rcItem;;
+	CIMACDoc* pDoc = GetDocument();
+	CSegy* pSegy = pDoc->GetSegyOutPtr();
+	int       si = pDoc->GetSI();			// note: si in MICRO seconds. 
+
+	int firstTr, incrementTr;
+	GetPlotDirection(firstTr, incrementTr);
+	CPen* pCurvePen = pDoc->GetWellBoldPen() ? &m_boldPen : &m_normPen;
+	WellList* pWellList = pDoc->GetWellListPtr();
+	POSITION pos = pWellList->GetHeadPosition();
+	while (pos) {
+		CWell* pWell = pWellList->GetNext(pos);
+		DWORD inLine, xLine;
+		pWell->GetInlineXline(inLine, xLine);
+
+		if (pDoc->GetInlineXlineMode() != eUSERLINE && pWell->GetDeviatedPointCount() == 0) {
+			if (inLine != pSegy->GetInline(0) && xLine != pSegy->GetCrossline(0)) continue; // well is not on this line
+		}
+
+		int colorIndex = pWell->GetColorDepthLogIndex();
+		int nColorTrackCount = pDoc->GetColorTrackWidth();
+
+		// find where the well belongs
+		int iTrace = 0;
+		int trnum = firstTr;
+		while (iTrace < m_nTrace) {
+			if (inLine == pSegy->GetInline(trnum) && xLine == pSegy->GetCrossline(trnum)) break;
+			iTrace++;
+			trnum += incrementTr;
+		}
+
+
+		// if well is deviated and is not on this line, check if any deviated point is on this line.
+		if (iTrace == m_nTrace && pWell->GetDeviatedInlineXlineCount() > 0) {
+
+			iTrace = -1;
+			for (int i = 0; i < m_nTrace; i++) {
+				inLine = pSegy->GetInline(i);
+				xLine = pSegy->GetCrossline(i);
+				for (int j = 0; j < pWell->GetDeviatedInlineXlineCount(); j++) {
+					CPoint* pPoint = pWell->GetDeviatedInlineXlinePtr(j);
+					if (pPoint->x == inLine && pPoint->y == xLine) {
+						iTrace = i;
+						break;
+					}
+				}
+				if (iTrace >= 0) break;
+			}
+
+		}
+
+		if (iTrace == m_nTrace || iTrace == -1) continue;  // well not on this line.
+
+
+		// adjust for embedded color tracks
+		int tmp1 = iTrace;
+		for (int iWell = 0; iWell < m_wellCount; iWell++) {
+			int wellTrace = m_listWellTraces[iWell];
+			if (incrementTr > 0) {
+				if (wellTrace < iTrace) tmp1 += nColorTrackCount + 2;
+			} else {
+				if (wellTrace > firstTr - iTrace) tmp1 += nColorTrackCount + 2;
+			}
+		}
+		iTrace = tmp1;
+
+		float flatteningOffset = pDoc->GetFlatteningOffsetForTrace(pSegy, trnum);
+		if (flatteningOffset == NULL_HORIZON_VALUE) continue;
+
+
+		// compute the center of well display if color track is on.
+		if (colorIndex >= 0) {
+			iTrace += (nColorTrackCount + 2) / 2;
+		}
+
+		// well x origin
+		int iorigin = SIDE + (iTrace * m_hScale) + (m_hScale / 2);
+
+		// Check if this is a deviated well.
+		if (pWell->GetDeviatedPointCount() > 0) {
+			DrawDeviatedWellOverlay(pDC, pWell);
+			continue;
+		}
+
+		// for an even number of embedded traces a further adjusment is necessary
+		if (colorIndex >= 0 && nColorTrackCount / 2 * 2 == nColorTrackCount) {
+			iorigin -= m_hScale / 2;
+		}
+
+		// bottom of the well 
+		int iy = TOP + (int)((m_endTime - m_startTime) / ((float)si / 1000.0) * m_vScale);
+
+		// well origin, vertical line
+		pDC->SelectObject(pCurvePen);
+		if (colorIndex == -1) {
+			pDC->MoveTo(iorigin, TOP);
+			pDC->LineTo(iorigin, iy);
+		}
+
+		// Lastly plot well curves. If no depthtime we skip ahead.
+		BOOL  bDepthMode = pDoc->GetWellDepthMode();
+		float* pDepTime = pWell->GetDepthTimePtr(bDepthMode);
+		if (pDoc->GetWellLogDisplayToggle() && pDepTime != NULL) {
+
+			// plot the embedded well if there is one
+			if (colorIndex >= 0) {
+				float* pColorLog = pWell->GetCurvePtr(colorIndex);
+				DWORD64* pInterpBits = pWell->GetInterpBitsPtr();
+
+				int curveOrigin = iorigin;
+				if (nColorTrackCount / 2 * 2 == nColorTrackCount) {
+					// even number of traces
+					curveOrigin -= (nColorTrackCount / 2 * m_hScale);
+				} else {
+					// odd number of traces
+					curveOrigin -= ((nColorTrackCount / 2 * m_hScale) + (m_hScale / 2));
+				}
+				int wellSampCount = pWell->GetCurvesNRecs();
+				int firstY = 0;
+				COLORREF* colorbar = pDoc->GetColorBar();
+				for (int i = 0; i < nColorTrackCount; i++) {
+					BOOL  bFirstPoint = TRUE;
+					CRect rcItem;
+					rcItem.left = curveOrigin + i * m_hScale;
+					rcItem.right = rcItem.left + m_hScale;
+					for (int k = 0; k < wellSampCount - 1; k++) {
+						if (pDepTime[k] < m_startTime) continue;
+						if (pDepTime[k] > m_endTime) break;
+						if (bFirstPoint && IsBitSet(pInterpBits[k], colorIndex)) continue;
+
+						int rTop = TOP + (int)(((std::round(flatteningOffset) * 1000 / si) * m_vScale) + ((pDepTime[k] - (float)m_startTime) / ((float)si / 1000.0) * m_vScale));
+						int rBottom = TOP + (int)(((std::round(flatteningOffset) * 1000 / si) * m_vScale) + ((pDepTime[k + 1] - (float)m_startTime) / ((float)si / 1000.0) * m_vScale));
+
+						if (rTop < TOP || rBottom > TOP + ((m_endTime * 1000 / si) * m_vScale)) {
+							continue;
+						}
+						if (rBottom < TOP || rBottom > TOP + ((m_endTime * 1000 / si) * m_vScale)) {
+							continue;
+						}
+
+						rcItem.top =  rTop;
+						rcItem.bottom = rBottom;
+
+						if (bFirstPoint) {
+							bFirstPoint = FALSE;
+							firstY = rcItem.top;
+						}
+
+						int sampValue = (int)pColorLog[k];
+						if (sampValue < 0) sampValue = 0;
+						if (sampValue >= pDoc->GetClassCount()) sampValue = pDoc->GetClassCount() - 1;
+						pDC->FillSolidRect(rcItem, colorbar[sampValue]);
+					}
+				}
+				pDC->SetBkColor(GetSysColor(COLOR_WINDOW));
+				// annotate curve name
+				rcItem.top = firstY;
+				rcItem.bottom = rcItem.top + DXY;
+				rcItem.left = iorigin - 50;
+				rcItem.right = iorigin + 50;
+				pDC->DrawText(pWell->GetCurveName(colorIndex), rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			}
+
+			// plot the curve overlay
+			int curveOrigin = iorigin - (pWell->GetTimeCurveCount() / 2 * pDoc->GetWellOffsetPixels(pWell));
+			if (pWell->GetTimeCurveCount() == 1) curveOrigin -= pDoc->GetWellOffsetPixels(pWell) / 2;
+			float* pCurve = NULL;
+			float wellMin, wellMax;
+			float wellScale = 0;
+			float* pFirstCurve = NULL;
+			float firstWellScale;
+			float firstWellMin;
+			int   firstCurveOrigin;
+			int iSelect = -1;
+			for (int j = 0; j < pWell->GetTimeCurveCount(); j++) {
+				pCurve = pWell->GetNextSelectedLogPtr(iSelect);
+				if (pCurve == NULL) break;
+				int wellSampCount = pWell->GetCurvesNRecs();
+				min_max_nozero(pCurve, wellSampCount, &wellMin, &wellMax);
+				if (wellMax - wellMin != 0) wellScale = pDoc->GetWellWidthPixels(pWell) / (wellMax - wellMin);
+
+				CString a, b, c;
+				pWell->GetCurveData(iSelect, a, b, c);
+
+				// save some stuff for plotting the tops later on.
+				if (pFirstCurve == NULL) {
+					pFirstCurve = pCurve;
+					firstWellScale = wellScale;
+					firstCurveOrigin = curveOrigin;
+					firstWellMin = wellMin;
+				}
+
+				BOOL  bSkipLeadingZeros = TRUE;
+				BOOL  bFirstPoint = TRUE;
+				int firstY = 0;
+				for (int k = 0; k < wellSampCount; k++) {
+					if (pDepTime[k] < m_startTime) continue;
+					if (pDepTime[k] > m_endTime) break;
+					if (bSkipLeadingZeros && pCurve[k] == 0)
+						continue;
+					else
+						bSkipLeadingZeros = FALSE;
+
+					int px = (int)(wellScale * (pCurve[k] - wellMin));
+					int py = TOP + (int)(((std::round(flatteningOffset) * 1000 / si) * m_vScale) + ((pDepTime[k] - (float)m_startTime) / ((float)si / 1000.0) * m_vScale));
+					
+					if (py < TOP || py > TOP + ((m_endTime * 1000 / si) * m_vScale)) {
+						continue;
+					}
+
+					if (bFirstPoint) {
+						bFirstPoint = FALSE;
+						firstY = py;
+						pDC->MoveTo(curveOrigin + px, firstY);
+					}
+					pDC->LineTo(curveOrigin + px, py);
+				}
+				// annotate curve name
+				rcItem.top = firstY;
+				rcItem.bottom = rcItem.top + DXY;
+				rcItem.left = curveOrigin;
+				rcItem.right = rcItem.left + pDoc->GetWellWidthPixels(pWell);
+				pDC->DrawText(pWell->GetTimeLogName(j, FALSE), rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+				// increment the curveOrigin for the next curve. Don't increment after the last curve is drawn.
+				if (j + 1 < pWell->GetTimeCurveCount()) {
+					curveOrigin += pDoc->GetWellOffsetPixels(pWell);
+				}
+			}
+
+			// well tops
+			if (pDoc->GetWellTopDisplayToggle() && pDepTime && (pCurve || colorIndex >= 0)) {
+				pDC->SelectObject(m_dotdotPen);
+				for (int j = 0; j < pWell->GetTopsCount(); j++) {
+					CString name, description;
+					float depth;
+					int time;
+					int wellIndex = 0;
+					if (pWell->GetTopSelectState(j) != eSELECTED) continue;
+					pWell->GetTopData(j, name, description, depth, time);
+					if (pWell->GetTimeIndex(pDepTime, (float)time, &wellIndex) == -1) continue;
+
+					int px1, px2;
+					if (pCurve) {
+						px1 = firstCurveOrigin + (int)(firstWellScale * (pFirstCurve[wellIndex] - firstWellMin));
+						px2 = curveOrigin + (int)(wellScale * (pCurve[wellIndex] - wellMin)) + 10;
+					} else {
+						px1 = iorigin;
+						px2 = iorigin + (nColorTrackCount + 2) / 2 * m_hScale;
+					}
+
+					int index = Time2Index((time - m_startTime), si);
+					if (index < 0 || index > Time2Index(m_endTime - m_startTime, si)) continue;
+					int py = TOP + (int)(((std::round(flatteningOffset) * 1000 / si) * m_vScale) + (index * m_vScale));
+					if (py < TOP || py > TOP + ((m_endTime * 1000 / si) * m_vScale)) {
+						continue;
+					}
+
+					pDC->MoveTo(px1, py);
+					pDC->LineTo(px2, py);
+					rcItem.top = py - (DXY / 2);
+					rcItem.bottom = rcItem.top + DXY;
+					rcItem.left = px2;
+					rcItem.right = rcItem.left + pDC->GetTextExtent(name).cx;
+					pDC->DrawText(name, rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+				}
+			}
+		}
+		// well name
+		pDC->SelectObject(m_normPen);
+		CSize extent = pDC->GetTextExtent(pWell->wellName);
+		rcItem.bottom = TOP - 5;
+		rcItem.top = rcItem.bottom - DXY;
+		rcItem.left = iorigin - extent.cx / 2 - 5;
+		rcItem.right = iorigin + extent.cx / 2 + 5;
+		CBrush hbrBkGnd;
+		hbrBkGnd.CreateSolidBrush(GetSysColor(COLOR_WINDOW));
+		pDC->FillRect(rcItem, &hbrBkGnd);
+		pDC->FrameRect(rcItem, &CBrush(RGB(0, 0, 0)));
+		pDC->DrawText(pWell->wellName, rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+		pDC->MoveTo(iorigin, TOP);
+		pDC->LineTo(iorigin + 5, TOP - 6);
+		pDC->MoveTo(iorigin, TOP);
+		pDC->LineTo(iorigin - 5, TOP - 6);
+	}
+}
+
+// draw the deviated well overlay in Depth.
+void CIMACView::DrawDeviatedWellOverlay(CDC* pDC, CWell* pWell)
+{
+#ifdef DEBUG
+	clock_t start, clock1, clock2, clock3, finish;
+	start = clock();
+#endif
+
+	// don't draw deviated well when flattened
+	CIMACDoc* pDoc = GetDocument();
+	if (pDoc->GetFlatteningDisplayToggle() && pDoc->GetFlattenHorizonCheck()) {
+		return;
+	}
+
+	CRect rcItem;;
+	CSegy* pSegy = pDoc->GetSegyOutPtr();
+	int      iorigin;
+	int       si = pDoc->GetSI();			// note: si in MICRO seconds. 
+
+	int firstTr, incrementTr;
+	GetPlotDirection(firstTr, incrementTr);
+	CPen* pCurvePen = pDoc->GetWellBoldPen() ? &m_boldPen : &m_normPen;
+	int colorIndex = pWell->GetColorDepthLogIndex();
+	int nColorTrackCount = pDoc->GetColorTrackWidth();
+
+	CDeviatedPoint* deviatedPoint = pWell->GetDeviatedPoint(0);
+	iorigin = (int)FindPixelOffset(deviatedPoint);
+
+	BOOL  bDepthMode = pDoc->GetWellDepthMode();
+	float* pDepTime = pWell->GetDepthTimePtr(bDepthMode);
+	int wellSampCount = pWell->GetCurvesNRecs();
+	int ixDepth = pWell->GetDepthLogIndex();
+	float* pDepth = pWell->GetCurvePtr(ixDepth);
+
+
+
+#ifdef DEBUG
+	clock1 = clock();
+	//    TRACE("Draw deviated well track. time=%f\n", (double)(clock1 - start) / CLOCKS_PER_SEC);
+#endif
+
+		// Draw well name at the top 
+	pDC->SelectObject(m_normPen);
+	CSize extent = pDC->GetTextExtent(pWell->wellName);
+	rcItem.bottom = TOP - 5;
+	rcItem.top = rcItem.bottom - DXY;
+	rcItem.left = iorigin - extent.cx / 2 - 5;
+	rcItem.right = iorigin + extent.cx / 2 + 5;
+	CBrush hbrBkGnd;
+	hbrBkGnd.CreateSolidBrush(GetSysColor(COLOR_WINDOW));
+	pDC->FillRect(rcItem, &hbrBkGnd);
+	pDC->FrameRect(rcItem, &CBrush(RGB(0, 0, 0)));
+	pDC->DrawText(pWell->wellName, rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+	pDC->MoveTo(iorigin, TOP);
+	pDC->LineTo(iorigin + 5, TOP - 6);
+	pDC->MoveTo(iorigin, TOP);
+	pDC->LineTo(iorigin - 5, TOP - 6);
+
+	// If no depthtime we skip ahead.	
+	if (pDepTime == NULL) return;
+
+	// plot the embedded well (colour track) if there is one
+	if (colorIndex >= 0) {
+		float* pColorLog = pWell->GetCurvePtr(colorIndex);
+		DWORD64* pInterpBits = pWell->GetInterpBitsPtr();
+
+		int curveOrigin = 0;
+		if (nColorTrackCount / 2 * 2 == nColorTrackCount) {
+			// even number of traces
+			curveOrigin -= (nColorTrackCount / 2 * m_hScale);
+		} else {
+			// odd number of traces
+			curveOrigin -= ((nColorTrackCount / 2 * m_hScale) + (m_hScale / 2));
+		}
+		int wellSampCount = pWell->GetCurvesNRecs();
+		int firstY = 0; int firstX = 0;
+		int lastY = 0; int lastX = 0;
+		COLORREF* colorbar = pDoc->GetColorBar();
+
+		BOOL  bFirstPoint = TRUE;
+		CRect rcItem;
+		CPen *pOriginalPen = pDC->SelectObject(&m_normPen);
+		int startIndex = 0;
+		for (int k = 0; k < wellSampCount - 1; k++) {
+			if (pDepTime[k] < m_startTime) continue;
+			if (pDepTime[k] > m_endTime) break;
+			if (pDepth[k] > pWell->GetDeviatedPoint(pWell->GetDeviatedPointCount() - 1)->m_md) break; // cut off log if depth is greater than deviated points depths
+			if (bFirstPoint && IsBitSet(pInterpBits[k], colorIndex)) continue;
+
+			double deviatedOffset = FindPixelOffset(pDepth[k], pWell, &startIndex);
+
+			// compute rotation
+			float p1x, p2x, p1y, p2y;
+			float x, y;
+			p1x = (float)deviatedOffset;
+			p2x = (float)FindPixelOffset(pDepth[k + 1], pWell, &startIndex);
+			p1y = pDepTime[k];
+			p2y = pDepTime[k + 1];
+			FindPerpendicularPoint(p1x, p1y, p2x, p2y, (float)m_hScale, x, y, ((nColorTrackCount - 1) * m_hScale));
+			x -= p2x;
+			y -= p2y;
+
+			int sampValue = (int)pColorLog[k];
+			if (sampValue < 0) sampValue = 0;
+			if (sampValue >= pDoc->GetClassCount()) sampValue = pDoc->GetClassCount() - 1;
+
+			CPen colorPen;
+			colorPen.CreatePen(PS_SOLID, 3, colorbar[sampValue]);
+			pDC->SelectObject(&colorPen);
+
+			// pixel coordinates before rotation
+			rcItem.left = (LONG)p1x;
+			rcItem.right = rcItem.left + m_hScale;
+			rcItem.top = TOP + (int)((p1y - (float)m_startTime) / ((float)si / 1000.0) * m_vScale);
+			rcItem.bottom = TOP + (int)((p2y - (float)m_startTime) / ((float)si / 1000.0) * m_vScale);
+
+			//				for (int pixelIndex = rcItem.top; pixelIndex < rcItem.bottom; pixelIndex++)
+			//{
+			int pixelIndex = rcItem.top;
+			pDC->MoveTo(rcItem.left, pixelIndex);
+			pDC->LineTo((int)(rcItem.left + x), (int)(pixelIndex + y));
+			//}
+
+			if (bFirstPoint) {
+				bFirstPoint = FALSE;
+				firstX = rcItem.left;
+				firstY = pixelIndex;
+			}
+
+			lastX = rcItem.left;
+			lastY = pixelIndex;
+		}
+
+		pDC->SetBkColor(GetSysColor(COLOR_WINDOW));
+		// annotate embedded curve at beginning 
+		rcItem.top = firstY;
+		rcItem.bottom = rcItem.top + DXY;
+		rcItem.left = firstX;
+		rcItem.right = rcItem.left + pDC->GetTextExtent(pWell->GetCurveName(colorIndex)).cx;
+		pDC->DrawText(pWell->GetCurveName(colorIndex), rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+		// annotate embedded curve at end 
+		rcItem.top = lastY;
+		rcItem.bottom = rcItem.top + DXY;
+		rcItem.left = lastX;
+		rcItem.right = rcItem.left + pDC->GetTextExtent(pWell->GetCurveName(colorIndex)).cx;
+		pDC->DrawText(pWell->GetCurveName(colorIndex), rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+#if 0
+		// test for top placement
+		pDC->SelectObject(pOriginalPen);
+		int debugIndex = 0;
+		float debugDepth = 1900;
+		float mdTime = pWell->GetTimeForMD(debugDepth, bDepthMode);
+		iy = TOP + (int)((mdTime - m_startTime) / ((float)si / 1000.0) * m_vScale);
+		ix = (int)FindPixelOffset(debugDepth, pWell, &debugIndex);
+		pDC->MoveTo(ix - 5, iy - 5);
+		pDC->LineTo(ix + 5, iy + 5);
+		pDC->MoveTo(ix - 5, iy + 5);
+		pDC->LineTo(ix + 5, iy - 5);
+#endif
+	}
+
+#ifdef DEBUG
+	clock2 = clock();
+	//    TRACE("Draw embedded well track. time=%f\n", (double)(clock2 - clock1) / CLOCKS_PER_SEC);
+#endif
+
+	// well tops: grab name and depths and create x and y vector lists to draw later on
+	std::vector<float> top_depths;
+	std::vector<CString> top_names;
+	std::vector < std::vector<float>> top_xs;
+	std::vector < std::vector<float>> top_ys;
+	for (int j = 0; j < pWell->GetTopsCount(); j++) {
+		CString name, description;
+		float depth;
+		int time;
+		int wellIndex = 0;
+		if (pWell->GetTopSelectState(j) != eSELECTED) continue;
+		pWell->GetTopData(j, name, description, depth, time);
+		if (pWell->GetTimeIndex(pDepTime, (float)time, &wellIndex) == -1) continue;
+		top_names.push_back(name);
+		top_depths.push_back(depth);
+		top_xs.push_back(std::vector<float>(pWell->GetTimeCurveCount(), INT_MIN)); // vector of vector of size number of wells
+		top_ys.push_back(std::vector<float>(pWell->GetTimeCurveCount(), INT_MIN)); // vector of vector of size number of wells
+	}
+
+	pDC->SelectObject(pCurvePen);
+
+	// curve overlays
+	int curveOrigin = -(pWell->GetTimeCurveCount() / 2 * pDoc->GetWellOffsetPixels(pWell));
+	if (pWell->GetTimeCurveCount() == 1) curveOrigin -= pDoc->GetWellOffsetPixels(pWell) / 2;
+	float* pCurve = NULL;
+	float wellMin, wellMax;
+	float wellScale = 0;
+	float* pFirstCurve = NULL;
+	float firstWellScale;
+	float firstWellMin;
+	int   firstCurveOrigin = -1;
+	int iSelect = -1;
+
+	if (pDoc->GetWellLogDisplayToggle()) {
+		// plot the curve overlay
+		for (int j = 0; j < pWell->GetTimeCurveCount(); j++) {
+			pCurve = pWell->GetNextSelectedLogPtr(iSelect);
+			if (pCurve == NULL) break;
+
+			min_max_nozero(pCurve, wellSampCount, &wellMin, &wellMax);
+			if (wellMax - wellMin != 0) wellScale = pDoc->GetWellWidthPixels(pWell) / (wellMax - wellMin);
+
+			CString a, b, c;
+			pWell->GetCurveData(iSelect, a, b, c);
+
+			// save some stuff for plotting the tops later on.
+			if (pFirstCurve == NULL) {
+				pFirstCurve = pCurve;
+				firstWellScale = wellScale;
+				firstCurveOrigin = curveOrigin;
+				firstWellMin = wellMin;
+			}
+
+			// Collect all the points, depths and magnitudes in lists
+			std::vector<float> magnitudes;
+			std::vector<float> depths;
+			std::vector<float> xs;
+			std::vector<float> ys;
+			float prev_x, prev_y;
+			BOOL firstPoint = TRUE;
+			BOOL  bSkipLeadingZeros = TRUE;
+			int startIndex = 0;
+			for (int k = 0; k < wellSampCount; k++) {
+				if (pDepTime[k] < m_startTime) continue;
+				if (pDepTime[k] > m_endTime) break;
+				if (pDepth[k] > pWell->GetDeviatedPoint(pWell->GetDeviatedPointCount() - 1)->m_md) break; // cut off log if depth is greater than deviated points depths
+				if (bSkipLeadingZeros && pCurve[k] == 0) continue;
+				else bSkipLeadingZeros = FALSE;
+
+				float _px = (float)FindPixelOffset(pDepth[k], pWell, &startIndex);
+				float _py = pDepTime[k];
+				float magnitude = wellScale * (pCurve[k] - wellMin);
+
+				if (firstPoint) {
+					firstPoint = FALSE;
+					prev_x = _px;
+					prev_y = _py;
+				}
+
+				// only add points if they are different
+				if (std::round(prev_x) != std::round(_px) || std::round(prev_y) != std::round(_py)) {
+					xs.push_back(_px);
+					ys.push_back(_py);
+					magnitudes.push_back(magnitude);
+					depths.push_back(pDepth[k]);
+					prev_x = _px;
+					prev_y = _py;
+				}
+			}
+
+			if (ys.size() == 0) continue; // Possibly no valid depth time sample, abort here
+
+			CIMACDoc* pDoc = GetDocument();
+			float perc = pDoc->GetDeviatedCurveWindowSize();
+			int WINDOW = (int)(ys.size() * (perc / 100));
+			if (WINDOW >= (int)ys.size()) WINDOW = (int)ys.size() - 2;
+			if (WINDOW % 2 == 0) WINDOW++; // should be odd
+			std::vector<float>  xs_moving(WINDOW);
+			std::vector<float>  ys_moving(WINDOW);
+			std::vector<float> avg_xs(xs.size());
+			std::vector<float> avg_ys(ys.size());
+			int index = 0;
+			int storeIndex = 0;
+
+
+			// FIRST ELEMENTS**********************
+			//fill window with first elements
+			int count = 1;
+			std::vector<float> fworking_window_xs;
+			std::vector<float> fworking_window_ys;
+			fworking_window_xs.push_back(xs[0]);
+			fworking_window_ys.push_back(ys[0]);
+			// deal with the first points 
+			for (int k = 0; k < WINDOW / 2 + 1; k++) {
+				float x_sum = 0;
+				float y_sum = 0;
+				for (int i = 0; i < count; i++) {
+					x_sum += fworking_window_xs[i];
+					y_sum += fworking_window_ys[i];
+				}
+
+				// store in correct position
+				avg_xs[k] = x_sum / count;
+				avg_ys[k] = y_sum / count;
+
+				count += 2;
+				fworking_window_xs.clear();
+				fworking_window_ys.clear();
+				for (int i = 0; i < count; i++) {
+					fworking_window_xs.push_back(xs[i]);
+					fworking_window_ys.push_back(ys[i]);
+				}
+			}
+
+			// MIDDLE ELEMENTS**********************
+			// deal with middle elements
+			for (int k = 0; k < xs.size(); k++) {
+				// first elements
+				if (k < WINDOW) {
+					index = k % WINDOW;
+					xs_moving[index] = xs[k];
+					ys_moving[index] = ys[k];
+					continue;
+				}
+
+				// The middle elements 
+				// calculate average
+				float x_sum = 0;
+				float y_sum = 0;
+				for (int i = 0; i < WINDOW; i++) {
+					x_sum += xs_moving[i];
+					y_sum += ys_moving[i];
+				}
+
+				// store in correct position
+				storeIndex = k - (WINDOW / 2) - 1;
+				avg_xs[storeIndex] = x_sum / WINDOW;
+				avg_ys[storeIndex] = y_sum / WINDOW;
+
+				// add new value in circular arrays
+				index = k % WINDOW;
+				xs_moving[index] = xs[k];
+				ys_moving[index] = ys[k];
+			}
+
+			// LAST ELEMENTS**********************
+			// fill window with last elements
+			index = (int)xs.size() - (WINDOW);
+			std::vector<float> eworking_window_xs(WINDOW);
+			std::vector<float> eworking_window_ys(WINDOW);
+			for (int k = 0; k < WINDOW; k++) {
+				eworking_window_xs[k] = xs[index];
+				eworking_window_ys[k] = ys[index++];
+			}
+			// deal with the last points 
+			for (int k = (int)xs.size() - (WINDOW / 2) - 1; k < xs.size(); k++) {
+				if (k < xs.size() - 1) {
+					float x_sum = 0;
+					float y_sum = 0;
+					for (int i = 0; i < eworking_window_xs.size(); i++) {
+						x_sum += eworking_window_xs[i];
+						y_sum += eworking_window_ys[i];
+					}
+
+					// store in correct position
+					avg_xs[k] = x_sum / eworking_window_xs.size();
+					avg_ys[k] = y_sum / eworking_window_ys.size();
+
+					// remove the first couple 
+					eworking_window_xs.erase(eworking_window_xs.begin(), eworking_window_xs.begin() + 2);
+					eworking_window_ys.erase(eworking_window_ys.begin(), eworking_window_ys.begin() + 2);
+				}
+				else {
+					avg_xs[k] = xs[xs.size() - 1];
+					avg_ys[k] = ys[ys.size() - 1];
+				}
+			}
+
+
+			// rotate and draw well curve
+			int firstY;
+			int firstX;
+			int lastY;
+			int lastX;
+
+			BOOL bFirstPoint = TRUE;
+			for (int k = 0; k < xs.size() - 1; k++) {
+				float x = avg_xs[k];
+				float y = TOP + (float)(((avg_ys[k] - (float)m_startTime) / ((float)si / 1000.0) * m_vScale));
+
+				float next_x = avg_xs[k + 1];
+				float next_y = TOP + (float)(((avg_ys[k + 1] - (float)m_startTime) / ((float)si / 1000.0) * m_vScale));
+
+				float px_, py_;
+				float magnitude = magnitudes[k];
+				FindPerpendicularPoint(x, y, next_x, next_y, magnitude, px_, py_, curveOrigin);
+
+				// for tops: add in rotated point for top_depth
+				for (int m = 0; m < top_depths.size(); m++) {
+					if ((depths[k] <= top_depths[m] && depths[k + 1] > top_depths[m]) && top_xs[m][j] == INT_MIN && k < xs.size() - 2) {
+						float rDepth = 0.0;
+						if ((depths[k] - depths[k + 1]) != 0) {
+							rDepth = (top_depths[m] - depths[k]) / (depths[k + 1] - depths[k]);
+						}
+						float interpolated_x = x + (next_x - x) * rDepth;
+						float interpolated_y = y + (next_y - y) * rDepth;
+						float interpolated_px_, interpolated_py_;
+						FindPerpendicularPoint(interpolated_x, interpolated_y, next_x, next_y, magnitude, interpolated_px_, interpolated_py_, curveOrigin);
+						top_xs[m][j] = interpolated_px_;
+						top_ys[m][j] = interpolated_py_;
+					}
+				}
+
+				if (bFirstPoint) {
+					// move to first position
+					pDC->MoveTo((int)px_, (int)py_);
+					bFirstPoint = FALSE;
+					firstY = (int)px_;
+					firstX = (int)py_;
+					continue;
+				}
+
+				lastX = (int)px_;
+				lastY = (int)py_;
+
+				// draw averaged pixel
+				pDC->LineTo((int)px_, (int)py_);
+			}
+			// annotate curve name at beginning 
+			rcItem.top = firstX;
+			rcItem.bottom = rcItem.top + DXY;
+			rcItem.left = firstY;
+			rcItem.right = rcItem.left + pDC->GetTextExtent(pWell->GetTimeLogName(j, FALSE)).cx;
+			pDC->DrawText(pWell->GetTimeLogName(j, FALSE), rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+			// annotate curve name at the end
+			rcItem.top = lastY;
+			rcItem.bottom = rcItem.top + DXY;
+			rcItem.left = lastX;
+			rcItem.right = rcItem.left + pDC->GetTextExtent(pWell->GetTimeLogName(j, FALSE)).cx;
+			pDC->DrawText(pWell->GetTimeLogName(j, FALSE), rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+			// increment the curveOrigin for the next curve. Don't increment after the last curve is drawn.
+			if (j + 1 < pWell->GetTimeCurveCount()) {
+				curveOrigin += pDoc->GetWellOffsetPixels(pWell);
+				// leave a gap if the colour track is visible
+				if (colorIndex > -1 && curveOrigin == 0) {
+					curveOrigin += (((nColorTrackCount)*m_hScale));
+				}
+			}
+		}
+
+
+#ifdef DEBUG
+		clock3 = clock();
+		//    TRACE("Draw curve overlay. time=%f\n", (double)(clock3 - clock2) / CLOCKS_PER_SEC);
+#endif
+		if (pDoc->GetWellTopDisplayToggle()) {
+			// remove null tops
+			for (int j = 0; j < top_xs.size(); j++) {
+				for (int k = (int)top_xs[j].size() - 1; k >= 0; k--) {
+					int xpos = (int)top_xs[j][k];
+					int ypos = (int)top_ys[j][k];
+					if (xpos == INT_MIN && ypos == INT_MIN) {
+						top_ys[j].erase(top_ys[j].begin() + k);
+						top_xs[j].erase(top_xs[j].begin() + k);
+					}
+				}
+			}
+
+			// draw well tops
+			for (int j = 0; j < top_xs.size(); j++) {
+				pDC->SelectObject(m_dotdotPen);
+				int xpos = 0;
+				int ypos = 0;
+				int next_xpos = 0;
+				int next_ypos = 0;
+
+				for (int k = 0; k < top_xs[j].size(); k++) {
+					if (k == top_xs[j].size() - 1) {
+						rcItem.top = (LONG)top_ys[j][k] - (DXY / 2) - DXY;
+						rcItem.bottom = rcItem.top + DXY;
+						rcItem.left = (LONG)top_xs[j][k] + DXY;
+						rcItem.right = rcItem.left + pDC->GetTextExtent(top_names[j]).cx;
+						pDC->DrawText(top_names[j], rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+						xpos = (int)top_xs[j][k];
+						ypos = (int)top_ys[j][k];
+						pDC->MoveTo(xpos, ypos);
+						pDC->LineTo(xpos + DXY, ypos - DXY);
+					}
+					else {
+						xpos = (int)top_xs[j][k];
+						ypos = (int)top_ys[j][k];
+						next_xpos = (int)top_xs[j][k + 1];
+						next_ypos = (int)top_ys[j][k + 1];
+						pDC->MoveTo(xpos, ypos);
+						pDC->LineTo(next_xpos, next_ypos);
+					}
+				}
+			}
+		}
+	}
+
+#ifdef DEBUG
+	finish = clock();
+#endif
+	// Draw the deviated well track
+	// bottom of the well or bottom of section if no depth time.
+	int ix = 0;
+	int iy = 0;
+	if (pDepTime) {
+		iy = TOP + (int)((pDepTime[wellSampCount - 1] - m_startTime) / ((float)si / 1000.0) * m_vScale);
+	} else {
+		iy = TOP + (int)((m_endTime - m_startTime) / ((float)si / 1000.0) * m_vScale);
+	}
+	// draw the deviated well track, vertical if there is no depth time
+	pDC->SelectObject(pCurvePen);
+	pDC->SelectObject(m_boldPen);
+	if (pDepTime) {
+		pDC->MoveTo(iorigin, TOP);
+		for (int i = 0; i < pWell->GetDeviatedPointCount(); i++) {
+			deviatedPoint = pWell->GetDeviatedPoint(i);
+			float mdTime = pWell->GetTimeForMD(deviatedPoint->m_md, bDepthMode);
+			iy = TOP + (int)((mdTime - m_startTime) / ((float)si / 1000.0) * m_vScale);
+			ix = (int)FindPixelOffset(deviatedPoint);
+			if (mdTime > m_startTime&& mdTime < m_endTime) {
+				pDC->LineTo(ix, iy);
+			}
+		}
+	} else {
+		pDC->MoveTo(iorigin, TOP);
+		pDC->LineTo(iorigin, iy);
+	}
+
+	//    TRACE("Draw well tops. time=%f\n", (double)(finish - clock3) / CLOCKS_PER_SEC);
+	//    TRACE("DrawDeviatedWell Total time=%f\n", (double)(finish - start) / CLOCKS_PER_SEC);
+
+}
+
+double CIMACView::FindPixelOffset(float depth, CWell * pWell, int *startIndex)
+{
+	int count = pWell->GetDeviatedPointCount();
+	if (count == 0)return 0;
+
+	int index = *startIndex < count ? *startIndex : count;
+	if (index > 0) index--;
+
+	// We want to bracket the depth with the previous and next deviated points
+	CDeviatedPoint *pPrev = pWell->GetDeviatedPoint(index++);
+	CDeviatedPoint *pNext = pPrev;
+	while (pNext->m_md < depth && index < count) {
+		pPrev = pNext;
+		pNext = pWell->GetDeviatedPoint(index++);
+	}
+
+	*startIndex = index - 1;
+
+	// make a new interpolated point
+	CDeviatedPoint interpolatedPoint;
+	interpolatedPoint.m_projectedTrace1 = pPrev->m_projectedTrace1;
+	interpolatedPoint.m_projectedTrace2 = pNext->m_projectedTrace2;
+
+	// interpolate
+	double rDepth = 0.0;
+	if ((pNext->m_md - pPrev->m_md) != 0) {
+		rDepth = (depth - pPrev->m_md) / (pNext->m_md - pPrev->m_md);
+	}
+	interpolatedPoint.m_md = depth;
+	interpolatedPoint.m_projectedX = pPrev->m_projectedX + (pNext->m_projectedX - pPrev->m_projectedX) * rDepth;
+	interpolatedPoint.m_projectedY = pPrev->m_projectedY + (pNext->m_projectedY - pPrev->m_projectedY) * rDepth;
+
+	return FindPixelOffset(&interpolatedPoint);
+}
+
+////
+//  given the deviated point return the interpolated screen position.
+double CIMACView::FindPixelOffset(CDeviatedPoint * deviatedPoint)
+{
+
+	double wellPointX = deviatedPoint->m_projectedX;
+	double wellPointY = deviatedPoint->m_projectedY;
+	int wellTrace1 = deviatedPoint->m_projectedTrace1;
+	int wellTrace2 = deviatedPoint->m_projectedTrace2;
+	if (wellTrace1 > wellTrace2) {
+		wellTrace1 = deviatedPoint->m_projectedTrace2;
+		wellTrace2 = deviatedPoint->m_projectedTrace1;
+	}
+
+	double trace1X = m_traceViewInfoArray[wellTrace1].xCoord;
+	double trace2X = m_traceViewInfoArray[wellTrace2].xCoord;
+	double trace1Y = m_traceViewInfoArray[wellTrace1].yCoord;
+	double trace2Y = m_traceViewInfoArray[wellTrace2].yCoord;
+	int xPixel1 = m_traceViewInfoArray[wellTrace1].xPixel;
+	int xPixel2 = m_traceViewInfoArray[wellTrace2].xPixel;
+
+	// distance between traces	
+	double dx = trace2X - trace1X;
+	double dy = trace2Y - trace1Y;
+	double traceDist = pow(((dx * dx) + (dy * dy)), 0.5);
+
+	// distance from well to trace1
+	dx = wellPointX - trace1X;
+	dy = wellPointY - trace1Y;
+	double wellDist = pow(((dx * dx) + (dy * dy)), 0.5);
+
+	double multiplier = 0;
+	if (!DoubleCompare(traceDist, 0)) {
+		multiplier = wellDist / traceDist;
+	}
+
+	return ((double)(xPixel2 - xPixel1) * multiplier) + xPixel1;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// CIMACView printing
+
+BOOL CIMACView::OnPreparePrinting(CPrintInfo * pInfo)
+{
+	// default preparation
+	return DoPreparePrinting(pInfo);
+}
+
+void CIMACView::OnBeginPrinting(CDC* /*pDC*/, CPrintInfo* /*pInfo*/)
+{
+}
+
+void CIMACView::OnEndPrinting(CDC* /*pDC*/, CPrintInfo* /*pInfo*/)
+{
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// CIMACView diagnostics
+
+#ifdef _DEBUG
+void CIMACView::AssertValid() const
+{
+	CView::AssertValid();
+}
+
+void CIMACView::Dump(CDumpContext & dc) const
+{
+	CView::Dump(dc);
+}
+
+CIMACDoc* CIMACView::GetDocument() // non-debug version is inline
+{
+	ASSERT(m_pDocument->IsKindOf(RUNTIME_CLASS(CIMACDoc)));
+	return (CIMACDoc*)m_pDocument;
+}
+#endif //_DEBUG
+
+/////////////////////////////////////////////////////////////////////////////
+// CIMACView message handlers
+
+BOOL CIMACView::OnCommand(WPARAM wParam, LPARAM lParam)
+{
+	// Don't delete this function. The xplot view classes need it.
+	return TRUE;
+}
+
+// Call this to disable any command that doesn't make sense unless some 
+// seismic attributes have already been loaded.
+void CIMACView::OnUpdateCommandThatDependsOnAttributes(CCmdUI * pCmdUI)
+{
+	pCmdUI->Enable(GetDocument()->GetFileCount() > 0);
+}
+void CIMACView::OnUpdateFileExport(CCmdUI * pCmdUI)
+{
+	if (pApp->IsDemoMode()) {
+		pCmdUI->Enable(FALSE);
+	} else {
+		OnUpdateCommandThatDependsOnAttributes(pCmdUI);
+	}
+}
+
+void CIMACView::OnUpdateSeiswareMode(CCmdUI * pCmdUI)
+{
+#ifdef _RELEASE_STATIC
+	pCmdUI->Enable(FALSE);
+#else
+	pCmdUI->Enable(pApp->IsSeiswareMode());
+#endif
+}
+void CIMACView::OnUpdateHeadwaveMode(CCmdUI * pCmdUI)
+{
+	if (!pApp->IsHeadwaveMode()) {
+		pCmdUI->Enable(FALSE);
+	}
+	else {
+		OnUpdateCommandThatDependsOnAttributes(pCmdUI);
+	}
+}
+
+void CIMACView::OnCVSettings()
+{
+	EditDisplaySettings();
+}
+
+void CIMACView::OnCVColorSelector()
+{
+	AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_EDIT_COLORBAR);
+}
+
+void CIMACView::OnCVCursorReport()
+{
+	CIMACDoc* pDoc = GetDocument();
+	if (pDoc == NULL) return;
+
+	pDoc->SetCursorPositionMode(TRUE);
+	if (pCursorReport == NULL) {
+		pCursorReport = new CCursorReportDlg();
+		pCursorReport->Initialize();
+		pCursorReport->SetDeleteFlagAddress(&m_deleteCursorDlgFlag);
+	}
+}
+
+void CIMACView::OnCVWiggleDisplay()
+{
+	CIMACDoc* pDoc = GetDocument();
+	if (pDoc == NULL) return;
+
+	CWiggleOverlayDlg wiggleOverlayDlg;
+	int index = 0;
+	for (int i = 0; i < pDoc->GetFileCount(); i++) {
+		wiggleOverlayDlg.m_attribute[i] = pDoc->GetAttr(i);
+		index++;
+	}
+	for (int i = 0; i < pDoc->GetVirtualVolumeCount(); i++) {
+		wiggleOverlayDlg.m_attribute[index] = pDoc->GetVirtualVolumeAttributeName(i);
+		index++;
+	}
+
+	wiggleOverlayDlg.SetInterpolationMode(pDoc->GetWiggleInterpolationMode());
+	wiggleOverlayDlg.SetDrawingMode(pDoc->GetWiggleDrawingMode());
+	wiggleOverlayDlg.SetTraceDecimation(pDoc->GetWiggleTraceDecimation());
+	wiggleOverlayDlg.SetTraceExcursion(pDoc->GetWiggleTraceExcursion());
+	wiggleOverlayDlg.SetTraceClip(pDoc->GetWiggleTraceClip());
+	wiggleOverlayDlg.SetSelectedAttribute(pDoc->GetWiggleSelectedAttribute());
+	wiggleOverlayDlg.SetClassifiedVolumeCheck(pDoc->GetWiggleClassifiedVolumeCheck());
+
+	wiggleOverlayDlg.m_pDoc = pDoc;
+
+	if (wiggleOverlayDlg.DoModal() == IDOK) {
+		pDoc->SetWiggleInterpolationMode(wiggleOverlayDlg.GetInterpolationMode());
+		pDoc->SetWiggleDrawingMode(wiggleOverlayDlg.GetDrawingMode());
+		pDoc->SetWiggleTraceDecimation(wiggleOverlayDlg.GetTraceDecimation());
+		pDoc->SetWiggleTraceExcursion(wiggleOverlayDlg.GetTraceExcursion());
+		pDoc->SetWiggleTraceClip(wiggleOverlayDlg.GetTraceClip());
+		pDoc->SetWiggleSelectedAttribute(wiggleOverlayDlg.GetSelectedAttribute());
+		pDoc->SetWiggleClassifiedVolumeCheck(wiggleOverlayDlg.GetClassifiedVolumeCheck());
+
+		if (wiggleOverlayDlg.GetDrawingMode() > eNO_WIGGLE) {
+			pDoc->LoadData();
+		}
+		else {
+			pDoc->SetWiggleDisplayToggle(TRUE); // reset wiggle display to on
+		}
+		pDoc->UpdateViews();
+	}
+}
+
+void CIMACView::OnCVWellDisplayUpdate()
+{
+	CIMACDoc* pDoc = GetDocument();
+	if (pDoc == NULL) return;
+
+	pDoc->SetWellDisplayToggle(!pDoc->GetWellDisplayToggle());
+	pDoc->UpdateViews(TRUE);
+}
+
+void CIMACView::OnCVWellLogDisplayUpdate()
+{
+	CIMACDoc* pDoc = GetDocument();
+	if (pDoc == NULL) return;
+
+	pDoc->SetWellLogDisplayToggle(!pDoc->GetWellLogDisplayToggle());
+	pDoc->UpdateViews(TRUE);
+}
+
+void CIMACView::OnCVWellTopDisplayUpdate()
+{
+	CIMACDoc* pDoc = GetDocument();
+	if (pDoc == NULL) return;
+
+	pDoc->SetWellTopDisplayToggle(!pDoc->GetWellTopDisplayToggle());
+	pDoc->UpdateViews(TRUE);
+}
+
+void CIMACView::OnCVWiggleDisplayUpdate()
+{
+	CIMACDoc* pDoc = GetDocument();
+	if (pDoc == NULL) return;
+
+	pDoc->SetWiggleDisplayToggle(!pDoc->GetWiggleDisplayToggle());
+	pDoc->UpdateViews(TRUE);
+}
+
+void CIMACView::OnCVHorizonDisplayUpdate()
+{
+	CIMACDoc* pDoc = GetDocument();
+	if (pDoc == NULL) return;
+
+	pDoc->SetHorizonDisplayToggle(!pDoc->GetHorizonDisplayToggle());
+	pDoc->UpdateViews(TRUE);
+}
+
+void CIMACView::OnCVFlatteningDisplayUpdate()
+{
+	CIMACDoc* pDoc = GetDocument();
+	if (pDoc == NULL) return;
+
+	pDoc->SetFlatteningDisplayToggle(!pDoc->GetFlatteningDisplayToggle());
+	pDoc->UpdateViews(TRUE);
+}
+
+void CIMACView::OnCVDisplayLinesDisplayUpdate()
+{
+	CIMACDoc* pDoc = GetDocument();
+	if (pDoc == NULL) return;
+
+	pDoc->SetDisplayLinesDisplayToggle(!pDoc->GetDisplayLinesDisplayToggle());
+	pDoc->UpdateViews(TRUE);
+}
+
+void CIMACView::OnCVLineDirectionDisplayUpdate()
+{
+	CIMACDoc* pDoc = GetDocument();
+	if (pDoc == NULL) return;
+
+	if (pDoc->GetInlineXlineMode() == eINLINE)
+		pDoc->SetInlineLR(!pDoc->IsInlineLR());
+	else if (pDoc->GetInlineXlineMode() == eXLINE)
+		pDoc->SetXlineLR(!pDoc->IsXlineLR());
+	else
+		pDoc->SetUserlineLR(!pDoc->IsUserlineLR());
+
+	UnselectAll(); // remove select booxes
+	pDoc->UpdateViews(TRUE);
+}
+
+void CIMACView::OnCVScaleHorizontalIncreaseUpdate()
+{
+	CIMACDoc* pDoc = GetDocument();
+	if (pDoc->GetHScale() <= 1) return;
+	int hscale = DPI / (pDoc->GetHScale()/2);
+	if (hscale > DPI) hscale = DPI;
+	int new_hScale = DPI / hscale;
+	if (new_hScale < 1) new_hScale = 1;
+	AdjustSelectBoxes(pDoc->GetStartTime(), pDoc->GetEndTime(), new_hScale, pDoc->GetVScale(), m_startTime);
+	pDoc->SetHScale(new_hScale);
+	pDoc->UpdateViews(TRUE);
+}
+
+void CIMACView::OnCVScaleHorizontalDecreaseUpdate()
+{
+	CIMACDoc* pDoc = GetDocument();
+	int hscale = DPI / (pDoc->GetHScale() * 2);
+	if (hscale < 1) hscale = 1;
+	int new_hScale = DPI / hscale;
+	if (new_hScale > DPI) new_hScale = DPI;
+	AdjustSelectBoxes(pDoc->GetStartTime(), pDoc->GetEndTime(), new_hScale, pDoc->GetVScale(), m_startTime);
+	pDoc->SetHScale(new_hScale);
+	pDoc->UpdateViews(TRUE);
+}
+
+void CIMACView::OnCVScaleVerticalIncreaseUpdate()
+{
+	CIMACDoc* pDoc = GetDocument();
+	float prev_vScale = pDoc->GetVScale();
+	float new_vScale = prev_vScale * 2;
+	AdjustSelectBoxes(pDoc->GetStartTime(), pDoc->GetEndTime(), pDoc->GetHScale(), new_vScale, m_startTime);
+	pDoc->SetVScale(new_vScale);
+	pDoc->UpdateViews(TRUE);
+}
+
+void CIMACView::OnCVScaleVerticalDecreaseUpdate()
+{
+	CIMACDoc* pDoc = GetDocument();
+	float prev_vScale = pDoc->GetVScale();
+	float new_vScale = prev_vScale / 2;
+	if (new_vScale < 1) new_vScale = 1;
+	AdjustSelectBoxes(pDoc->GetStartTime(), pDoc->GetEndTime(), pDoc->GetHScale(), new_vScale, m_startTime);
+	pDoc->SetVScale(new_vScale);
+	pDoc->UpdateViews(TRUE);
+}
+
+
+void CIMACView::OnUpdateAttributeAdvisor(CCmdUI * pCmdUI)
+{
+	OnUpdateCommandThatDependsOnAttributes(pCmdUI);
+}
+void CIMACView::OnUpdateColorbar(CCmdUI * pCmdUI)
+{
+	pCmdUI->Enable(GetDocument()->GetFileCount() > 0);
+	pCmdUI->SetCheck(FALSE);
+}
+void CIMACView::OnUpdateQiproMode(CCmdUI * pCmdUI)
+{
+	pCmdUI->Enable(GetDocument()->GetFileCount() > 0);
+	pCmdUI->SetCheck(GetDocument()->IsIMACMode());
+}
+void CIMACView::OnUpdateCsiMode(CCmdUI * pCmdUI)
+{
+	pCmdUI->Enable(GetDocument()->GetFileCount() > 0);
+	pCmdUI->SetCheck(GetDocument()->IsCSIMode());
+}
+void CIMACView::OnUpdateViewXplot1(CCmdUI * pCmdUI)
+{
+	CIMACDoc* pDoc = GetDocument();
+	pCmdUI->Enable(pDoc->bMenuXPlots[0]);
+}
+void CIMACView::OnUpdateViewXplot2(CCmdUI * pCmdUI)
+{
+	CIMACDoc* pDoc = GetDocument();
+	pCmdUI->Enable(pDoc->bMenuXPlots[1]);
+}
+void CIMACView::OnUpdateViewXplot3(CCmdUI * pCmdUI)
+{
+	CIMACDoc* pDoc = GetDocument();
+	pCmdUI->Enable(pDoc->bMenuXPlots[2]);
+}
+void CIMACView::OnUpdateViewXplot4(CCmdUI * pCmdUI)
+{
+	CIMACDoc* pDoc = GetDocument();
+	pCmdUI->Enable(pDoc->bMenuXPlots[3]);
+}
+void CIMACView::OnUpdateViewXplot5(CCmdUI * pCmdUI)
+{
+	CIMACDoc* pDoc = GetDocument();
+	pCmdUI->Enable(pDoc->bMenuXPlots[4]);
+}
+
+BOOL CIMACView::OnEraseBkgnd(CDC * pDC)
+{
+	//	Don't call the base class, the erase is done inside the OnDraw method
+	//	return CScrollView::OnEraseBkgnd(pDC);
+	return TRUE;
+}
+
+void CIMACView::OnRButtonUp(UINT nFlags, CPoint point)
+{
+	CIMACDoc* pDoc = GetDocument();
+	CPoint pointWithScroll;
+	CPoint pntScrollPosition = GetScrollPosition();
+	pointWithScroll.x = point.x + pntScrollPosition.x;
+	pointWithScroll.y = point.y + pntScrollPosition.y;
+
+
+	if (IsPtInLegend(pointWithScroll)) {
+		AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_EDIT_COLORBAR);
+		return;
+	}
+	EditDisplaySettings();
+}
+
+void CIMACView::EditDisplaySettings()
+{
+	CIMACDoc* pDoc = GetDocument();
+	CClassifiedVolumeDisplaySettingsDlg CVDisplaySettingsDlg;
+	CVDisplaySettingsDlg.pView = this;
+
+	if (m_selectState == eSelecting1 || m_selectState == eSelecting2) {
+		m_selectState = eSelectOff;
+	}
+	CVDisplaySettingsDlg.m_hscale = pDoc->GetHScale();
+	CVDisplaySettingsDlg.m_starttime = pDoc->GetStartTime();
+	CVDisplaySettingsDlg.m_endtime = pDoc->GetEndTime();
+	CVDisplaySettingsDlg.m_vScale = pDoc->GetVScale();
+	CVDisplaySettingsDlg.m_10msLines = pDoc->Get10msTLineMode();
+	CVDisplaySettingsDlg.m_100msLines = pDoc->Get100msTLineMode();
+	CVDisplaySettingsDlg.m_500msLines = pDoc->Get500msTLineMode();
+	CVDisplaySettingsDlg.m_selectColor1 = pDoc->GetSelectColor1();
+	CVDisplaySettingsDlg.m_selectColor2 = pDoc->GetSelectColor2();
+	CVDisplaySettingsDlg.m_highliteDotSize = pDoc->GetHighliteDotSize();
+	CVDisplaySettingsDlg.m_cursorPosition = pDoc->GetCursorPositionMode();
+	CVDisplaySettingsDlg.m_10msLineLabels = pDoc->Get10msLineLabels();
+	CVDisplaySettingsDlg.m_100msLineLabels = pDoc->Get100msLineLabels();
+	CVDisplaySettingsDlg.m_500msLineLabels = pDoc->Get500msLineLabels();
+	CVDisplaySettingsDlg.m_petrelTime = pDoc->IsPetrelTimeMode();
+	CVDisplaySettingsDlg.m_petrelDatum = pDoc->GetPetrelDatum();
+	CVDisplaySettingsDlg.m_labelInterval = pDoc->GetLabelInterval();
+	CVDisplaySettingsDlg.m_faciesHistogram = pDoc->GetFaciesHistogramMode();
+	CVDisplaySettingsDlg.m_bInlineLR = !pDoc->IsInlineLR();
+	CVDisplaySettingsDlg.m_bXlineLR = !pDoc->IsXlineLR();
+	CVDisplaySettingsDlg.m_bUserlineLR = !pDoc->IsUserlineLR();
+	CVDisplaySettingsDlg.m_wellWidth = pDoc->GetWellWidth();
+	CVDisplaySettingsDlg.m_wellOffset = pDoc->GetWellOffset();
+	CVDisplaySettingsDlg.m_bWellBoldPen = !pDoc->GetWellBoldPen();
+	CVDisplaySettingsDlg.m_bHighlightAll = !pDoc->IsHighlightAll();
+	CVDisplaySettingsDlg.m_nColorTrackWidth = pDoc->GetColorTrackWidth();
+	CVDisplaySettingsDlg.m_nDeviatedCurveView = pDoc->GetDeviatedCurveView();
+	CVDisplaySettingsDlg.m_fWindowSize = pDoc->GetDeviatedCurveWindowSize();
+	CVDisplaySettingsDlg.m_depthMode = pDoc->GetWellDepthMode();
+	CVDisplaySettingsDlg.m_depthUnits = pDoc->GetProjectUnits();
+	CVDisplaySettingsDlg.m_flattenHorizonCheck = pDoc->GetFlattenHorizonCheck();
+	CVDisplaySettingsDlg.m_flatteningDatum = pDoc->GetFlatteningDatum();
+	CVDisplaySettingsDlg.m_horizon = pDoc->GetFlatteningHorizon();
+	CVDisplaySettingsDlg.m_useAverage = pDoc->GetFlatteningUseAverage();
+
+	CHorizon* m_pDocHor = pDoc->GetHorizonDataPtr();
+	CHorizon* pHor = m_pDocHor;
+	int nHor = pHor->GetHorizonCount();
+	for (int i = 0; i < nHor; i++) {
+		CVDisplaySettingsDlg.m_horizons[i] = pHor->GetName(i);
+	}
+
+	if (CVDisplaySettingsDlg.DoModal() != IDOK) return;
+
+	int si = pDoc->GetSI();			// Note: si in MICRO seconds
+	if (si == 0) return;
+	CSegy* pSegy = pDoc->GetSegyOutPtr();
+	int segySampCount = pSegy->GetSampleCount();
+	int segyStartTime = pSegy->GetStartTime();
+	int segyEndTime = segyStartTime + Index2Time((segySampCount - 1), si);
+	m_startTime = CVDisplaySettingsDlg.m_starttime;
+	if (CVDisplaySettingsDlg.m_endtime > segyEndTime || CVDisplaySettingsDlg.m_endtime == 0) {
+		CVDisplaySettingsDlg.m_endtime = segyEndTime;
+	}
+	m_endTime = CVDisplaySettingsDlg.m_endtime;
+	if (m_startTime == 0 || m_startTime < segyStartTime) {
+		m_startTime = segyStartTime;
+	}
+	if (m_endTime == 0 || m_endTime < m_startTime) {
+		m_endTime = segyEndTime;
+	}
+	m_sampCount = Time2Index((m_endTime - m_startTime), si) + 1;
+	if (m_sampCount > segySampCount) m_sampCount = segySampCount;
+
+	// if we're trying to display more data then we have to reload the VVs if they're in use.
+	BOOL bLoadVVFlag = FALSE;
+	if (CVDisplaySettingsDlg.m_starttime < pDoc->GetStartTime() ||
+		CVDisplaySettingsDlg.m_endtime > pDoc->GetEndTime())
+	{
+		bLoadVVFlag = TRUE;
+	}
+
+	// if line mode or display direction has changed we are going to abort the selection.
+	if (CVDisplaySettingsDlg.m_bInlineLR != !pDoc->IsInlineLR() ||
+		CVDisplaySettingsDlg.m_bXlineLR != !pDoc->IsXlineLR() ||
+		CVDisplaySettingsDlg.m_bUserlineLR != !pDoc->IsUserlineLR())
+	{
+		UnselectAll();
+	}
+
+	// if necessary adjust the select box for the new display parameters
+	AdjustSelectBoxes(CVDisplaySettingsDlg.m_starttime, CVDisplaySettingsDlg.m_endtime, CVDisplaySettingsDlg.m_hscale, CVDisplaySettingsDlg.m_vScale, m_startTime);
+
+	// update horizontal and vertical scale
+	if (CVDisplaySettingsDlg.m_hscale < 1) CVDisplaySettingsDlg.m_hscale = 1;
+	if (CVDisplaySettingsDlg.m_vScale < 1) CVDisplaySettingsDlg.m_vScale = 1;
+	m_hScale = DPI / CVDisplaySettingsDlg.m_hscale;	// pixels per trace
+	m_vScale = DPI * CVDisplaySettingsDlg.m_vScale * si / 1.0e6f;	// pixels per sample
+
+	// Check if the crossplot density mode has to be updated
+	if (CVDisplaySettingsDlg.m_endtime != pDoc->GetEndTime() ||
+		CVDisplaySettingsDlg.m_starttime != pDoc->GetStartTime())
+	{
+		pDoc->SetDensityModeUpdateFlag(TRUE);
+	}
+
+	pDoc->SetHScale(CVDisplaySettingsDlg.m_hscale);
+	pDoc->SetStartEndTimes(m_startTime, m_endTime);
+	pDoc->SetVScale(CVDisplaySettingsDlg.m_vScale);
+	pDoc->Set10msTLineMode(CVDisplaySettingsDlg.m_10msLines);
+	pDoc->Set100msTLineMode(CVDisplaySettingsDlg.m_100msLines);
+	pDoc->Set500msTLineMode(CVDisplaySettingsDlg.m_500msLines);
+	pDoc->SetSelectColor1(CVDisplaySettingsDlg.m_selectColor1);
+	pDoc->SetSelectColor2(CVDisplaySettingsDlg.m_selectColor2);
+	pDoc->SetHighliteDotSize(CVDisplaySettingsDlg.m_highliteDotSize);
+	pDoc->SetCursorPositionMode(CVDisplaySettingsDlg.m_cursorPosition);
+	pDoc->Set10msLineLabels(CVDisplaySettingsDlg.m_10msLineLabels);
+	pDoc->Set100msLineLabels(CVDisplaySettingsDlg.m_100msLineLabels);
+	pDoc->Set500msLineLabels(CVDisplaySettingsDlg.m_500msLineLabels);
+	pDoc->SetPetrelTimeMode(CVDisplaySettingsDlg.m_petrelTime);
+	pDoc->SetPetrelDatum(CVDisplaySettingsDlg.m_petrelDatum);
+	pDoc->SetLabelInterval(CVDisplaySettingsDlg.m_labelInterval);
+	pDoc->SetFaciesHistogramMode(CVDisplaySettingsDlg.m_faciesHistogram);
+	pDoc->SetInlineLR(!CVDisplaySettingsDlg.m_bInlineLR);
+	pDoc->SetXlineLR(!CVDisplaySettingsDlg.m_bXlineLR);
+	pDoc->SetUserlineLR(!CVDisplaySettingsDlg.m_bUserlineLR);
+	pDoc->SetWellWidth(CVDisplaySettingsDlg.m_wellWidth);
+	pDoc->SetWellOffset(CVDisplaySettingsDlg.m_wellOffset);
+	pDoc->SetWellBoldPen(!CVDisplaySettingsDlg.m_bWellBoldPen);
+	pDoc->SetHighlightAll(!CVDisplaySettingsDlg.m_bHighlightAll);
+	pDoc->SetColorTrackWidth(CVDisplaySettingsDlg.m_nColorTrackWidth);
+	pDoc->SetDeviatedCurveView(CVDisplaySettingsDlg.m_nDeviatedCurveView);
+	pDoc->SetDeviatedCurveWindowSize(CVDisplaySettingsDlg.m_fWindowSize);
+	pDoc->SetFlattenHorizonCheck(CVDisplaySettingsDlg.m_flattenHorizonCheck);
+	pDoc->SetFlatteningDatum(CVDisplaySettingsDlg.m_flatteningDatum);
+	pDoc->SetFlatteningHorizon(CVDisplaySettingsDlg.m_horizon);
+	pDoc->SetFlatteningUseAverage(CVDisplaySettingsDlg.m_useAverage);
+
+	if (CVDisplaySettingsDlg.m_clearSelectBoxes) {
+		// remove highlite boxes
+		if (!pDoc->IsHighliteRegion1Null()) {
+			pDoc->SetHighliteRegion1Null();
+			UnselectRegion1();
+		}
+		if (!pDoc->IsHighliteRegion2Null()) {
+			pDoc->SetHighliteRegion2Null();
+			UnselectRegion2();
+		}
+		CVDisplaySettingsDlg.m_clearSelectBoxes = FALSE;
+	}
+
+	float depthDatum;
+	BOOL  bDepthMode = pDoc->GetWellDepthMode(depthDatum);
+	if (pDoc->IsPetrelTimeMode()) depthDatum = pDoc->CalculatePetrelOffset(depthDatum);
+	CWellUtil::ProcessDepthTimeCurves(pDoc->GetWellListPtr(), bDepthMode, depthDatum);
+
+	if (bLoadVVFlag) pDoc->LoadVirtualVolumes(NULL, NULL);
+	pDoc->SetReadyToCompute();
+	pDoc->UpdateViews(TRUE);
+}
+
+void CIMACView::AdjustSelectBoxes(int stime, int etime, int hscale, float vscale, int startTime)
+{
+	CIMACDoc* pDoc = GetDocument();
+	int si = pDoc->GetSI();			// Note: si in MICRO seconds
+	for (int j = 0; j < 2; j++) {
+		CRect selectBox;
+		if (j == 0) {
+			selectBox = pDoc->GetHighliteRegion1();
+		}
+		else {
+			selectBox = pDoc->GetHighliteRegion2();
+		}
+		if (!selectBox.IsRectNull() &&
+			(etime != pDoc->GetEndTime() ||
+				hscale != pDoc->GetHScale() ||
+				stime != pDoc->GetStartTime() ||
+				vscale != pDoc->GetVScale()))
+		{
+			// compute the trace #s and sample indexes of the select box
+			int itr1 = (selectBox.left - SIDE) / m_hScale;
+			int itr2 = (selectBox.right - SIDE) / m_hScale;
+			int isamp1 = (int)(((selectBox.top - TOP) / m_vScale) + 0.5);
+			int isamp2 = (int)(((selectBox.bottom - TOP) / m_vScale) + 0.5);
+			if (itr1 > itr2) {
+				int itmp = itr1;
+				itr1 = itr2;
+				itr2 = itmp;
+			}
+			if (isamp1 > isamp2) {
+				int itmp = isamp1;
+				isamp1 = isamp2;
+				isamp2 = itmp;
+			}
+
+			// now compute the new coordinates based on the new plot parms.
+			int iDiff = Time2Index(startTime - pDoc->GetStartTime(), si);
+			isamp1 -= iDiff;
+			isamp2 -= iDiff;
+
+			int new_hScale = DPI / hscale;	// pixels per trace
+			int new_vScale = (int)(DPI * vscale * si / 1.0e6f);	// pixels per sample
+			selectBox.left = (itr1 * new_hScale) + SIDE;
+			selectBox.right = (itr2 * new_hScale) + SIDE;
+
+			selectBox.top = (int)(isamp1 * new_vScale) + TOP;
+			selectBox.bottom = (int)(isamp2 * new_vScale) + TOP;
+
+			// check if the new select box is in range, if not make it so
+			selectBox.left = (selectBox.left < SIDE) ? SIDE : selectBox.left;
+			selectBox.right = (selectBox.right < SIDE) ? SIDE : selectBox.right;
+			selectBox.left = (selectBox.left > SIDE + m_nTrace * new_hScale) ? SIDE + m_nTrace * new_hScale : selectBox.left;
+			selectBox.right = (selectBox.right > SIDE + m_nTrace * new_hScale) ? SIDE + m_nTrace * new_hScale : selectBox.right;
+
+			selectBox.top = (selectBox.top < TOP) ? TOP : selectBox.top;
+			selectBox.bottom = (selectBox.bottom < TOP) ? TOP : selectBox.bottom;
+			selectBox.top = (selectBox.top > TOP + (int)(m_sampCount * new_vScale)) ? TOP + (int)(m_sampCount * new_vScale) : selectBox.top;
+			selectBox.bottom = (selectBox.bottom > TOP + (int)(m_sampCount * new_vScale)) ? TOP + (int)(m_sampCount * new_vScale) : selectBox.bottom;
+			if (selectBox.top == selectBox.bottom) {
+				selectBox.SetRectEmpty();
+			}
+			if (j == 0) {
+				pDoc->SetHighliteRegion1(selectBox);
+			}
+			else {
+				pDoc->SetHighliteRegion2(selectBox);
+			}
+			SetHighliteRegionLine();
+		}
+	}
+}
+
+void CIMACView::OnMouseMove(UINT nFlags, CPoint point)
+{
+	//	TRACE("onMouseMove(nFlags=%d, point=(%d,%d))\n", nFlags, point.x, point.y);
+	if (m_mx == point.x && m_my == point.y && m_mflags == nFlags) return; // no change since last call
+	m_mx = point.x;
+	m_my = point.y;
+	m_mflags = nFlags;
+	CPoint pointWithScroll;
+
+	if (!m_bReady) {
+		// we have to wait for the display to be drawn before this code will work.
+		return;
+	}
+
+	CIMACDoc* pDoc = GetDocument();
+
+	// get the leftmost trace # and the increment. Drawing is always left to right.
+	int firstTr, incrementTr;
+	GetPlotDirection(firstTr, incrementTr);
+
+	if (m_selectState == eBeginSelecting1) {
+		CPoint pntScrollPosition = GetScrollPosition();
+		CRect select = pDoc->GetHighliteRegionTemp();
+		select.right = point.x + pntScrollPosition.x;
+		select.bottom = point.y + pntScrollPosition.y;
+		pDoc->SetHighliteRegionTemp(select);
+		CRect normSelect = select;
+		normSelect.NormalizeRect();
+		CSize size = normSelect.Size();
+		if (size.cx > 2 || size.cy > 2) {
+			UnselectRegion1();
+			pDoc->SetHighliteRegion1(select);
+			m_selectState = eSelecting1;
+		}
+		Invalidate();
+	}
+	else if (m_selectState == eSelecting1) {
+		CPoint pntScrollPosition = GetScrollPosition();
+		CRect select = pDoc->GetHighliteRegion1();
+		select.right = point.x + pntScrollPosition.x;
+		select.bottom = point.y + pntScrollPosition.y;
+		pDoc->SetHighliteRegion1(select);
+		Invalidate();
+	}
+	if (m_selectState == eBeginSelecting2) {
+		CPoint pntScrollPosition = GetScrollPosition();
+		CRect select = pDoc->GetHighliteRegionTemp();
+		select.right = point.x + pntScrollPosition.x;
+		select.bottom = point.y + pntScrollPosition.y;
+		pDoc->SetHighliteRegionTemp(select);
+		CRect normSelect = select;
+		normSelect.NormalizeRect();
+		CSize size = normSelect.Size();
+		if (size.cx > 2 || size.cy > 2) {
+			UnselectRegion2();
+			pDoc->SetHighliteRegion2(select);
+			m_selectState = eSelecting2;
+		}
+		Invalidate();
+	}
+	else if (m_selectState == eSelecting2) {
+		CPoint pntScrollPosition = GetScrollPosition();
+		CRect select = pDoc->GetHighliteRegion2();
+		select.right = point.x + pntScrollPosition.x;
+		select.bottom = point.y + pntScrollPosition.y;
+		pDoc->SetHighliteRegion2(select);
+		Invalidate();
+	}
+
+	// The cursor report window has been closed, clean up
+	if (pDoc->GetCursorPositionMode() &&
+		pCursorReport != NULL && m_deleteCursorDlgFlag)
+	{
+		delete pCursorReport;
+		pCursorReport = NULL;
+		pDoc->SetCursorPositionMode(FALSE);
+		m_deleteCursorDlgFlag = FALSE;
+		m_cursorWindowSize.SetSize(0, 0);
+	}
+
+	// The cursor report window has been turned off, clean up
+	if (!pDoc->GetCursorPositionMode() && pCursorReport != NULL)
+	{
+		pCursorReport->DestroyWindow();
+		delete pCursorReport;
+		pCursorReport = NULL;
+		m_deleteCursorDlgFlag = FALSE;
+		m_cursorWindowSize.SetSize(0, 0);
+	}
+
+	// Get some inital data
+	CSegy* pSegy = pDoc->GetSegyOutPtr();
+	int si = pSegy->GetSampleInterval();
+	int ntrace = pSegy->GetTraceCount();
+	int startTime = m_startTime;
+	int endTime = m_endTime;
+	m_sampCount = Time2Index((endTime - startTime), si) + 1;
+
+	CPoint pntScrollPosition = GetScrollPosition();
+	int px = point.x + pntScrollPosition.x;
+	int py = point.y + pntScrollPosition.y;
+	
+	// Resolve issue with colour wheel select when scrollbar not all the way left
+	pointWithScroll.x = px;
+	pointWithScroll.y = py;
+
+	int screentrace = (px - SIDE) / m_hScale;
+	int isamp = (int)((py - TOP) / m_vScale);
+	int time = 0;
+
+	int itrn = ComputeTraceNumber(screentrace);
+
+	// Mouse Tracking. Save inline and xline
+	if (itrn >= 0 && itrn < m_nTrace && isamp >= 0 && isamp < m_sampCount) {
+		time = Index2Time(isamp, si) + startTime;
+		int inLine = pSegy->GetInline(itrn);
+		int xLine = pSegy->GetCrossline(itrn);
+		pDoc->SetTrackTrace(inLine, xLine);
+		Invalidate();
+	}
+	else {
+		pDoc->SetTrackTrace(-1, -1);
+		Invalidate();
+	}
+
+	//	If necessary report the cursor position
+	if (pDoc->GetCursorPositionMode()) {
+		if (pCursorReport == NULL) {
+			pCursorReport = new CCursorReportDlg();
+			pCursorReport->Initialize();
+			pCursorReport->SetDeleteFlagAddress(&m_deleteCursorDlgFlag);
+		}
+
+		if (itrn >= 0 && itrn < m_nTrace && isamp >= 0 && isamp < m_sampCount) {
+
+			float* pData = pSegy->GetTraceDataPtr(itrn, time);
+			int k = (int)pData[0];
+			int reportCount = 0;
+			CString strName;
+			CString strTime;
+
+			if (pDoc->GetWellDepthMode()) {
+				strName.Format("Depth = ");
+			}
+			else {
+				strName.Format("Time = ");
+			}
+			if (pDoc->IsPetrelTimeMode()) {
+				int displayTime = -(time - (int) pDoc->CalculatePetrelOffset(pDoc->GetPetrelDatum()));
+				if (pDoc->GetFlatteningDisplayToggle() && pDoc->GetFlattenHorizonCheck())  strTime.Format("%d (%d)", displayTime, displayTime - (pDoc->GetFlatteningDatum()));
+				else strTime.Format("%d", displayTime);
+			}
+			else {
+				if (pDoc->GetFlatteningDisplayToggle() && pDoc->GetFlattenHorizonCheck())  strTime.Format("%d (%d)", time, time - pDoc->GetFlatteningDatum());
+				else strTime.Format("%d", time);
+			}
+			if (pDoc->GetWellDepthMode()) {
+				if (pDoc->GetProjectUnits() == eMETRIC_UNITS) strTime += " Meters";
+				else if (pDoc->GetProjectUnits() == eIMPERIAL_UNITS) strTime += " Feet";
+			}
+			strTime += "\n";
+			arrNames.SetAtGrow(reportCount, strName);
+			arrTimes.SetAtGrow(reportCount, strTime);
+			reportCount++;
+			strName.Format("Inline = ");
+			strTime.Format("%d\n", pSegy->GetInline(itrn));
+			arrNames.SetAtGrow(reportCount, strName);
+			arrTimes.SetAtGrow(reportCount, strTime);
+			reportCount++;
+			strName.Format("Crossline = ");
+			strTime.Format("%d\n", pSegy->GetCrossline(itrn));
+			arrNames.SetAtGrow(reportCount, strName);
+			arrTimes.SetAtGrow(reportCount, strTime);
+			reportCount++;
+			strName.Format("Class = ");
+			int classValue = k;
+			while (classValue >= SELECTION_BIAS) {
+				classValue -= SELECTION_BIAS;
+			}
+			if (classValue == UNCLASSIFIED) classValue = 0;
+			strTime.Format("%d\n", classValue);
+			arrNames.SetAtGrow(reportCount, strName);
+			arrTimes.SetAtGrow(reportCount, strTime);
+			reportCount++;
+			// Get the attribute values
+			for (int i = 0; i < pDoc->GetFileCount(); i++) {
+				CString attribute = pDoc->GetAttr(i);
+				if (!pDoc->IsAttributeInUse(attribute)) continue;
+				strName.Format("%s = ", attribute);
+				CSegy* pSegyTmp = pDoc->GetSegyInPtr(i);
+				pData = pSegyTmp->GetTraceDataPtr(itrn, time);
+				float value = pData[0];
+				strTime.Format("%.2f\n", value);
+				arrNames.SetAtGrow(reportCount, strName);
+				arrTimes.SetAtGrow(reportCount, strTime);
+				reportCount++;
+			}
+			// Get Virtual Volume values
+			for (int i = 0; i < pDoc->GetVVAttributeCount(); i++) {
+				CVVAttribute& vvAttr = pDoc->GetVVAttributeRef(i);
+				for (int j = 0; j < vvAttr.GetVVCount(); j++) {
+					CString vvName = vvAttr.GetVVName(j);
+					if (!pDoc->IsAttributeInUse(vvName)) continue;
+					strName.Format("%s = ", vvName);
+					CSegy& virtualSegy = vvAttr.GetSegyRef(j);
+					pData = virtualSegy.GetTraceDataPtr(itrn, time);
+					float value = pData[0];
+					strTime.Format("%.2f\n", value);
+					arrNames.SetAtGrow(reportCount, strName);
+					arrTimes.SetAtGrow(reportCount, strTime);
+					reportCount++;
+				}
+			}
+
+			// if mouse is pointing at an embedded well, then report it's amplitude
+			for (int iWell = 0; iWell < m_wellCount; iWell++) {
+				WellList* pWellList = pDoc->GetWellListPtr();
+				int wellTrace = m_listWellTraces[iWell];
+				if (wellTrace == itrn) {
+					int wellIndex = m_listWellIndex[iWell];
+					CWell* pWell = pWellList->GetAt(pWellList->FindIndex(wellIndex));
+					int colorIndex = pWell->GetColorDepthLogIndex();
+					if (colorIndex >= 0) {
+						float* pColorLog = pWell->GetCurvePtr(colorIndex);
+						BOOL  bDepthMode = pDoc->GetWellDepthMode();
+						float* pDepTime = pWell->GetDepthTimePtr(bDepthMode);
+						if (pDepTime == NULL) break;
+						int wellSampCount = pWell->GetCurvesNRecs();
+						int dataIndex = 0;
+						while (dataIndex < wellSampCount && pDepTime[dataIndex] < time) {
+							dataIndex++;
+						}
+						if (dataIndex >= wellSampCount) break;
+						float sampValue = pColorLog[dataIndex];
+						strName.Format("%s = ", pWell->wellName);
+						strTime.Format("%.1f\n", sampValue);
+						arrNames.SetAtGrow(reportCount, strName);
+						arrTimes.SetAtGrow(reportCount, strTime);
+						reportCount++;
+
+						// report Depth
+						int ixDepth = pWell->GetDepthLogIndex();
+						if (ixDepth == -1) break;
+						float* pDepth = pWell->GetCurvePtr(ixDepth);
+						strName.Format("Log Depth = ");
+						strTime.Format("%.1f\n", pDepth[dataIndex]);
+						arrNames.SetAtGrow(reportCount, strName);
+						arrTimes.SetAtGrow(reportCount, strTime);
+						reportCount++;
+					}
+					break;
+				}
+			}
+			pCursorReport->ReportFromData(arrNames, arrTimes, reportCount, m_cursorWindowSize);
+		}
+	}
+
+	// check if cursor is within the legend box, if so switch cursor
+	else if (IsPtInLegend(pointWithScroll)) {
+		m_cursor = IDC_HELP;
+	} else {
+		m_cursor = 0;
+	}
+}
+
+BOOL CIMACView::IsPtInLegend(CPoint point)
+{
+	return (!m_legendBox.IsRectNull() && m_legendBox.PtInRect(point));
+}
+
+void CIMACView::OnLButtonDown(UINT nFlags, CPoint point)
+{
+	CIMACDoc* pDoc = GetDocument();
+	CSegy* pSegy = pDoc->GetSegyOutPtr();
+	CPoint pntScrollPosition = GetScrollPosition();
+
+	// if no data bail out.
+	if (pDoc->GetSegyOutPtr()->GetTraceCount() == 0) return;
+
+	if (!pDoc->IsHighliteRegionOnCurrentLine()) {
+		UnselectAll();
+		SetHighliteRegionLine();
+	}
+	if (m_bCtrlDown) {
+		CRect select = pDoc->GetHighliteRegionTemp();
+		select.left = select.right = point.x + pntScrollPosition.x;
+		select.top = select.bottom = point.y + pntScrollPosition.y;
+		pDoc->SetHighliteRegionTemp(select);
+		m_selectState = eBeginSelecting2;
+	} else {
+		CRect select = pDoc->GetHighliteRegionTemp();
+		select.left = select.right = point.x + pntScrollPosition.x;
+		select.top = select.bottom = point.y + pntScrollPosition.y;
+		pDoc->SetHighliteRegionTemp(select);
+		m_selectState = eBeginSelecting1;
+	}
+	m_lButtonPressState = TRUE;
+	Invalidate();
+}
+
+void CIMACView::OnLButtonUp(UINT nFlags, CPoint point)
+{
+
+	if (m_lButtonPressState != TRUE) return;	// if we didn't process LButtonDown then bail out.
+	m_lButtonPressState = FALSE;
+
+	CIMACDoc* pDoc = GetDocument();
+	CSegy* pSegy = pDoc->GetSegyOutPtr();
+	m_nTrace = pSegy->GetTraceCount();
+	if (m_nTrace == 0) return;
+
+	int si = pDoc->GetSI();				// NOTE: si in MICRO seconds
+	if (si == 0) return;
+	int startTime = m_startTime;
+	int endTime = m_endTime;
+	m_sampCount = Time2Index((endTime - startTime), si) + 1;
+	CRect select1 = pDoc->GetHighliteRegion1();
+	CRect select2 = pDoc->GetHighliteRegion2();
+
+	CPoint pntScrollPosition = GetScrollPosition();
+	// Update the select region and actually select the data samples.
+	if (m_selectState == eSelecting1) {
+		select1.right = point.x + pntScrollPosition.x;
+		select1.bottom = point.y + pntScrollPosition.y;
+		pDoc->SetHighliteRegion1(select1);
+		SetHighliteRegionLine();
+		SelectData(select1, 0);
+	} else if (m_selectState == eSelecting2) {
+		select2.right = point.x + pntScrollPosition.x;
+		select2.bottom = point.y + pntScrollPosition.y;
+		pDoc->SetHighliteRegion2(select2);
+		SetHighliteRegionLine();
+		SelectData(select2, 1);
+	}
+	m_selectState = eSelectOff;
+
+
+	pDoc->UpdateViews(FALSE);
+}
+
+void CIMACView::SelectAllData()
+{
+	CIMACDoc* pDoc = GetDocument();
+
+	CRect selectBox = pDoc->GetHighliteRegion1();
+	SelectData(selectBox, 0);
+
+	selectBox = pDoc->GetHighliteRegion2();
+	SelectData(selectBox, 1);
+}
+
+// add the selection flag to the data samples according to the highlight boxes.
+void CIMACView::SelectData(CRect selectBox, int regionIndex)
+{
+	CIMACDoc* pDoc = GetDocument();
+	CSegy* pSegy = pDoc->GetSegyOutPtr();
+	int startTime = m_startTime;
+
+	// if no data bail out.
+	if (pDoc->GetSegyOutPtr()->GetTraceCount() == 0) return;
+
+	// if the selection box doesn't refer to the current line then just return silently
+	if (!pDoc->IsHighliteRegionOnCurrentLine()) return;
+
+	// ensure the selection is "in bounds"
+	CRect plotBox = ClipToBounds(selectBox);
+
+	// convert the screen coordinates to trace and sample indexes
+	CRect traceIndex = ConvertToIndexes(plotBox);
+
+	bool foundSample = false;
+
+	// now we can actually select the data by adding the sample bias
+	for (int i = traceIndex.left; i <= traceIndex.right; i++) {
+		float* pData = pSegy->GetTraceDataPtr(i, startTime);
+		float flatteningOffset = pDoc->GetFlatteningOffsetForTrace(pSegy, i);
+		int segySampCount = pSegy->GetSampleCount();
+		int segyStartTime = pSegy->GetStartTime();
+		int segyEndTime = segyStartTime + Index2Time((segySampCount - 1), pDoc->GetSI());
+		int endTime = min(pDoc->GetEndTime(), segyEndTime);
+		int sampCount = Time2Index((endTime - startTime), pDoc->GetSI()) + 1;
+
+		if (flatteningOffset == NULL_HORIZON_VALUE) continue;
+		if (flatteningOffset < startTime && flatteningOffset > endTime) continue;
+		
+		int sampleOffset = (int)std::round(flatteningOffset) * 1000 / pDoc->GetSI();
+		
+		for (int j = traceIndex.top; j < traceIndex.bottom; j++) {
+			if (j - sampleOffset < 0 || j - sampleOffset >= sampCount) continue;
+
+			foundSample = true;
+
+			if (regionIndex == 0) {
+				if (pData[j - sampleOffset] < SELECTION_BIAS) pData[j - sampleOffset] += SELECTION_BIAS;
+			} else {
+				if (pData[j - sampleOffset] < SELECTION_BIAS) pData[j - sampleOffset] += 2 * SELECTION_BIAS;
+			}
+		}
+	}
+	// delete highlight box if no samples found
+	if (foundSample == false) {
+		if (regionIndex == 0) pDoc->SetHighliteRegion1Null();
+		else pDoc->SetHighliteRegion2Null();
+	}
+}
+
+// set the document version of the highliteRegion line and line mode
+void CIMACView::SetHighliteRegionLine()
+{
+	CIMACDoc* pDoc = GetDocument();
+	CSegy* pSegy = pDoc->GetSegyOutPtr();
+
+	eLineMode highlightLineMode = pDoc->GetInlineXlineMode();
+
+	DWORD currentLine;
+	if (pDoc->GetInlineXlineMode() == eINLINE) {
+		currentLine = pSegy->GetInline(1);
+	} else if (pDoc->GetInlineXlineMode() == eXLINE) {
+		currentLine = pSegy->GetCrossline(1);
+	} else {
+		currentLine = pDoc->GetSelectedUserLineNumber();
+	}
+
+	pDoc->SetHighliteLine(currentLine, highlightLineMode);
+}
+
+// rotates the x and y coordinate as well as the curve origin offset for the x axis
+void CIMACView::FindPerpendicularPoint(float p1x, float p1y, float p2x, float p2y, float magnitude, float &x, float &y, int curveOrigin)
+{
+	float x_len = p2x - p1x;
+	float y_len = p2y - p1y;
+	float theta = atan2(x_len, y_len);
+
+	CIMACDoc* pDoc = GetDocument();
+
+	// rotation then translation
+	if (pDoc->GetDeviatedCurveView() == ePERSPECTIVE_CURVE_VIEW) {
+		x = (x_len * cos(theta) - y_len * sin(theta)) + curveOrigin + magnitude + p1x;
+		y = (x_len * sin(theta) + y_len * cos(theta)) + curveOrigin + magnitude + p1y;
+	} else if (pDoc->GetDeviatedCurveView() == eHORIZONAL_CURVE_VIEW) {
+		x = (x_len * cos(theta) - y_len * sin(theta)) + magnitude + p1x;
+		y = (x_len * sin(theta) + y_len * cos(theta)) + curveOrigin + magnitude + p1y;
+	} else if (pDoc->GetDeviatedCurveView() == eVERTICAL_CURVE_VIEW) {
+		x = (x_len * cos(theta) - y_len * sin(theta)) + curveOrigin + magnitude + p1x;
+		y = (x_len * sin(theta) + y_len * cos(theta)) + p1y;
+	}
+
+	else { // flat view
+		//translation then rotation
+		x = p1x + (curveOrigin + magnitude) * cos(theta);
+		y = p1y - (curveOrigin + magnitude) * sin(theta);
+	}
+}
+
+
+// Get plotting direction.  Return true if direction is LR.  Also return the leftmost trace and increment.
+// Drawing is always done left to right on the screen.
+BOOL CIMACView::GetPlotDirection(int& firstTr, int& incrementTr)
+{
+	CIMACDoc* pDoc = GetDocument();
+	BOOL bDirectionLR;
+
+	if (pDoc->GetInlineXlineMode() == eINLINE)
+		bDirectionLR = pDoc->IsInlineLR();
+	else if (pDoc->GetInlineXlineMode() == eXLINE)
+		bDirectionLR = pDoc->IsXlineLR();
+	else
+		bDirectionLR = pDoc->IsUserlineLR();
+
+	if (bDirectionLR) {
+		firstTr = 0;
+		incrementTr = 1;
+	} else {
+		firstTr = m_nTrace - 1;
+		incrementTr = -1;
+	}
+
+	return bDirectionLR;
+}
+
+void CIMACView::OnLButtonDblClk(UINT nFlags, CPoint point)
+{
+	CIMACDoc* pDoc = GetDocument();
+	CPoint pntScrollPosition = GetScrollPosition();
+	CPoint adjustedPoint(point.x + pntScrollPosition.x, point.y + pntScrollPosition.y);
+	// a double click will turn off the selection of both selected regions
+	CRect select1 = pDoc->GetHighliteRegion1(); // original is LeftTopRightBottom
+	CRect select2 = pDoc->GetHighliteRegion2(); // original is LeftTopRightBottom
+
+	// get values
+	LONG select1P1X = min(select1.left, select1.right);
+	LONG select1P1Y = min(select1.top, select1.bottom); 
+	LONG select1P2X = max(select1.left, select1.right);
+	LONG select1P2Y = max(select1.top, select1.bottom);
+
+	LONG select2P1X = min(select2.left, select2.right);
+	LONG select2P1Y = min(select2.top, select2.bottom);
+	LONG select2P2X = max(select2.left, select2.right);
+	LONG select2P2Y = max(select2.top, select2.bottom);
+
+	CRect select1Corrected(select1P1X, select1P1Y, select1P2X, select1P2Y);
+	CRect select2Corrected(select2P1X, select2P1Y, select2P2X, select2P2Y);
+
+	BOOL found = false;
+	if (select1Corrected.PtInRect(adjustedPoint)) {
+		UnselectRegion1();
+		found = true;
+	}
+	if (select2Corrected.PtInRect(adjustedPoint) ) {
+		UnselectRegion2();
+		found = true;
+	}
+	if (found) {
+		pDoc->UpdateViews(FALSE);
+	}
+}
+
+
+void CIMACView::UnselectAll()
+{
+	TRACE("UnselectAll()\n");
+	CIMACDoc* pDoc = GetDocument();
+	CSegy* pSegy = pDoc->GetSegyOutPtr();
+	m_sampCount = pSegy->GetSampleCount();
+	m_selectState = eSelectOff;
+	pDoc->SetHighliteRegion1Null();
+	pDoc->SetHighliteRegion2Null();
+
+	for (int i = 0; i < m_nTrace; i++) {
+		float* pData = pSegy->GetTraceDataPtr(i);
+		for (int j = 0; j < m_sampCount; j++) {
+			while (pData[j] > SELECTION_BIAS) {
+				pData[j] -= SELECTION_BIAS;
+			}
+		}
+	}
+}
+
+void CIMACView::UnselectRegion1()
+{
+	TRACE("UnselectRegion1()\n");
+	CIMACDoc* pDoc = GetDocument();
+	CSegy* pSegy = pDoc->GetSegyOutPtr();
+	m_sampCount = pSegy->GetSampleCount();
+	m_selectState = eSelectOff;
+	pDoc->SetHighliteRegion1Null();
+
+	for (int i = 0; i < m_nTrace; i++) {
+		float* pData = pSegy->GetTraceDataPtr(i);
+		for (int j = 0; j < m_sampCount; j++) {
+			if (pData[j] >= SELECTION_BIAS && pData[j] < SELECTION_BIAS * 2) {
+				pData[j] -= SELECTION_BIAS;
+			}
+		}
+	}
+}
+
+void CIMACView::UnselectRegion2()
+{
+	TRACE("UnselectRegion2()\n");
+	CIMACDoc* pDoc = GetDocument();
+	CSegy* pSegy = pDoc->GetSegyOutPtr();
+	m_sampCount = pSegy->GetSampleCount();
+	m_selectState = eSelectOff;
+	pDoc->SetHighliteRegion2Null();
+
+	for (int i = 0; i < m_nTrace; i++) {
+		float* pData = pSegy->GetTraceDataPtr(i);
+		for (int j = 0; j < m_sampCount; j++) {
+			if (pData[j] >= SELECTION_BIAS * 2) {
+				pData[j] -= SELECTION_BIAS * 2;
+			}
+		}
+	}
+}
+
+void CIMACView::UpdateFaciesHistogram()
+{
+	CIMACDoc* pDoc = GetDocument();
+	CDWORDArray* pHistoData;
+	CDWORDArray* pHistoFlag;
+	pDoc->GetHistoPointers(&pHistoData, &pHistoFlag);
+
+	// The Facies Histogram window has been closed, clean up
+	if (pDoc->GetFaciesHistogramMode() &&
+		pFaciesHistogram != NULL && m_deleteFaciesHistoDlgFlag)
+	{
+		delete pFaciesHistogram;
+		pFaciesHistogram = NULL;
+		m_deleteFaciesHistoDlgFlag = FALSE;
+		m_faciesHistoWindowSize.SetSize(0, 0);
+	}
+
+	// The Facies Histogram window has been turned off, clean up
+	if (!pDoc->GetFaciesHistogramMode() && pFaciesHistogram != NULL)
+	{
+		pFaciesHistogram->DestroyWindow();
+		delete pFaciesHistogram;
+		pFaciesHistogram = NULL;
+		m_deleteFaciesHistoDlgFlag = FALSE;
+		m_faciesHistoWindowSize.SetSize(0, 0);
+	}
+
+	//	If necessary turn on the Facies Histogram window
+	if (pDoc->GetFaciesHistogramMode()) {
+		if (pFaciesHistogram == NULL) {
+			pFaciesHistogram = new CFaciesHistoDlg();
+			pFaciesHistogram->Create(IDD_FACIES_HISTO, CWnd::GetDesktopWindow());
+			pFaciesHistogram->ShowWindow(SW_SHOW);
+			pFaciesHistogram->pDeleteFlag = &m_deleteFaciesHistoDlgFlag;
+			pFaciesHistogram->m_pBaseClassDoc = pDoc;
+			pFaciesHistogram->m_staticCtrl.pHistoData = pHistoData;
+			pFaciesHistogram->m_staticCtrl.pHistoFlag = pHistoFlag;
+			pFaciesHistogram->m_staticCtrl.pColorbar = pDoc->GetColorBar();
+		}
+	} else {
+		return;
+	}
+
+	int histoCount = 0;
+	for (int i = 0; i < MAXCLASS; i++) {
+		if (pHistoFlag->GetAt(i) > 0) histoCount++;
+	}
+
+	if (histoCount < 4) histoCount = 4; // minimum window width
+
+	// Adjust the window size
+	int clientXsize = BORDER + (MARGIN * 2) + histoCount * (BARWIDTH + BARSPACE);
+	int clientYsize = HISTOSIZE + (MARGIN * 2) + (TEXTSIZE * 2);
+	int windowborder = 3;
+	int windowtopborder = 25;
+	int staticmargin = 0;
+	CSize windowSize;
+	windowSize.cx = clientXsize + (2 * staticmargin) + (2 * windowborder);
+	windowSize.cy = windowtopborder + clientYsize + (3 * staticmargin) + windowborder;
+
+	if (windowSize != m_faciesHistoWindowSize) {
+		m_faciesHistoWindowSize = windowSize;
+		CRect rect;
+		pFaciesHistogram->GetWindowRect(rect);
+		pFaciesHistogram->SetWindowPos(0, rect.left, rect.top, windowSize.cx, windowSize.cy, 0);
+		pFaciesHistogram->m_staticCtrl.SetWindowPos(0, staticmargin, staticmargin, clientXsize, clientYsize, 0);
+	}
+
+	pFaciesHistogram->m_staticCtrl.Invalidate(FALSE);
+	pFaciesHistogram->m_staticCtrl.UpdateWindow();
+}
+
+// compute the actual trace number from the screen trace based on the number of embedded well traces.
+int CIMACView::ComputeTraceNumber(int itrn)
+{
+	CIMACDoc* pDoc = GetDocument();
+
+	int firstTr, incrementTr;
+	GetPlotDirection(firstTr, incrementTr);
+
+	if (incrementTr < 0) {
+		itrn = m_nTotalTrace - itrn - 1;
+	}
+
+	int wellTraceCount = pDoc->GetColorTrackWidth() + 2;
+
+	for (int iWell = 0; iWell < m_wellCount; iWell++) {
+		int wellTrace = m_listWellTraces[iWell];
+
+		// turn off trace tracking when pointing to an embedded well
+		if (incrementTr > 0) {
+			if (itrn >= wellTrace && itrn < (wellTrace + wellTraceCount)) {
+				return wellTrace;
+				return -1;
+			}
+		} else {
+			if (itrn > wellTrace && itrn <= (wellTrace + wellTraceCount)) {
+				return wellTrace;
+				return -1;
+			}
+		}
+
+		if (itrn >= (wellTrace + wellTraceCount)) {
+			itrn -= wellTraceCount;
+		}
+	}
+
+	return itrn;
+}
+
+
+BOOL CIMACView::OnSetCursor(CWnd * pWnd, UINT nHitTest, UINT message)
+{
+	BOOL bReturnValue = TRUE;
+	if (m_cursor) {
+		SetCursor(AfxGetApp()->LoadStandardCursor(m_cursor));
+	} else {
+		bReturnValue = CScrollView::OnSetCursor(pWnd, nHitTest, message);
+	}
+
+	return bReturnValue;
+}
+
+
+void CIMACView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
+{
+
+	if (nChar == VK_CONTROL) {
+		m_bCtrlDown = TRUE;
+	}
+
+}
+
+
+void CIMACView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
+{
+	if (nChar == VK_CONTROL) {
+		m_bCtrlDown = FALSE;
+	}
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+// CTraceViewInfo - implementation
+
+CTraceViewInfo::CTraceViewInfo()
+{
+	inLine = 0;
+	xLine = 0;
+	traceNumber = 0;
+	xPixel = 0;
+	xCoord = 0;
+	yCoord = 0;
+}
+
+CTraceViewInfo::~CTraceViewInfo()
+{
+
+}

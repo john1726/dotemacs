@@ -1,0 +1,1068 @@
+// Horizon.cpp: implementation of the CHorizon class.
+//
+//////////////////////////////////////////////////////////////////////
+
+#include "stdafx.h"
+#include "Horizon.h"
+
+#include <exception>
+#include <math.h>
+
+#include "Segy.h"
+#include "../IMAC/IMACDoc.h"
+
+#ifdef _DEBUG
+#undef THIS_FILE
+static char THIS_FILE[]=__FILE__;
+#define new DEBUG_NEW
+#endif
+
+const CString CHorizon::TIME_ZERO =	"Time Zero";
+
+CHorizon::CHorizon()
+{ 
+	InitData();
+}
+
+CHorizon::~CHorizon()
+{
+	DestroyData();
+}
+
+void CHorizon::InitData()
+{
+	m_pX       = NULL;
+	m_pY       = NULL;
+	m_pInline  = NULL;
+	m_pXline   = NULL;
+	m_nRecs    = 0;
+	m_nHeader  = 0;
+	m_nullValue = NULL_HORIZON_VALUE;
+
+	m_inLineMin = 0;
+	m_inLineMax = 0; 
+	m_xLineMin  = 0;
+	m_xLineMax  = 0;
+	m_yMin = 0;
+	m_yMax = 0;
+	m_xMin = 0;
+	m_xMax = 0;
+	
+	m_nWords = 0;
+	m_arrNames.RemoveAll();
+
+	for (int i=0; i<MAXHRZ; i++) {
+		m_pHorizon[i] = NULL;
+		m_displayMode[i] = true;
+		m_lineWidth[i]   = 2;
+		m_color[i]       = NOCOLOR;
+	}
+}
+void CHorizon::DestroyData()
+{
+	try {
+		if (m_pX) delete m_pX;
+		if (m_pY) delete m_pY;
+		if (m_pInline) delete m_pInline;
+		if (m_pXline)  delete m_pXline;
+
+		for (int i=0; i<m_nWords; i++) {
+			if (m_pHorizon[i]) delete m_pHorizon[i];
+		}
+	}
+	catch (std::exception& ex) {
+		CString exceptionMessage = ex.what();
+		CIMACDoc* pDoc = CIMACDoc::GetIMACDocPtr();
+		CLogfile* pLogfile = pDoc->GetLogfilePtr();
+		CString projectPath = pDoc->GetPathName();
+		pLogfile->OpenLogfile(projectPath);
+		pLogfile->WriteLogfile("CHorizon::DestroyData", exceptionMessage);
+		pLogfile->CloseLogfile();
+		AfxMessageBox("Error destroying data: " + exceptionMessage);
+	}
+	InitData();	
+}
+
+void CHorizon::AllocateHorizonArrays()
+{
+	if (m_nRecs > 0) {
+		m_pX = new double[m_nRecs];
+		m_pY = new double[m_nRecs];
+		m_pInline = new int[m_nRecs];
+		m_pXline  = new int[m_nRecs];
+
+		if (m_nWords > 0 && m_arrNames.GetSize() < m_nWords ) m_arrNames.SetSize(m_nWords);
+
+		for (int i=0; i<m_nWords; i++) {
+			m_pHorizon[i] = new float[m_nRecs];
+		}
+	}
+}
+
+void CHorizon::Serialize(CArchive& ar)
+{
+	if (ar.IsStoring())
+	{
+		int nVersion = 4;	// ar version info for application use
+		ar << nVersion;
+		ar << m_nRecs;
+		ar << m_nWords;
+		if (m_nRecs == 0 && m_nWords == 0) return;
+		ar << m_inLineMin; 
+		ar << m_inLineMax; 
+		ar << m_xLineMin; 
+		ar << m_xLineMax;
+		ar << m_yMin; 
+		ar << m_yMax; 
+		ar << m_xMin; 
+		ar << m_xMax;
+		ar << m_nullValue;
+		for (int i=0; i<m_nRecs; i++) {
+			ar << m_pInline[i];
+			ar << m_pXline[i];
+		}
+		for (int i=0; i<m_nRecs; i++) {
+			ar << m_pX[i];
+			ar << m_pY[i];
+		}
+		m_arrNames.Serialize(ar);
+		for (int i=0; i<m_nWords; i++) {
+			float *pData = m_pHorizon[i];
+			for (int j=0; j<m_nRecs; j++) {
+				ar << pData[j];
+			}
+		}
+		for (int i=0; i<m_nWords; i++) {
+			ar << m_displayMode[i];
+			ar << m_lineWidth[i];
+			ar << m_color[i];
+		}
+	}
+	else
+	{
+		DestroyData();
+
+		int nVersion;
+		ar >> nVersion;		// ar version info for application use
+		ar >> m_nRecs;
+		ar >> m_nWords;
+		if (m_nRecs == 0 && m_nWords == 0) return;
+		ar >> m_inLineMin; 
+		ar >> m_inLineMax; 
+		ar >> m_xLineMin; 
+		ar >> m_xLineMax;
+		ar >> m_yMin; 
+		ar >> m_yMax; 
+		ar >> m_xMin; 
+		ar >> m_xMax;
+		if (nVersion < 4){
+			BOOL b2D;
+			ar >> b2D;
+		}
+		if (nVersion >= 3)
+			ar >> m_nullValue;
+		else
+			m_nullValue = NULL_HORIZON_VALUE;
+
+		AllocateHorizonArrays();
+
+		for (int i=0; i<m_nRecs; i++) {
+			ar >> m_pInline[i];
+			ar >> m_pXline[i];
+		}
+		
+		for (int i=0; i<m_nRecs; i++) {
+			ar >> m_pX[i];
+			ar >> m_pY[i];
+		}
+		m_arrNames.Serialize(ar);
+		for (int i=0; i<m_nWords; i++) {
+			float *pData = m_pHorizon[i];
+			for (int j=0; j<m_nRecs; j++) {
+				ar >> pData[j];
+			}
+		}
+
+		if (nVersion > 1) {
+			for (int i=0; i<m_nWords; i++) {
+				ar >> m_displayMode[i];
+				ar >> m_lineWidth[i];
+				ar >> m_color[i];
+			}
+		}
+	}
+}
+
+void CHorizon::GetInlineXlineFromXY()
+{
+	CIMACDoc* pDoc = CIMACDoc::GetIMACDocPtr();
+	myfile = fopen("find_nearest_trace.log", "a+");
+	fprintf(myfile, "<Inline>        <Xline>         <X>             <Y>             <traceNo> \n");
+	fclose(myfile);
+
+	// Get nearest bins
+	CSegy* pSegy = pDoc->GetSegyInPtr(0);
+	CSegyIndex* pIndex = pSegy->GetSegyIndexPtr();
+	//double minX, minY, maxX, maxY;
+	//pIndex->GetCoordMinMax(minX, maxX, minY, maxY);
+	DWORD inLine, xLine, inLine2, xLine2, inLine3, xLine3;
+	pIndex->FindNearestTrace(m_xMin, minY, inLine, xLine);
+	pIndex->FindNearestTrace(minX, maxY, inLine2, xLine2);
+	pIndex->FindNearestTrace(maxX, minY, inLine3, xLine3);
+
+	double binSizeX, binSizeY;
+	if (inLine == inLine3) {
+		binSizeX = (maxX - minX) / (pIndex->GetCrosslineTraceCount() - 1);
+		binSizeY = (maxY - minY) / (pIndex->GetInlineTraceCount() - 1);
+	}
+	else {
+		binSizeX = (maxX - minX) / (pIndex->GetInlineTraceCount() - 1);
+		binSizeY = (maxY - minY) / (pIndex->GetCrosslineTraceCount() - 1);
+	}
+	myfile = fopen("find_nearest_trace.log", "a+");
+	double binX = 0;
+	double binY = 0;
+
+	for (int inputFileRec = 0; inputFileRec < m_nRecs; inputFileRec++) {
+		binX = (m_pX[inputFileRec] - minX) / binSizeX;
+		binY = (m_pY[inputFileRec] - minY) / binSizeY;
+		DWORD traceNo = 0;
+
+		try {
+			traceNo = static_cast<int>(binY * pIndex->GetCrosslineTraceCount() + binX);
+
+			if (traceNo < pIndex->GetTraceCount())
+			{
+				//const int inlineTrace = pIndex->GetInline2(traceNo);
+				m_pInline[inputFileRec] = pIndex->GetInline(traceNo);
+
+				//const int xlinTrace = pIndex->GetCrossline2(traceNo);
+				m_pXline[inputFileRec] = pIndex->GetCrossline(traceNo);
+				fprintf(myfile, "%u        %u         %lf             %lf             %u             %lu", m_pInline[inputFileRec], m_pXline[inputFileRec], m_pX[inputFileRec], m_pY[inputFileRec], inputFileRec, traceNo);
+			}
+		}
+		catch (std::exception& ex) {
+			const CString exceptionMessage = ex.what();
+			CIMACDoc* pDoc = CIMACDoc::GetIMACDocPtr();
+			CLogfile* pLogfile = pDoc->GetLogfilePtr();
+			const CString projectPath = pDoc->GetPathName();
+			pLogfile->OpenLogfile(projectPath);
+			pLogfile->WriteLogfile("CHorizon::GetInlineXlineFromXY", exceptionMessage);
+			pLogfile->CloseLogfile();
+		}
+	}
+
+	fclose(myfile);
+}
+
+// Load an HR format horizon file.
+int CHorizon::LoadFile(CString fname)
+{
+#define NCHAR 2048
+	FILE *pf;
+	int i, j;
+	char pBuf[NCHAR];
+	CString msg;
+	char *token;
+	char delimiters[] = " ,\t\n";
+
+	DestroyData();
+	if (fname.IsEmpty()) return -1;
+
+	if ((pf=fopen(fname, "r"))==NULL) {		
+		msg.Format("Cannot open horizon file %s", fname);
+		AfxMessageBox(msg);
+		return -1;
+	}
+
+	// Look for the title line, it should immediately preceed the data. Then we can ignore the header and parse the data.
+	m_nHeader = 0;
+	BOOL bHR9 = FALSE;
+	BOOL bAok = FALSE;
+	while (!feof(pf)) {
+		m_nHeader++;
+		if (fgets (pBuf, NCHAR, pf)==NULL) {
+			if (ferror(pf)) {
+				msg.Format("Error reading header from file %s", fname);
+				AfxMessageBox(msg);
+				fclose(pf);
+				DestroyData();
+				return -1;
+			}
+			continue;
+		}
+		if (m_nHeader == 1 && pBuf[0] == '#') bHR9 = TRUE;
+		if (bHR9 && strncmp(pBuf, "#{BODY}", 7)==0) bHR9 = FALSE;
+		if (!bHR9 && pBuf[0] == '<') {
+			bAok = TRUE;
+			break;
+		}
+	}
+	if (!bAok) {
+		msg.Format("Cannot parse file header as known Hampson Russell format");
+		AfxMessageBox(msg);
+		fclose(pf);
+		DestroyData();
+		return -1;
+	}
+
+	// loop once through the file, we need to know:
+	// - the number of horizons in each record
+	// - the total number of records in the file
+	m_nRecs=0;
+	m_nWords=0;
+	while (!feof(pf)) {
+		if (fgets (pBuf, NCHAR, pf)==NULL) {
+			if (ferror(pf)) {
+				msg.Format("Error reading file %s", fname);
+				AfxMessageBox(msg);
+				fclose(pf);
+				DestroyData();
+				return -1;
+			}
+			continue;
+		}
+
+		// Count the number of items in each record, check that every record is the same.
+		if (++m_nRecs>1) {
+			j=0;
+			token=strtok(pBuf, delimiters);
+			while (token) {
+				j++;
+				token=strtok(NULL, delimiters);
+			}
+			if (m_nRecs==2) {
+				m_nWords = j;
+			} else {
+				if (j != m_nWords) {
+					msg.Format("Loading horizon: Bad record found. Record number %d only has %d words. Expecting %d.", m_nRecs, j, m_nWords);
+					AfxMessageBox(msg);
+					fclose(pf);
+					DestroyData();
+					return -1;
+				}
+			}
+		}
+	}
+
+	// reset the file pointer and read the header
+	rewind(pf);
+	for (int i=0; i<m_nHeader; i++) {
+		fgets (pBuf, NCHAR, pf);
+	}
+
+	// get the file type (2d or 3d) and the x, y columns
+	token=strtok(pBuf, "<");
+	int inCol=-1, xCol=-1;
+	int ix = 0;
+	BOOL bYcol = FALSE;
+	while (token && ix<4 && !bYcol) {
+		if (ix>0) token=strtok(NULL, "<");
+		CString str;
+		str.Format("%s", token);
+		str = str.Left(str.Find(">"));
+		if (str.CompareNoCase("Inline") == 0) {
+			inCol = ix;
+		} else if (str.CompareNoCase("Xline") == 0 || str.CompareNoCase("Crossline") == 0) {
+			xCol = ix;
+		} else if (str.CompareNoCase("Y") == 0) {
+			bYcol = TRUE;
+		}
+		ix++;
+	}
+
+	if (!bYcol) {
+		AfxMessageBox("no coordinates found");
+		// leaving this as a warning for now.  Until we need coords in the horizon files. 
+		//DestroyData();
+		//return -1;
+	}
+
+	if (inCol == -1 || xCol == -1) {
+		CString msg;
+		msg.Format("Inline and Crossline columns not found in %s.", fname);
+		AfxMessageBox(msg);
+		DestroyData();
+		return -1;
+	}
+
+	if ((inCol != 0 || xCol != 1) && (inCol != 1 || xCol != 0) ) {
+		AfxMessageBox("Inline and Crossline numbers should be in the first two columns");
+		DestroyData();
+		return -1;
+	}
+
+	m_nWords -= ix;
+	if (m_nWords <= 0) {
+		msg.Format("No horizons found in file:\n %s", fname);
+		AfxMessageBox(msg);
+		DestroyData();
+		return -1;
+	}
+
+	// allocate according to what we found above.
+	AllocateHorizonArrays();
+
+	// get the horizon names
+	if (token) {
+		token=strtok(NULL, "<");
+		for (i=0; i<m_nWords; i++) {
+			if (token) {
+				CString str;
+				str.Format("%s", token);
+				str = str.Left(str.Find(">"));
+				m_arrNames.SetAt(i, str);
+				token=strtok(NULL, "<");
+			}
+		}
+	}
+
+	// read the data, store in memory.
+	int *p1, *p2;
+	if (inCol == 0) {
+		p1 = m_pInline;
+		p2 = m_pXline;
+	} else {
+		p1 = m_pXline;
+		p2 = m_pInline;
+	}
+	for (i=0; i<m_nRecs; i++) {				
+		fscanf(pf, "%d %d %lf %lf", &p1[i], &p2[i], &m_pX[i], &m_pY[i]);
+		for (j=0; j<m_nWords; j++) {
+			fscanf(pf, "%f", &m_pHorizon[j][i]);
+			if (m_pHorizon[j][i] == m_nullValue) m_pHorizon[j][i] = NULL_HORIZON_VALUE;
+		}
+	}
+
+	fclose(pf);
+	FindLimits();
+	return m_nRecs;
+}
+
+
+// Load a CSV format horizon file.
+int CHorizon::LoadCSV(CString fname)
+{
+#define NCHAR 2048
+	FILE *pf;
+	int i, j;
+	char pBuf[NCHAR];
+	CString msg;
+	char *token;
+	CString strToken;
+
+	DestroyData();
+	if (fname.IsEmpty()) return -1;
+
+	if ((pf = fopen(fname, "r")) == NULL) {
+		msg.Format("Cannot open horizon file %s", fname);
+		AfxMessageBox(msg);
+		return -1;
+	}
+
+	// Read and parse the header.
+	fgets(pBuf, NCHAR, pf);
+	token = strtok(pBuf, ",");
+	int inCol = -1, xCol = -1;
+	int ix = 0;
+	int headerWordCount = 0;
+	int horizonNameCount = 0;
+	BOOL bYcol = FALSE;
+	BOOL bXcol = FALSE;
+	CStringArray arrHeaderWords;
+	while (token) {
+		strToken = token;
+
+		// remove the newline if it exists
+		int newlineIndex = strToken.Find("\n");
+		if (newlineIndex > 0) {
+			strToken = strToken.Left(newlineIndex);
+		}
+
+		if (strToken.CompareNoCase("Inline") == 0) {
+			inCol = ix;
+		}
+		else if (strToken.CompareNoCase("Xline") == 0 || strToken.CompareNoCase("Crossline") == 0) {
+			xCol = ix;
+		}
+		else if (strToken.CompareNoCase("X") == 0) {
+			bXcol = TRUE;
+		}
+		else if (strToken.CompareNoCase("Y") == 0) {
+			bYcol = TRUE;
+		}
+		else {
+			arrHeaderWords.SetAtGrow(horizonNameCount++, strToken);
+		}
+
+		token = strtok(NULL, ",");
+		ix++;
+		headerWordCount = ix;
+	}
+
+	if (!bYcol) {
+		AfxMessageBox("no coordinates found");
+		// leaving this as a warning for now.  Until we need coords in the horizon files. 
+		//DestroyData();
+		//return -1;
+	}
+
+	if (inCol == -1 || xCol == -1) {
+		CString msg;
+		msg.Format("Inline and Crossline columns not found in %s.", fname);
+		AfxMessageBox(msg);
+		DestroyData();
+		return -1;
+	}
+
+	if ((inCol != 0 || xCol != 1) && (inCol != 1 || xCol != 0)) {
+		AfxMessageBox("Inline and Crossline numbers should be in the first two columns");
+		DestroyData();
+		return -1;
+	}
+
+	if (headerWordCount <= 4) {
+		msg.Format("No horizons found in file:\n %s", fname);
+		AfxMessageBox(msg);
+		DestroyData();
+		return -1;
+	}
+
+
+	// loop once through the file, we need to know:
+	// - the number of horizons in each record
+	// - the total number of records in the file
+	m_nRecs = 0;
+	m_nWords = 0;
+	while (!feof(pf)) {
+		if (fgets(pBuf, NCHAR, pf) == NULL) {
+			if (ferror(pf)) {
+				msg.Format("Error reading file %s", fname);
+				AfxMessageBox(msg);
+				fclose(pf);
+				DestroyData();
+				return -1;
+			}
+			continue;
+		}
+
+		// Count the number of items in each record, check that every record is the same.
+		m_nRecs++;
+		j = 0;
+		token = strtok(pBuf, ",");
+		while (token) {
+			j++;
+			token = strtok(NULL, ",");
+		}
+		if (j != headerWordCount) {
+			msg.Format("Loading horizon: Bad record found. Record number %d only has %d words. Expecting %d.", m_nRecs, j, m_nWords);
+			AfxMessageBox(msg);
+			fclose(pf);
+			DestroyData();
+			return -1;
+		}
+	}
+
+	// allocate according to what we found above.
+	m_nWords = horizonNameCount;
+	AllocateHorizonArrays();
+
+	// store the horizon names
+	for (i = 0; i<horizonNameCount; i++) {
+		m_arrNames.SetAt(i, arrHeaderWords.GetAt(i));
+	}
+
+	// reset the file pointer and skip over the header
+	rewind(pf);
+	fgets(pBuf, NCHAR, pf);	
+
+	// read the data, store in memory.
+	int *p1, *p2;
+	if (inCol == 0) {
+		p1 = m_pInline;
+		p2 = m_pXline;
+	}
+	else {
+		p1 = m_pXline;
+		p2 = m_pInline;
+	}
+	for (i = 0; i<m_nRecs; i++) {
+		int n = fscanf(pf, "%d,%d,%lf,%lf", &p1[i], &p2[i], &m_pX[i], &m_pY[i]);
+		if (n != 4) {
+			msg.Format("Loading horizon: Error reading horizon file. Record number %d.", i);
+			AfxMessageBox(msg);
+			fclose(pf);
+			DestroyData();
+			return -1;
+		}
+		for (j = 0; j<m_nWords; j++) {
+			fscanf(pf, ",%f", &m_pHorizon[j][i]);
+			if (m_pHorizon[j][i] == m_nullValue) m_pHorizon[j][i] = NULL_HORIZON_VALUE;
+		}
+	}
+
+	fclose(pf);
+	FindLimits();
+	return m_nRecs;
+}
+
+void CHorizon::LoadHorizon(CString name, double* pX, double* pY, int* pInline, int* pXline, float* pHorizon, int nRecs)
+{
+	DestroyData();
+	m_nRecs = nRecs;
+	m_nWords = 1;
+	
+	m_arrNames.SetSize(m_nWords);
+	m_arrNames.SetAt(0, name); // store the horizon name
+
+	m_pX = pX;
+	m_pY = pY;
+	m_pInline = pInline;
+	m_pXline = pXline;
+	m_pHorizon[0] = pHorizon;
+	FindLimits();
+}
+
+// Load a free format text horizon file.
+int CHorizon::LoadTxtFile(CString fname, int headerCount, int wordCount, CStringArray* arrTitles)
+{
+#define NCHAR 2048
+	FILE* pf;
+	int i, j;
+	char pBuf[NCHAR];
+	CString msg;
+	char* token;
+	char delimiters[] = " ,\t\n";
+
+	float nullValue = GetNullValue();
+	DestroyData();
+	SetNullValue(nullValue);
+
+	clock_t start, pass1, pass2, finish;
+	start = clock();
+
+	int inlineCol = -1, xlineCol = -1;
+	int xCoordCol = -1, yCoordCol = -1;
+	int ix = 0;
+	for (int i = 0; i < wordCount; i++) {
+		CString horName = arrTitles->GetAt(i);
+		if (horName.CompareNoCase("inline") == 0)
+			inlineCol = i;
+		else if (horName.CompareNoCase("crossline") == 0 || horName.CompareNoCase("xline") == 0)
+			xlineCol = i;
+		else if (horName.CompareNoCase("x") == 0)
+			xCoordCol = i;
+		else if (horName.CompareNoCase("y") == 0)
+			yCoordCol = i;
+		else if (arrTitles->GetAt(i) == IGNORECOLUMN)
+			m_nWords--; // subtract from word count
+	}
+	const int numberOfColumnsForXY = 2;
+	const int numberOfColumnsForInlineXlineXY = 4;
+	bool isHorixonXy = FALSE;
+	bool isHorixonInineXline = FALSE;
+	
+	if (inlineCol = -1 && xlineCol == -1) {
+		m_nWords = wordCount - numberOfColumnsForXY;
+		isHorixonXy = TRUE;
+	}
+	else {
+		m_nWords = wordCount - numberOfColumnsForInlineXlineXY;
+		isHorixonInineXline = TRUE;
+	}
+	m_nHeader = headerCount;
+
+	if (fname.IsEmpty()) return -1;
+
+	if (wordCount > arrTitles->GetCount()) {
+		msg.Format("Not enough horizons names defined for file %s", fname);
+		AfxMessageBox(msg);
+		return -1;
+	}
+
+	// get the horizon names and column indexes
+	if (m_nWords > 0) m_arrNames.SetSize(m_nWords);
+	inlineCol = -1; xlineCol = -1;
+	xCoordCol = -1; yCoordCol = -1;
+	ix = 0;
+	for (int i = 0; i < wordCount; i++) {
+		CString horName = arrTitles->GetAt(i);
+		if (horName.CompareNoCase("inline") == 0)
+			inlineCol = i;
+		else if (horName.CompareNoCase("crossline") == 0 || horName.CompareNoCase("xline") == 0)
+			xlineCol = i;
+		else if (horName.CompareNoCase("x") == 0)
+			xCoordCol = i;
+		else if (horName.CompareNoCase("y") == 0)
+			yCoordCol = i;
+		else if (arrTitles->GetAt(i) == IGNORECOLUMN)
+			m_nWords--; // subtract from word count
+		else if (ix < m_nWords)
+			m_arrNames[ix++] = horName;
+	}
+
+	if ((inlineCol == -1 || xlineCol == -1) && (xCoordCol == -1 || yCoordCol == -1)) {
+		AfxMessageBox("Inline and Crossline columns not found, or no X, Y coordinates found");
+		DestroyData();
+		return -1;
+	}
+
+	if (m_nWords <= 0) {
+		msg.Format("No horizons found in file:\n %s", fname);
+		AfxMessageBox(msg);
+		DestroyData();
+		return -1;
+	}
+
+	if ((pf = fopen(fname, "r")) == NULL) {
+		msg.Format("Cannot open horizon file %s", fname);
+		AfxMessageBox(msg);
+		return -1;
+	}
+
+
+	// skip the header
+	BOOL bError = FALSE;
+	for (int i = 0; i < m_nHeader; i++) {
+		if (fgets(pBuf, NCHAR, pf) == NULL) {
+			if (ferror(pf)) {
+				msg.Format("Error reading file %s", fname);
+				bError = TRUE;
+			}
+		}
+		if (feof(pf)) {
+			msg.Format("unexpected end of file reading file %s", fname);
+			bError = TRUE;
+		}
+
+		if (bError) {
+			AfxMessageBox(msg);
+			fclose(pf);
+			DestroyData();
+			return -1;
+		}
+	}
+
+	// loop once through the file, we need to know:
+	// - the number of horizons in each record
+	// - the total number of records in the file
+	m_nRecs = 0;
+	while (!feof(pf)) {
+		if (fgets(pBuf, NCHAR, pf) == NULL) {
+			if (ferror(pf)) {
+				msg.Format("Error reading file %s", fname);
+				AfxMessageBox(msg);
+				fclose(pf);
+				DestroyData();
+				return -1;
+			}
+			continue;
+		}
+		m_nRecs++;
+
+		// Count the number of items in each record, check that every record is the same.
+		j = 0;
+		token = strtok(pBuf, delimiters);
+		while (token) {
+			j++;
+			token = strtok(NULL, delimiters);
+		}
+
+		if (j != wordCount) {
+			msg.Format("Loading horizon: Bad record found. Record number %d only has %d words. Expecting %d.", m_nRecs, j, m_nWords);
+			AfxMessageBox(msg);
+			fclose(pf);
+			DestroyData();
+			return -1;
+		}
+	}
+
+	// allocate according to what we found above.
+	AllocateHorizonArrays();
+
+	pass1 = clock();
+
+	// reset the file pointer and read the header
+	rewind(pf);
+	for (int i = 0; i < m_nHeader; i++) {
+		fgets(pBuf, NCHAR, pf);
+	}
+
+	try {
+		// read the data, store in memory.
+		for (i = 0; i < m_nRecs; i++) {
+			fgets(pBuf, NCHAR, pf);
+			char* pStart;
+			pStart = pBuf;
+			int ix = 0;
+
+
+			char* pch;
+			pch = strtok(pStart, delimiters);
+			j = 0;
+			while (pch != NULL || j < wordCount)
+			{
+				if (j == inlineCol) {
+					m_pInline[i] = (int)strtod(pch, NULL);
+				}
+				else if (j == xlineCol) {
+					m_pXline[i] = (int)strtod(pch, NULL);
+				}
+				else if (j == xCoordCol) {
+					m_pX[i] = (int)strtod(pch, NULL);
+				}
+				else if (j == yCoordCol) {
+					m_pY[i] = (int)strtod(pch, NULL);
+				}
+				else {
+					if (arrTitles->GetAt(j) != IGNORECOLUMN) {
+						m_pHorizon[ix][i] = (float)strtod(pch, NULL);
+						if (m_pHorizon[ix][i] == m_nullValue) {
+							m_pHorizon[ix][i] = NULL_HORIZON_VALUE;
+						}
+						ix++;
+					}
+				}
+				pch = strtok(NULL, delimiters);
+				j++;
+			}
+		}
+	}
+	catch (std::exception& ex) {
+		CString exceptionMessage = ex.what();
+		CIMACDoc* pDoc = CIMACDoc::GetIMACDocPtr();
+		CLogfile* pLogfile = pDoc->GetLogfilePtr();
+		CString projectPath = pDoc->GetPathName();
+		pLogfile->OpenLogfile(projectPath);
+		pLogfile->WriteLogfile("CHorizon::LoadTxtFile", exceptionMessage);
+		pLogfile->CloseLogfile();
+		AfxMessageBox("Error reading file: " + exceptionMessage);
+	}
+
+	fclose(pf);
+	if (isHorixonXy == TRUE) {
+		GetInlineXlineFromXY();
+	}
+
+	pass2 = clock();
+
+	FindLimits();
+
+
+	finish = clock();
+	double duration1 = (double)(pass1 - start) / CLOCKS_PER_SEC;
+	double duration2 = (double)(pass2 - pass1) / CLOCKS_PER_SEC;
+	double durationTotal = (double)(finish - start) / CLOCKS_PER_SEC;
+	TRACE("LoadTxtFile pass1=%f pass2 = %f Total time=%f\n", duration1, duration2, durationTotal);
+
+	return m_nRecs;
+}
+
+// find the min and max of inline, xline, x, and y. Unless the value is -1 then skip them.
+void CHorizon::FindLimits()
+{
+	if (m_nRecs == 0) return;
+
+	m_inLineMin = m_inLineMax = m_pInline[0];
+	m_xLineMin = m_xLineMax = m_pXline[0];
+
+	m_yMin = m_yMax = m_pY[0];
+	m_xMin = m_xMax = m_pX[0];
+
+	for (int i=0; i<m_nRecs; i++) {
+		if (m_pInline[i] >= 0) {
+			m_inLineMin = __min( m_inLineMin, m_pInline[i] );
+			m_inLineMax = __max( m_inLineMax, m_pInline[i] );
+		}
+		if (m_pXline[i] >= 0) {
+			m_xLineMin  = __min( m_xLineMin,  m_pXline[i] );
+			m_xLineMax  = __max( m_xLineMax,  m_pXline[i] );
+		}
+		if (m_pX[i] >= 0) {
+			m_xMin = __min( m_xMin, m_pX[i] );
+			m_xMax = __max( m_xMax, m_pX[i] );
+		}
+		if (m_pY[i] >= 0) {
+			m_yMin = __min( m_yMin, m_pY[i] );
+			m_yMax = __max( m_yMax, m_pY[i] );
+		}
+	}
+}
+
+int CHorizon::findNearestPoint(double mx, double my)
+{
+	double dx, dy;
+	double dist, nearDist;
+	int i, nearIndex;
+	dx = mx - m_pX[0];
+	dy = my - m_pY[0];
+	nearDist = pow((dx*dx + dy*dy),0.5);
+	nearIndex = 0;
+	for (i=0; i<m_nRecs; i++) {
+		dx = mx - m_pX[i];
+		dy = my - m_pY[i];
+		dist = pow ((dx*dx + dy*dy), 0.5);
+		if (dist < nearDist) {
+			nearDist = dist;
+			nearIndex = i;
+		}
+			
+	}
+	return nearIndex;
+}
+
+// given the inline,xline pair set istart to it's index. return 0 on success or -1 if not found. 
+int CHorizon::FindIndex(int inLine, int xLine, int &istart)
+{
+	if (istart >= m_nRecs) return -1;
+	if (istart < 0) istart = 0;
+	int ix = istart;
+	int icount = 0;
+	while (m_pInline[ix] != inLine || m_pXline[ix] != xLine) {
+		if (++ix == m_nRecs) ix = 0;
+		if (++icount == m_nRecs) return -1;
+	}
+	istart = ix;
+	return 0;
+}
+
+void CHorizon::FindInlineXlineFromXY(CSegyIndex* pSegyIndexPtr, int traceIndex, DWORD* pInline, DWORD* pXline)
+{
+	pSegyIndexPtr->FindNearestTrace(m_pX[traceIndex], m_pY[traceIndex], *pInline, *pXline);
+	m_pInline[traceIndex] = *pInline;
+	m_pXline[traceIndex] = *pXline;
+	//TRACE("%u        %u         %lf             %lf             %u\n", rInline, rXline, GetXCoord(i), GetYCoord(i), i);
+	//fprintf(myfile, "%u        %u         %lf             %lf             %u", m_pInline[traceIndex], m_pXline[traceIndex], m_pX[traceIndex], m_pY[traceIndex], traceIndex);
+}
+
+BOOL CHorizon::Contains(const CString& horizonName)
+{
+	for(int i=0; i<m_arrNames.GetCount(); i++) {
+		if(horizonName == m_arrNames[i]) {
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+void CHorizon::Create(CHorizon &rHorizon)
+{
+	m_inLineMin = rHorizon.m_inLineMin;
+	m_inLineMax = rHorizon.m_inLineMax;
+	m_xLineMin  = rHorizon.m_xLineMin;
+	m_xLineMax  = rHorizon.m_xLineMax;;
+	
+	m_nRecs = rHorizon.m_nRecs;
+	
+	AllocateHorizonArrays();
+
+	//TRACE("m_pInline[i], m_pXline[i], m_pX[i], m_pY[i]:\n");
+	for (int i=0; i<m_nRecs; i++) {
+		//TODO: Write all of these m_pInline and m_pXline values to a file to compare
+		m_pInline[i] = rHorizon.m_pInline[i];
+		m_pXline[i]  = rHorizon.m_pXline[i];
+		m_pX[i] = rHorizon.m_pX[i];
+		m_pY[i] = rHorizon.m_pY[i];
+		//TRACE("%d	%d	%u	%u\n", m_pInline[i], m_pXline[i], m_pX[i], m_pY[i]);
+	}
+}
+
+// Append the horizon. Only the portion that has common inline,xline will be appended.
+// Check the limits with > operator, if a larger area is needed use Create then append.
+void CHorizon::operator += (const CHorizon& rHorizon)
+{
+	int i, j, ix;
+	if (rHorizon.m_nRecs == 0 || rHorizon.m_nWords == 0) return; 
+
+	// add some space for the new horizons, copy in the horizon names
+	for (i=0; i<rHorizon.m_nWords; i++) {
+		float *pData = new float[m_nRecs];
+		for (j=0; j<m_nRecs; j++) pData[j] = NULL_HORIZON_VALUE;
+
+		m_arrNames.Add(rHorizon.m_arrNames[i]);
+		m_pHorizon[i+m_nWords]    = pData;
+		m_displayMode[i+m_nWords] = rHorizon.m_displayMode[i];
+		m_lineWidth[i+m_nWords]   = rHorizon.m_lineWidth[i];
+		m_color[i+m_nWords]       = rHorizon.m_color[i];
+	}
+
+	// copy the data to the new index locations
+	for (i=0, ix=0; i<rHorizon.m_nRecs; i++) {
+		if (FindIndex(rHorizon.m_pInline[i], rHorizon.m_pXline[i], ix) == 0) {
+			// copy in the x,y's if they are not defined
+			if (m_pX[ix] < 0) m_pX[ix] = rHorizon.m_pX[i];
+			if (m_pY[ix] < 0) m_pY[ix] = rHorizon.m_pY[i];
+			// copy the horizon data
+			for (j=0; j<rHorizon.m_nWords; j++) {
+				float *pData = m_pHorizon[j+m_nWords];
+				float *pSrc  = rHorizon.m_pHorizon[j];
+				pData[ix] = pSrc[i];
+			}
+		}
+	}
+
+	m_nWords += rHorizon.m_nWords;
+}
+
+void CHorizon::DeleteHorizon(int nDeleteIndex)
+{
+	if (nDeleteIndex < 0 || nDeleteIndex >= m_nWords) return;
+
+	// remove it
+	delete m_pHorizon[nDeleteIndex];
+	m_arrNames.RemoveAt(nDeleteIndex);
+	
+	m_nWords--;
+
+	// shuffle down the remaining horizons. Just move the pointers, not the data.
+	for (int i=nDeleteIndex; i<m_nWords; i++) {
+		m_pHorizon[i]    = m_pHorizon[i+1];
+		m_displayMode[i] = m_displayMode[i+1];
+		m_lineWidth[i]   = m_lineWidth[i+1];
+		m_color[i]       = m_color[i+1];
+	}
+}
+
+// Determine if the left operand is greater in all dimensions than the right operand.
+BOOL CHorizon::operator > (const CHorizon& rHorizon)
+{
+	if (m_inLineMin > rHorizon.m_inLineMin) return false;
+	if (m_inLineMax < rHorizon.m_inLineMax) return false;
+	if (m_xLineMin  > rHorizon.m_xLineMin)  return false;
+	if (m_xLineMax  < rHorizon.m_xLineMax)  return false;
+
+	return true;
+}
+
+// Get the maximum dimensions
+void CHorizon::GetBounds(CHorizon *pHor, int &inlineMin, int &inlineMax, int &xlineMin, int &xlineMax)
+{
+	inlineMin = __min(m_inLineMin, pHor->m_inLineMin);
+	inlineMax = __max(m_inLineMax, pHor->m_inLineMax);
+	xlineMin  = __min(m_xLineMin, pHor->m_xLineMin);
+	xlineMax  = __max(m_xLineMax, pHor->m_xLineMax);
+}
+
+// Get the properties for one horizon.
+void CHorizon::GetHorizonProperties(int horizonIndex, int &dataCount, 
+	int &inlineMin, int &inlineMax, int &xlineMin, int &xlineMax, float &dataMin, float &dataMax)
+{
+	float *pData = GetHorizonDataPtr(horizonIndex);
+	int *pInline = GetInlinePtr();
+	int *pXline = GetXlinePtr();
+	dataMin = NULL_HORIZON_VALUE;
+	dataMax = NULL_HORIZON_VALUE;
+	inlineMin = inlineMax = xlineMin = xlineMax = -1;
+	dataCount = 0;
+	for (int j = 0; j < GetRecordCount(); j++) {
+		if (pData[j] != NULL_HORIZON_VALUE) {
+			dataCount++;
+			if (dataMin == NULL_HORIZON_VALUE || pData[j] < dataMin) dataMin = pData[j];
+			if (dataMax == NULL_HORIZON_VALUE || pData[j] > dataMax) dataMax = pData[j];
+			if (inlineMin == -1 || pInline[j] < inlineMin) inlineMin = pInline[j];
+			if (inlineMax == -1 || pInline[j] > inlineMax) inlineMax = pInline[j];
+			if (xlineMin == -1 || pXline[j] < xlineMin) xlineMin = pXline[j];
+			if (xlineMax == -1 || pXline[j] > xlineMax) xlineMax = pXline[j];
+		}
+	}
+}

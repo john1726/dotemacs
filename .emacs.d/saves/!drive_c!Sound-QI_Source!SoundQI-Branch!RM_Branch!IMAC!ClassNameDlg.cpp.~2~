@@ -1,0 +1,244 @@
+// ClassNameDlg.cpp : implementation file
+//
+
+#include "stdafx.h"
+#include "IMAC.h"
+#include "ClassNameDlg.h"
+#include "afxdialogex.h"
+#include "GetColorDlg.h"
+#include "../common/CppUtil.h"
+
+// CClassNameDlg dialog
+
+IMPLEMENT_DYNAMIC(CClassNameDlg, CDialogEx)
+
+CClassNameDlg::CClassNameDlg(CWnd* pParent /*=NULL*/)
+	: CDialogEx(CClassNameDlg::IDD, pParent)
+{
+	//m_nameList.SetEditItemMode(FALSE);
+	m_nameList.SetTextColRange(1, 1);
+	m_nameList.SetNumericColRange(3, 5);
+
+	m_arrNames.SetSize(MAXCLASS);
+	m_arrColorR.SetSize(MAXCLASS);
+	m_arrColorG.SetSize(MAXCLASS);
+	m_arrColorB.SetSize(MAXCLASS);
+}
+
+CClassNameDlg::~CClassNameDlg()
+{
+}
+
+void CClassNameDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_NAMELIST, m_nameList);
+}
+
+
+BEGIN_MESSAGE_MAP(CClassNameDlg, CDialogEx)
+	ON_BN_CLICKED(IDC_GETCOLOR, &CClassNameDlg::OnClickedGetcolor)
+	ON_BN_CLICKED(ID_CLASS_NAMES_HELP, &CClassNameDlg::OnClickedHelp)
+	ON_MESSAGE(WM_UPDATEPARENT, &CClassNameDlg::OnEndEdit)	// custom message
+	ON_WM_SIZE()
+END_MESSAGE_MAP()
+
+COLORREF* CClassNameDlg::GetColorBarPtr() {
+	CIMACDoc* pDoc = CIMACApp::GetDocument();
+	if (pDoc == NULL) return NULL;
+
+	return pDoc->GetColorBarPtr();
+}
+
+
+void CClassNameDlg::SetRgbValuesForClass(int i, COLORREF classColor)
+{
+	// Update RGB numeric values
+	if (classColor == NOCOLOR)	{
+		m_arrColorR[i] = "";
+		m_arrColorG[i] = "";
+		m_arrColorB[i] = "";
+	}
+	else {
+		int red = (int)(GetRValue(classColor));
+		int grn = (int)(GetGValue(classColor));
+		int blu = (int)(GetBValue(classColor));
+		char color[10];
+		sprintf(color, "%d", red);
+		m_arrColorR[i] = color;
+		sprintf(color, "%d", grn);
+		m_arrColorG[i] = color;
+		sprintf(color, "%d", blu);
+		m_arrColorB[i] = color;
+	}
+	m_nameList.SetItem(i, 3, LVIF_TEXT, m_arrColorR[i], 0, 0, 0, 0);
+	m_nameList.SetItem(i, 4, LVIF_TEXT, m_arrColorG[i], 0, 0, 0, 0);
+	m_nameList.SetItem(i, 5, LVIF_TEXT, m_arrColorB[i], 0, 0, 0, 0);
+}
+
+BOOL CClassNameDlg::OnInitDialog()
+{
+	CDialogEx::OnInitDialog();
+
+	CRect rItem;
+	m_nameList.GetClientRect(rItem);
+	m_nameList.InsertColumn(0, "Color #", LVCFMT_LEFT, rItem.Width()*15/100);
+	m_nameList.InsertColumn(1, "Name", LVCFMT_LEFT, rItem.Width()*40/100);
+	m_nameList.InsertColumn(2, "Color", LVCFMT_LEFT, rItem.Width() * 10 / 100);
+	m_nameList.InsertColumn(3, "Red", LVCFMT_LEFT, rItem.Width()*10 / 100);
+	m_nameList.InsertColumn(4, "Green", LVCFMT_LEFT, rItem.Width()*10/100);
+	m_nameList.InsertColumn(5, "Blue", LVCFMT_LEFT, rItem.Width()*10/100);
+	PopulateControls();
+	
+	return TRUE;
+}
+
+void CClassNameDlg::OnClickedGetcolor()
+{
+	int nItem = m_nameList.GetNextItem(-1, LVNI_SELECTED);
+	if (nItem < 0) {
+		AfxMessageBox("No Class selected. Select a Class for the new color.");
+		return;
+	}
+
+	CGetColorDlg dlg;
+	if (dlg.DoModal() != IDOK) return;
+    const COLORREF whiteColor = RGB(255, 255, 255);
+	const COLORREF classColor = dlg.GetSelectedColor();
+
+	while (nItem > -1) {
+		SetRgbValuesForClass(nItem, classColor);
+		m_nameList.SetSubitemColor(2, nItem, classColor);
+		nItem = m_nameList.GetNextItem(nItem, LVNI_SELECTED);
+
+	}
+}
+
+
+LRESULT CClassNameDlg::OnEndEdit(WPARAM wparam, LPARAM lparam)
+{
+	int nItem = m_nameList.GetNextItem(-1, LVNI_SELECTED);
+
+	m_arrColorR[nItem] = m_nameList.GetItemText(nItem, 3);
+	m_arrColorG[nItem] = m_nameList.GetItemText(nItem, 4);
+	m_arrColorB[nItem] = m_nameList.GetItemText(nItem, 5);
+
+	COLORREF* pColorbar = GetColorBarPtr();
+	COLORREF updatedColor = RGB(
+		atoi(m_arrColorR[nItem]), 
+		atoi(m_arrColorG[nItem]), 
+		atoi(m_arrColorB[nItem]));
+	SetRgbValuesForClass(nItem, updatedColor);
+
+	// put in the updated color
+	m_nameList.SetColoredSubitem(2);
+	m_nameList.SetSubitemColor(2, nItem, updatedColor);
+
+	return LRESULT();
+}
+
+
+void CClassNameDlg::OnOK()
+{
+	int nRows = m_nameList.GetItemCount();
+	COLORREF* pColorbar = GetColorBarPtr();
+	if (nRows > MAXCLASS) nRows = MAXCLASS;
+	for (int i=0; i<nRows; i++) {
+		m_arrNames[i] = m_nameList.GetItemText(i, 1);
+		m_arrColorR[i] = m_nameList.GetItemText(i, 3);
+		m_arrColorG[i] = m_nameList.GetItemText(i, 4);
+		m_arrColorB[i] = m_nameList.GetItemText(i, 5);
+
+		// Update color bar stored on CIMACDoc
+		int red = atoi(m_arrColorR[i]);
+		int grn = atoi(m_arrColorG[i]);
+		int blu = atoi(m_arrColorB[i]);
+		pColorbar[i] = RGB(red, grn, blu);
+	}
+	for (int i=nRows; i<MAXCLASS; i++) {
+		if(i==0) {
+			// unclassified is white
+			m_arrNames[i] = "Unclassified";
+		}
+		else {
+			m_arrNames[i].Format("Class %d", i);
+		}
+	}
+
+	CDialogEx::OnOK();
+}
+
+void CClassNameDlg::OnClickedHelp()
+{
+	CCppUtil::OpenURL(CIMACApp::URL_HELP_CLASS_NAMES);
+}
+
+
+void CClassNameDlg::OnSize(UINT nType, int cx, int cy)
+{
+	CDialogEx::OnSize(nType, cx, cy);
+
+	// Check if list controls have been created. Grab the list controls from the
+	// the view and check if they have been created. Crashes without this test since
+	// OnSize() is called before the view is created.
+	CEditListCtrl* pList;
+	CRect tRect;
+
+	pList = (CEditListCtrl*)GetDlgItem(IDC_NAMELIST);
+	GetClientRect(&tRect);
+
+	// Adjust second column width with window change while keeping the rest of the column the same width
+	if (pList) {
+
+		LVCOLUMN col0, col1, col2, col3, col4, col5;
+		col0.mask = LVCF_WIDTH;
+		col1.mask = LVCF_WIDTH;
+		col2.mask = LVCF_WIDTH;
+		col3.mask = LVCF_WIDTH;
+		col4.mask = LVCF_WIDTH;
+		col5.mask = LVCF_WIDTH;
+
+		CRect r;
+		m_nameList.GetClientRect(r);
+		if (m_nameList.GetColumn(0, &col0) && 
+			m_nameList.GetColumn(1, &col1) &&
+			m_nameList.GetColumn(2, &col2) &&
+			m_nameList.GetColumn(3, &col3) &&
+			m_nameList.GetColumn(4, &col4) &&
+			m_nameList.GetColumn(5, &col5))
+		{
+			col1.cx = r.Width() - col0.cx - col2.cx - col3.cx - col4.cx - col5.cx;
+			m_nameList.SetColumn(1, &col1);
+		}
+	}
+}
+
+void CClassNameDlg::PopulateControls()
+{
+	m_nameList.DeleteAllItems();
+	const COLORREF whiteColor = RGB(255, 255, 255);
+	COLORREF* pColorbar = GetColorBarPtr();
+
+	for (int i = 0; i < m_pDoc->GetClassCount(); i++) {
+		CString msg;
+		msg.Format("%d", i);
+		m_nameList.InsertItem(i, msg);
+		m_nameList.SetItem(i, 1, LVIF_TEXT, m_arrNames[i], 0, 0, 0, 0);
+
+		if (pColorbar[i] > whiteColor)
+		{
+			pColorbar[i] = 0;
+			pColorbar[i] = NOCOLOR;
+		}
+		const COLORREF classColor = pColorbar[i];
+		SetRgbValuesForClass(i, classColor);
+	}
+
+	// put in some default colors
+	m_nameList.SetColoredSubitem(2);
+	for (int j = 0; j < MAXCLASS; j++) {
+		m_nameList.SetSubitemColor(2, j, pColorbar[j]);
+	}
+		
+	UpdateData(FALSE);
+}

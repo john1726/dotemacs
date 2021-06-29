@@ -1,0 +1,38 @@
+Clarification on requirements for this software development task:
+
+•	Should we save custom color bar settings as text files in the installation directory or in AppData, or have them be a limited set that are compiled directly into the QI-Pro executable?  What is the best way to ensure that a given customer’s custom color bar settings don’t get deleted or lost when they install a new version of QI-Pro?
+
+-Brenda: Don`t need just one place for things.  We could store some in a binary, some in a directory, some in an AppData folder.
+-Carl: There are default built-in color bars, but you can still customize any of those.  Do we need separate files?  
+-Kevin: If you load a different version of QI-Pro, so then a different executable doesn't have those templates built-in.
+-Brenda: If you want to pull in a bunch of color bars maybe we do want an external file?
+-Carl: In terms of having stored colors
+-Brenda: Dolomites are blue, sandstones are yellow
+-The classified colour bar is going to be a tricky one.  Maybe even just changing the default color bar, so that it is a bit bigger than 10 classes.  Let us have, say, 15 classes.
+-Kaushal: For classified volume, we don`t need a custom colour bar.  When they are done, they just tweak it a bit.  I was thinking if you want to see porosity, s-impedance, z-impedance, there are custom colour bars out there.  We need to make sure that when a person upgrades QI-Pro, he shouldn`t lose it, if he moves or upgrades.
+-Carl: The paste, easter-egg color 
+-Laurie: Instead of them saving to an internal database is better.  If they save to their own directory, they will lose it all of the time.  If you can internally save it to a database that goes with QI-Pro.  
+-Carl: If they have several projects, we want the colour bar to go between projects.
+-Kaushal: In my view, whenever you open QI-Pro, you should see all of your color bars.  
+-Kevin: I don't want to lose existing functionality, so if somebody wants to save their color bar as a text file, they can then send it to a colleague.
+-Save the whole range of options.
+-Brenda: Would you really want to see all of your color bars in all of your projects?  It might get pretty big soon.
+-Kaushal: How Petrel works, is it saves it in the project, butthen it has that reference tool function so I can transfer that colour bar between projects.
+-Brenda: It might be good to store the colour bars in the app directory or in AppData, then we are kind of building up a database. 
+-Laurie: I think we should start simple.  Rather than trying to think of every possible situation that may arise, let us put in a few colour bar templates that everybody uses in the install directory.  
+-Kevin: They will always be saved in the project.  But we won`t save the whole database in the project.
+
+•	Should we have the custom color bars be selected in the Color Bar via combobox or open file selector?  Should we allow users to add as many custom color bar settings files as they want, or limit it to a pre-defined set?
+•	What specific custom color bar settings should we have? Rainbow, Sand shale, etc?  
+•	Should we allow the user to select these custom color bar settings in the “Color Bar” accessed only from the “Xplot Settings” dialog or from other ways as well?
+
+Laurie: I have had this idea that you can have this highlight color in your colour bar, and you can slide it up and down in your porosity or point density colour.  
+-Kaushal: We were wondering about inserting two colours, in between.  
+-Brenda: We have another ticket.
+-Laurie: Do we have a greyscale as well?
+-Carl: Do we have a target number of spectra to have?  10?  7?
+-Laurie: That is for the Thrid Attribute, right?
+-Kevin: We will save all the color bars in use in the project bar.  We will ... in the Third Attribute mode, to save to a database.  Then we will allow the user to export their database.
+-Carl: In Hampson Russel, you have individually select every color bar combo-box text item to see what it actually is.  This drives me absolutely batty.
+-Brenda: We want to put a little Red, White and Blue swatch.
+-Kevin: Save class names as well as part of the colour bar 

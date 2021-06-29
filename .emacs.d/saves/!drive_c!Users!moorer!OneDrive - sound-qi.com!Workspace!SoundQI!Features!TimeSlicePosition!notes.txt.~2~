@@ -1,0 +1,1450 @@
+Description:
+A few clients have requested a dotted line indicating the position of the time slice displayed on the map.
+
+2020.12.14
+I. Researching and implementing solution:
+
+	CEdit	   m_edtSliceTime;
+	int        m_sliceTime;
+	CComboBox  m_cmbSlice;
+
+// Time slice controls
+void CMapSelectDlg::OnClickedUpdateSlice()
+{
+	UpdateData(TRUE);
+	if (ValidateSliceTime()) {
+		CString sliceReference;
+		m_cmbSlice.GetLBText(m_cmbSlice.GetCurSel(), sliceReference);
+		pDoc->SetTimeSliceParms(m_sliceTime, sliceReference);
+		pDoc->UpdateViews(TRUE);
+	} else {
+		m_bShowSliceFlag = FALSE;
+	}
+	UpdateControls();
+}
+
+		m_cmbSlice.GetCurSel()	Function CComboBox::GetCurSel has no address, possibly due to compiler optimizations.	
+
+    m_sliceTime = 10                
+    sliceReference = " Lwr_Keg_River"
+    m_sliceReference = CHorizon::TIME_ZERO;
+    
+void CIMACDoc::SetTimeSliceParms(int time, CString ref) 
+{ 
+	m_timeSlice.SetSliceTime(time); 
+	m_timeSlice.SetSliceReference(ref); 
+	m_timeSlice.SetShowSliceFlag(TRUE); 
+	m_timeSlice.SetLoadSliceFlag(TRUE);
+	m_timeSlice.SetActiveFlag(TRUE);
+}
+
+void CIMACDoc::GetSliceParms(BOOL &bShow, BOOL &bLoad, int &time, CString &ref)
+{
+	bShow = m_timeSlice.isShowSliceFlag(); 
+	bLoad = m_timeSlice.isLoadSliceFlag();
+	time  = m_timeSlice.GetSliceTime(); 
+	ref   = m_timeSlice.GetSliceReference();
+}
+
+    
+	CString strReference = pTimeSlice->GetSliceReference();
+
+-Which is called in:
+
+***
+
+int CSegy::LoadSliceData(int ixSlice, CString fname, CTimeSlice *pTimeSlice, CHorizon *pHorizon, const CUPDUPDATA* pProgress )
+{
+	clock_t start = clock();
+	if (fname.IsEmpty()) return -1;
+
+	CString strReference = pTimeSlice->GetSliceReference();
+	int horIndex = -1;
+	float *pHor = NULL;
+	int horizonOffset = 0;
+	int traceLength = 240 + GetSampleCount() * 4; 
+	BYTE *pBuf;
+
+	// Depending if there is a reference horizon the reference time will be absolute or relative.
+	// find index of reference horizon
+	if (strReference != CHorizon::TIME_ZERO && pHorizon->GetHorizonCount() > 0) {
+		int j = 0;
+		while (j < pHorizon->GetHorizonCount() && pHorizon->GetName(j) != strReference) j++;
+		if (j < pHorizon->GetHorizonCount()) horIndex = j;
+	}
+	// reference horizon not found, so reset to default.
+	if (horIndex == -1) {
+		strReference = CHorizon::TIME_ZERO;
+		pTimeSlice->SetSliceReference(strReference);
+	} else {
+		pHor = pHorizon->GetHorizonDataPtr(horIndex);
+	}
+
+	int si = GetSampleInterval();
+	int segyStartTime = GetStartTime();
+	int sliceTime = pTimeSlice->GetSliceTime(); 
+	int sampleIndex;
+	if (horIndex == -1) {
+		// reference time is absolute;
+		sampleIndex = Time2Index(sliceTime-segyStartTime, si);
+		// check if in range
+		if (sampleIndex < 0 || sampleIndex >= GetSampleCount()) {
+			return -1;
+		}
+	} else {
+		// reference time is relative to a horizon
+		sampleIndex = Time2Index(sliceTime, si);
+	}
+
+	int sampleOffset = 240 + (sampleIndex * 4);
+
+	CFile f;
+	CFileException ex;
+	CSegyIndex *pIndex = &m_index;
+	float *pSliceData = pTimeSlice->GetDataPtr(ixSlice);
+	float *pSlice     = pTimeSlice->GetSlicePtr();
+	BOOL  *pDeadFlag  = pTimeSlice->GetFlagPtr();
+	CDoublePointArray *pCoords = pTimeSlice->GetCoordPtr();
+	 
+	if (!m_file.Open(fname, CFile::modeRead|CFile::shareDenyWrite, &ex)) {
+		TCHAR   szCause[255];
+		ex.GetErrorMessage(szCause,255);
+		AfxMessageBox(szCause);
+		return -1;
+	} else {
+		DWORD inlineMin, inlineMax, xlineMin, xlineMax;
+		pIndex->GetLineMinMax(inlineMin, inlineMax, xlineMin, xlineMax);
+
+		int totalSamps = (xlineMax-xlineMin+1) * (inlineMax-inlineMin+1);
+		int sampCount = 0;
+		int iPercentDone = -1;
+		DWORD sliceIndex = 0;
+		DWORD ixTrace = 0;
+		int   currIndex = 0;
+		double nextTraceOffset = -1;
+		pBuf = new BYTE[traceLength];
+		int hits = 0;
+		int misses = 0;
+
+		BOOL bIgnore;
+		DWORD inLine, xLine;
+		double traceOffset, xcoord, ycoord;
+		BOOL bNoHorizon = FALSE;
+
+		while (!pProgress->ShouldTerminate() && pIndex->FindNextTrace(ixTrace, inLine, xLine, xcoord, ycoord, traceOffset, bIgnore) == 0) {
+			ixTrace++;
+
+			if (inLine < inlineMin || inLine > inlineMax) continue;
+			if (xLine  < xlineMin  || xLine  > xlineMax ) continue;
+
+			// report the progress
+			float fPercentDone = (float)(sampCount++) / (float)totalSamps * 100.0f;
+			if ((int)fPercentDone != iPercentDone) {
+				//TRACE("percent=%d hits=%d misses=%d\n",iPercentDone, hits, misses);
+				iPercentDone = (int)fPercentDone;
+				pProgress->SetProgress(iPercentDone);
+			}
+
+			if (bIgnore) {
+				// ignore this trace, no valid data.
+				pSliceData[sliceIndex] = NODATA;
+				pSlice[sliceIndex]     = NODATA;
+				pDeadFlag[sliceIndex]  = TRUE;
+			} else {	
+				// get the horizon time for this trace
+				if (horIndex >= 0) {
+					if (pHorizon->FindIndex(inLine, xLine, currIndex) == 0) {
+						int horTime = (int) pHor[currIndex];
+						horizonOffset = Time2Index(horTime-segyStartTime, si) * 4;
+						bNoHorizon = FALSE;
+					} else {
+						bNoHorizon = TRUE;
+					}
+				}
+
+				pCoords->SetAtGrow(sliceIndex, CDoublePoint(xcoord, ycoord));
+
+				// check if in range.
+				if ((sampleOffset + horizonOffset) < 240 || (sampleOffset + horizonOffset) >= traceLength || bNoHorizon) {
+					pSliceData[sliceIndex] = NODATA;
+					pSlice[sliceIndex]     = NODATA;
+					pDeadFlag[sliceIndex]  = TRUE;	
+				} else {
+					if (traceOffset != nextTraceOffset) {
+						LARGE_INTEGER li;
+						li.QuadPart = (__int64) traceOffset;
+						SetFilePointer((HANDLE)m_file.m_hFile, li.LowPart, &li.HighPart, FILE_BEGIN);
+						misses++;
+					} else {
+						hits++;
+					}
+					nextTraceOffset = traceOffset + traceLength;
+
+					if(m_file.Read(pBuf, traceLength) != traceLength) {
+						AfxMessageBox("Problem reading time slice data");
+						break;
+					}
+
+					if (m_nFormatCode == 1) {
+						ibm_ieee(&pBuf[sampleOffset + horizonOffset], &pSliceData[sliceIndex], 1, GetDataEndian());
+					} else {
+                        if (GetDataEndian() == eBIGENDIAN) {
+                            flip_endian(&pBuf[sampleOffset + horizonOffset], (BYTE *)&pSliceData[sliceIndex], 1);
+                        } else {
+                            memcpy(&pSliceData[sliceIndex], &pBuf[sampleOffset + horizonOffset], sizeof(float));
+                        }
+					}
+					pSlice[sliceIndex] = UNCLASSIFIED;
+					pDeadFlag[sliceIndex] = FALSE;
+				}
+			}
+			sliceIndex++;
+		}
+	}
+
+	m_file.Close();
+	delete pBuf;
+
+	if(!pProgress->ShouldTerminate()) {
+		pTimeSlice->SetDataLoadedFlag(ixSlice, TRUE);
+	}
+
+#if TIMERS == 1
+	TRACE("Time Slice %d loaded in %5.3f seconds\n", ixSlice, (double) (clock()-start) / CLOCKS_PER_SEC);
+#endif
+
+	return 0;
+}
+
+
+***
+
+See also which calls the above:
+
+// static method run in the progress dialog thread
+bool LoadTimesliceTask(const CUPDUPDATA* pCUPDUPData)
+{
+	LOAD_TIMESLICE_PARM* pTaskparm = (LOAD_TIMESLICE_PARM*) pCUPDUPData->GetAppData();
+	CIMACDoc* pDoc = pTaskparm->pDoc;
+	CTimeSlice* pTimeSlice = pTaskparm->pTimeSlice;
+	int fileCount = pDoc->GetFileCount();
+	int volumeCount = fileCount;
+
+	// Update the timeslice with the document data and count the number of unique attributes that 
+	// need to be loaded (for the message).
+	int attributeCount = 0;
+	for (int i = 0; i<fileCount; i++) {
+		CString sAttr = pDoc->GetAttr(i);
+		if (pDoc->GetFile(i) != pTimeSlice->GetFileName(i)) {
+			pTimeSlice->SetFileName(i, pDoc->GetFile(i));
+			pTimeSlice->SetDataLoadedFlag(i, FALSE);
+		}
+		if (sAttr != pTimeSlice->GetAttrName(i)) {
+			pTimeSlice->SetAttrName(i, sAttr);
+		}
+
+		// check if this attribute is active
+		if( !pTimeSlice->IsDataLoaded(i) ) {
+			// skip loading if this attribute isn't being used in crossplot
+			if (pDoc->IsAttributeInCrossPlot(sAttr) || pDoc->IsAttributeInVirtualVolumeInCrossPlot(sAttr)) {
+					attributeCount++;
+			}
+		}
+	}
+	// now update the timeslice with the virtual volume attributes
+	for (int i = 0; i < pDoc->GetVirtualVolumeCount(); i++){
+		CString sAttr = pDoc->GetVirtualVolumeAttributeName(i);
+		if (sAttr != pTimeSlice->GetAttrName(volumeCount)){
+			pTimeSlice->SetFileName(volumeCount, "");
+			pTimeSlice->SetDataLoadedFlag(volumeCount, FALSE);
+			pTimeSlice->SetAttrName(volumeCount, sAttr);
+		}
+
+		// check if the virtual volume is active
+		if (!pTimeSlice->IsDataLoaded(volumeCount)) {
+			// skip loading if this attribute isn't being used in crossplot
+			if (pDoc->IsAttributeInCrossPlot(sAttr)) {
+				attributeCount++;
+			}
+		}
+		volumeCount++;
+	}
+
+	if (attributeCount == 0) return TRUE; // return if there are no attribute to load 
+
+	pTimeSlice->SetVolumeCount(volumeCount);
+
+	// Load slice data from active files.
+	int currentAttribute = 0;
+	for (int i = 0; i<fileCount && !pCUPDUPData->ShouldTerminate(); i++) {
+		CSegy *pSegy=pDoc->GetSegyInPtr(i);
+		CString sAttr = pDoc->GetAttr(i);
+
+		// check if this attribute is active
+		BOOL bLoad = FALSE;
+		if ( pDoc->IsAttributeInCrossPlot(sAttr) || pDoc->IsAttributeInVirtualVolumeInCrossPlot(sAttr)) {
+			bLoad = TRUE;
+		}
+
+		if (!bLoad || pTimeSlice->IsDataLoaded(i)) continue;
+
+		CString msg;
+		msg.Format("Loading Attribute %d of %d: %s", ++currentAttribute, attributeCount, sAttr);
+		pCUPDUPData->SetProgress(msg);
+
+		if (pSegy->LoadSliceData(i, pDoc->GetFile(i), pTimeSlice, pDoc->GetHorizonDataPtr(), pCUPDUPData) != 0) 
+		{
+			msg.Format("Unable to load time slice data for %d ms in file:\n %s\nPlease check that the time slice lies within the project start and end time.",
+				pTimeSlice->GetSliceTime(), pDoc->GetFile(i));
+			AfxMessageBox(msg);
+			return FALSE;
+		}
+	}
+
+	// compute the virtual time slices.
+	int vvCount = -1;
+	for (int i = 0; i < pDoc->GetVVAttributeCount(); i++) {
+		CVVAttribute& vvAttr = pDoc->GetVVAttributeRef(i);
+		for (int j = 0; j < vvAttr.GetVVCount(); j++) {
+			CString sAttr = vvAttr.GetVVName(j);
+			vvCount++;
+
+			if (!pDoc->IsAttributeInCrossPlot(sAttr) || pTimeSlice->IsDataLoaded(vvCount + fileCount)) continue;
+
+			CString msg;
+			msg.Format("Loading Attribute %d of %d: %s", ++currentAttribute, attributeCount, sAttr);
+			pCUPDUPData->SetProgress(msg);
+
+			// create completely expanded (substituted) equation of equation
+				// NOTE:	GetSubstitutedEquation() replaces all attributes with a random variable and stores those attributes
+				//			in a separate external list to save them. This is done so that the parsing will work accurately, in
+				//			case there are 'illegal' characters in the attribute names. To get the variables, we use GetSubstitutedVariables()
+			CVVEquation vvEquationRef(vvAttr.GetVVEquation(j).GetSubstitutedEquation());
+			vvEquationRef.Parse();
+			CStringArray* pVariableArray = vvAttr.GetVVEquation(j).GetSubstitutedVariables(); // NOTE: Get SubstitutedEquation must be called first for this to work
+
+			// get the list of attribute names and their corresponding file indexes
+			CIntArray attributeIndexes;
+			for (int k = 0; k < pVariableArray->GetCount(); k++) {
+				attributeIndexes.Add(pDoc->GetAttributeIndex(pVariableArray->GetAt(k)));
+			}
+
+			// with the equation and list of indexes, we can now compute the virtual timeslice.
+			pTimeSlice->ComputeVirtualTimeSlice(vvCount + fileCount, vvEquationRef, &attributeIndexes);
+			
+		}
+	}
+
+	return TRUE;
+}
+
+See CMapSelectDlg::LoadUserLine()
+See CTimeSlice::ComputeVirtualTimeSlice()
+
+-----
+
+void CIMACDoc::GetSliceParms(BOOL &bShow, BOOL &bLoad, int &time, CString &ref)
+{
+	bShow = m_timeSlice.isShowSliceFlag(); 
+	bLoad = m_timeSlice.isLoadSliceFlag();
+	time  = m_timeSlice.GetSliceTime(); 
+	ref   = m_timeSlice.GetSliceReference();
+}
+
+-The above function is called here:
+
+// reset the controls according to the document settings.
+void CMapSelectDlg::UpdateControls()
+{
+	if (m_cmbSlice.m_hWnd == NULL) {
+		TRACE("Error updating Time Slice Relative To combo box. Invalid window handle.\n");
+		return;	// The dialog has probably been closed.
+	}
+
+	// time slice combo
+	m_cmbSlice.ResetContent();  // this line of code breaks the redraw of the crossplot views.  See bug 237
+	CString selectedString;
+	pDoc->GetSliceParms(m_bShowSliceFlag, m_bLoadSliceFlag, m_sliceTime, selectedString);
+	CString defaultString = CHorizon::TIME_ZERO;
+	m_cmbSlice.AddString(defaultString);
+	CHorizon *pHor = pDoc->GetHorizonDataPtr();
+        // ...
+}    
+
+-In IMACDoc::UpdateViews:
+
+	// Time Slice...
+	if (m_timeSlice.isActive() && m_timeSlice.isShowSliceFlag()) {
+		if (m_timeSlice.isLoadSliceFlag()) {
+			if (!m_timeSlice.Create(GetFileCount()+GetVirtualVolumeCount(), GetSegyInPtr(0)->GetSegyIndexPtr())) {
+				m_timeSlice.Destroy();
+				m_timeSlice.SetShowSliceFlag(FALSE);
+			}
+		}
+		LoadTimeSlice(&m_timeSlice);
+  		m_timeSlice.SetLoadSliceFlag(FALSE);
+        }
+
+-		m_index	{m_pEbcdic=0xcccccccc000000a0 <Error reading characters of string.> m_pBinary=0xcccccccc00000d20 <Error reading characters of string.> ...}	CSegyIndex
++		CObject	{...}	CObject
++		m_pEbcdic	0xcccccccc000000a0 <Error reading characters of string.>	unsigned char[3200]
++		m_pBinary	0xcccccccc00000d20 <Error reading characters of string.>	unsigned char[400]
++		m_pTrHeader	0xcccccccc00000eb0 <Error reading characters of string.>	unsigned char[240]
+		m_ntrace	<Unable to read memory>	
+		m_nsamps	<Unable to read memory>	
+		m_sampleInterval	<Unable to read memory>	
+		m_trsize	<Unable to read memory>	
+		m_inlineCount	<Unable to read memory>	
+		m_xlineCount	<Unable to read memory>	
+		m_liveInlineCount	<Unable to read memory>	
+		m_liveXlineCount	<Unable to read memory>	
+		m_startTime	<Unable to read memory>	
+		m_endTime	<Unable to read memory>	
+		m_pInline	<Unable to read memory>	
+		m_pXline	<Unable to read memory>	
+		m_pTmp	<Unable to read memory>	
+		m_pXcoord	<Unable to read memory>	
+		m_pYcoord	<Unable to read memory>	
+		m_pOffset	<Unable to read memory>	
+		m_bIgnore	<Unable to read memory>	
+		m_bSaveIgnore	<Unable to read memory>	
+		m_pLiveInline	<Unable to read memory>	
+		m_pLiveXline	<Unable to read memory>	
+		m_isIndexLoaded	<Unable to read memory>	
+		m_isIgnoreListValid	<Unable to read memory>	
+		m_isFileOpen	<Unable to read memory>	
++		m_filename	???	ATL::CStringT<char,StrTraitMFC_DLL<char,ATL::ChTraitsCRT<char>>>
+
+int CIMACDoc::GetVirtualVolumeCount()
+{
+	int fileCount = 0;
+	int vvCount = GetVVAttributeCount();
+	for (int i = 0; i < vvCount; i++){
+		CVVAttribute &vvAttr = GetVVAttributeRef(i);
+		fileCount += vvAttr.GetVVCount();
+	}
+	return fileCount; 
+}
+
+vvCount = 11
+
+fileCount = 13
+
+typedef struct load_timeslice_parm {
+	CIMACDoc* pDoc;
+	CTimeSlice* pTimeSlice;
+} LOAD_TIMESLICE_PARM;
+
+Where:
+
+class CTimeSlice : public CObject
+{
+public:
+	CTimeSlice(); 
+	virtual ~CTimeSlice();
+        // ...
+        void  SetSliceTime(int n){ m_sliceTime = n;}
+        // ...
+	BOOL  isActive()		 { return m_bActiveFlag; }
+	void  SetShowSliceFlag(BOOL flg) { m_bShowSliceFlag = flg; }
+	void  SetLoadSliceFlag(BOOL flg) { m_bLoadSliceFlag = flg; }
+	void  SetActiveFlag(BOOL flg)    { m_bActiveFlag = flg; }
+        // ...    
+}
+
+GetXplotCount()
+3
+
+CIMACApp *pApp = (CIMACApp *)AfxGetApp();
+
+-What is a virtual volume?
+
+CMapSelectDlg::OnPaint:
+
+if (pParent->GetShowAllUseLines() && pDoc->GetInlineXlineMode() == eUSERLINE && mapMode != eMAP_DIGITIZE && m_bMouseEnter) {
+        // ...
+}        
+
+Where:
+
+CMapSelectDlg *pParent;
+
+BOOL GetShowAllUseLines() {return m_showAllUserLines;}
+
+BOOL CChildFrame::PreCreateWindow(CREATESTRUCT& cs)
+{
+
+	cs.style &= ~(LONG)FWS_ADDTOTITLE;
+	cs.lpszName = "Classified Seismic Volume";
+
+	return CMDIChildWndEx::PreCreateWindow(cs);
+
+}
+
+ID_VIEW_VIEW1    "Classified Seismic Volume\nClassified Seismic Volume"
+
+	pDocTemplate->AddFrameTemplate(
+        new CFrameTemplate( 
+			menuID,
+            RUNTIME_CLASS( CChildFrame ), 
+            RUNTIME_CLASS( CIMACView ), 
+            ID_VIEW_VIEW1, 
+            SW_SHOWNORMAL, 
+            TRUE ) );
+
+ // Draw the timing lines at the specified "timingLine" interval.
+void CIMACView::DrawTimingLines(CDC *pDC, int timingLine)
+{
+	CIMACDoc* pDoc = GetDocument();
+	if (!pDoc->GetDisplayLinesDisplayToggle()) return;
+	int si = pDoc->GetSI();
+	int ixs = Time2Index(m_startTime, si);
+	if (timingLine == 10) {
+		pDC->SelectObject(m_normPen);
+	} else {
+		pDC->SelectObject(m_dotPen);
+	}
+	for (int i = m_startTime; i <= m_endTime; i++) {
+		int displayTime = i;
+		if (pDoc->IsPetrelTimeMode()) {
+			displayTime = -(displayTime - (int) pDoc->CalculatePetrelOffset(pDoc->GetPetrelDatum()));
+		}
+		if (displayTime != displayTime / timingLine * timingLine) continue;
+		float ixLine = Time2IndexFloat(i, si);
+		int iy = TOP + (int)((ixLine - ixs) * m_vScale);
+		if (timingLine == 10) {
+			// for 10 mil timing lines, draw our own dotted line
+			for (int j = SIDE; j < SIDE + m_nTotalTrace * m_hScale; j += 6) {
+				pDC->MoveTo(j, iy);
+				pDC->LineTo(j + 2, iy);
+			}
+		} else {
+			// draw the line using the DotPen
+			pDC->MoveTo(SIDE, iy);
+			pDC->LineTo(SIDE + m_nTotalTrace * m_hScale, iy);
+		}
+	}
+}
+       
+// Draw the timing line labels at the specified "timingLine" interval.
+void CIMACView::DrawTimingLineLabels(CDC *pDC, int timingLine)
+{
+
+	CRect rcItem;
+	CString strItem;
+	CIMACDoc* pDoc = GetDocument();
+	if (!pDoc->GetDisplayLinesDisplayToggle()) return;
+	int si = pDoc->GetSI();
+	int ixs = Time2Index(m_startTime, si);
+	int ixe = Time2Index(m_endTime, si);
+	for (int i = m_startTime; i <= m_endTime; i++) {
+		int displayTime = i;
+		if (pDoc->IsPetrelTimeMode()) {
+			displayTime = -(displayTime - (int) pDoc->CalculatePetrelOffset(pDoc->GetPetrelDatum()));
+		}
+		if (displayTime != displayTime / timingLine * timingLine) continue;
+		float ixLabel = Time2IndexFloat(i, si);
+		rcItem.left = 0;
+		rcItem.right = SIDE - DXY;
+		int iy = TOP + (int)((ixLabel - ixs) * m_vScale);
+		rcItem.top = iy - DXY;
+		rcItem.bottom = iy + DXY;
+		
+		
+		if (pDoc->IsPetrelTimeMode() && pDoc->GetFlatteningDisplayToggle() && pDoc->GetFlattenHorizonCheck())  strItem.Format("%d (%d)", displayTime, displayTime - (pDoc->GetFlatteningDatum()));
+		else if (pDoc->GetFlatteningDisplayToggle() && pDoc->GetFlattenHorizonCheck())  strItem.Format("%d (%d)", displayTime, displayTime - pDoc->GetFlatteningDatum());
+		else strItem.Format("%d", displayTime);
+
+		pDC->DrawText(strItem, -1, rcItem, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
+		rcItem.left = SIDE + m_nTotalTrace * m_hScale + DXY;
+		rcItem.right = rcItem.left + SIDE;
+		pDC->DrawText(strItem, -1, rcItem, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+	}
+}
+
+Where:
+
+for (int i = m_startTime; i <= m_endTime; i++) {
+        // ...
+        
+}
+
+m_startTime = 850
+m_endTime = 1050
+
+void CIMACDoc::ComputeSlice()
+{ 
+	clock_t start = clock();
+
+	int fileCount = GetFileCount();
+	if (fileCount == 0) return;
+
+	CTimeSlice *pTimeSlice = GetTimeSlicePtr();
+	if (!pTimeSlice->isShowSliceFlag() || pTimeSlice->isLoadSliceFlag()) return;
+	float *pSlice = pTimeSlice->GetSlicePtr();
+        // ...
+}    
+1)
+
+if (pWell->m_xline == xLine && pWell->m_inline == inLine) {
+        // ...
+}
+Where:
+
+pWell = 0x000001d00bcd0290 {m_fileName="Z:\\QI-Pro Demo\\Horn River Demo\\Wells\\Well 1_logs.las" header="~VERSION INFORMATION\n VERS.                          2.0   : CWLS LOG ASCII STANDARD - VERSION 2.0\n WRAP.                          NO    : ONE LINE PER DEPTH..."
+
+if (!pDoc->m_bDrawFlag || m_nTrace == 0) {
+    // ...
+}        
+
+
+-----
+2)
+
+	// Get start and end times. If they fall outside the data range then adjust them.
+	int segySampCount = pOutputSegy->GetSampleCount();
+	int segyStartTime = pOutputSegy->GetStartTime();
+	int segyEndTime = segyStartTime + Index2Time((segySampCount - 1), si);
+	m_startTime = max(pDoc->GetStartTime(), segyStartTime);
+	m_endTime = min(pDoc->GetEndTime(), segyEndTime);
+	pDoc->SetStartEndTimes(m_startTime, m_endTime);
+                            
+		m_endTime	1050	int
+		m_sampCount	101	int
+		m_startTime	850	int
++		pDoc	0x000001d00bce8990 {m_tempPathName="C:\\QI-Pro Demo\\Horn River Demo\\Projects\\QI-Pro Laurie complete.prj" ...}	CIMACDoc *
+		segyEndTime	1300	int
+		si	2000	int
+
+m_nTotalTrace = 551
+
+
+	ON_UPDATE_COMMAND_UI(IDC_RADIO_USERLINE,
+                             OnUpdateCommandThatDependsOnAttributes)
+                             
+
+        
+		pDC->DrawText(strItem, -1, rcItem, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
+		rcItem.left = SIDE + m_nTotalTrace * m_hScale + DXY;
+		rcItem.right = rcItem.left + SIDE;
+		pDC->DrawText(strItem, -1, rcItem, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+
+
+2020.12.15
+I. Researching and implementing solution:
+
+void  CEditListCtrl::SetSubitemColor(int column, int index, DWORD color) 
+{ 
+	int arrSize = (int) m_arrColors[column].GetSize();
+	if (index >= arrSize) {
+		m_arrColors[column].SetSize(arrSize + 3);
+	}
+	m_arrColors[column][index] = color; 
+}
+
+
+2020.12.16
+I. Researching and implementing solution:
+
+// Radio buttons for Line Select Mode
+void CMapSelectDlg::OnClickedMapInline() { DoSelectMode(); }
+void CMapSelectDlg::OnMapUserLine()      { DoSelectMode(); }
+void CMapSelectDlg::OnMapXline()         { DoSelectMode(); }
+void CMapSelectDlg::DoSelectMode() 
+{
+	int oldSelectMode = m_selectMode;
+	UpdateData(TRUE);
+	if (m_selectMode == eUSERLINE) {
+		if (pDoc->GetCurrentUserLinePtr() == NULL) {
+			AfxMessageBox ("No user line defined yet");
+			m_selectMode = oldSelectMode;
+			UpdateData(FALSE);
+			return;
+		}
+		int lineno = pDoc->GetSelectedUserLineNumber();
+		SetUserLineData(lineno);
+
+		m_cmbUserLine.EnableWindow(TRUE);
+		m_checkShowAllUserLines.EnableWindow(TRUE);
+	} else {
+		ClearUserLineData();
+		m_cmbUserLine.EnableWindow(FALSE);
+		m_checkShowAllUserLines.EnableWindow(FALSE);
+	}
+
+	pDoc->SetInlineXlineMode((eLineMode)m_selectMode);
+    pDoc->ResetAllLines();
+	pDoc->LoadData();
+	pDoc->UpdateViews();
+}
+
+    // Read the Segy data into memory for one segy line.
+    int CIMACDoc::LoadData()
+    {
+	int i;
+	int fileCount = GetFileCount();
+	if (fileCount == 0) return 0;
+        // ...
+
+		// load user line
+
+		CPointArray* pData = GetCurrentUserLinePtr();
+		if (pData == NULL) {
+			AfxMessageBox("No Userline has been selected");
+			return -1;
+		}    
+
+		for (i=0; i<fileCount; i++) {
+			CSegy* pSegy = GetSegyInPtr(i);
+			if (!pSegy->isUserLineLoaded(pData)) {
+
+				CString attrName = GetAttr(i);
+
+				// skip loading if this attribute doesn`t appear on any xplot.
+				if (!IsAttributeInUse(attrName) && i != segyToUseForOutput) {
+					// check if the attribute is needed for a virtual volume
+					if (!IsAttributeInVirtualVolumeInUse(attrName)) {
+						continue;
+					}
+				}
+
+				infoDlg.AddString(attrName);
+				pSegy->Reset();
+				int ntrace = (int) pData->GetCount();
+				pSegy->Create(ntrace, pSegy->GetSegyIndexPtr()->GetSampleCount());
+				if (pSegy->LoadIndexedLine(GetFile(i), 0, GetInlineXlineMode(), pData) < 0) {
+					return -1;
+				}
+			}
+		}
+        
+
+        // ...
+    }    
+    
+Where:
+
+fileCount = 13
+ntrace = 551
+
+    CString CIMACDoc::GetAttr(int n)
+    {
+	CString strRet;
+	if (n < m_nFile) {
+            strRet = m_arrAttributeNames[n];
+	}
+	return strRet;
+    }
+
+Where:    
+
+strRet = "angle_stack_15"
+
+DWORD  GetSampleCount()    { return m_nsamps; }
+
+Where:
+
+m_nsamps = 0
+
+// Reset() must always be called before Create, otherwise you leak memory
+void CSegy::Create(int nTrace, int nSamps)
+{
+	m_nTrace=nTrace;
+	m_nSamps=nSamps;
+	pInLine =	new int[nTrace];
+	pXLine =	new int[nTrace];
+	pXCoord =	new double[nTrace];
+	pYCoord =	new double[nTrace];
+	pData =		new float[nTrace*nSamps];
+	pHdr =		new BYTE[nTrace*240];
+	pEbcdic =	new BYTE[3200];
+	pBinary =	new BYTE[400];
+	memset(pData, 0, nTrace * nSamps * sizeof(float));
+	memset(pHdr,  0, nTrace * 240 );
+}
+
+Where:
+
+m_nTrace = 551
+m_nSamps = 651
+
+-----
+
+DWORD  GetLineNumber(int n, int linemode);
+
+	DWORD		m_ntrace;
+	DWORD		m_nsamps;
+	int			m_sampleInterval;
+	DWORD		m_trsize;
+
+-----
+
+CString CIMACDoc::GetFile(int n)
+{
+	if (n< m_nFile) return m_arrAttributePaths[n];
+	return "";
+}
+
+m_arrAttributePaths = 0x000001c884669868 {"Z:\\QI-Pro Demo\\Horn River Demo\\Seismic\\demo_angle_stack_15_shift_subset.sgy", ...}
+
+// Use the SegyIndex to read the specifed line from the file.
+int	CSegy::LoadIndexedLine(CString fname, int nLine, eLineMode linemode, CPointArray *pUserLine )
+{
+	return LoadIndexedLine( fname, nLine, linemode, &m_index, pUserLine );
+}
+
+int CSegy::LoadIndexedLine(CString fname, int nLine, eLineMode linemode, CSegyIndex *pIndex, CPointArray *pUserLine )
+{
+	CFile f;
+	CFileException ex;
+	DWORD *pIndexLine, *pInline, *pXline;
+	DWORD trsize;
+	int nLoaded = 0;
+
+	if (linemode == eUSERLINE && pUserLine == NULL) return -1;
+
+	if (fname.IsEmpty()) return -1;
+
+	trsize = m_nSamps * 4 + 240;
+	pBuf = new BYTE[trsize];
+
+	if (!m_file.Open(fname, CFile::modeRead|CFile::shareDenyWrite, &ex)) {
+		ex.GetErrorMessage((char *)pBuf,255);
+		AfxMessageBox((char *)pBuf);
+		delete pBuf;
+		return -1;
+	} else {
+		if(m_file.Read(pEbcdic, 3200) != 3200) {
+			m_file.Close();
+			delete pBuf;
+			return -1;
+		}
+		if(m_file.Read(pBinary, 400) != 400) {
+			m_file.Close();
+			delete pBuf;
+			return -1;
+		}
+
+        DWORD nsamp;
+        CSegyUtil segyUtil;
+        segyUtil.SegyPropertiesFromHeader(pBinary, GetHeaderMap(), &nsamp, (DWORD *)&m_nSi, (DWORD *)&m_nFormatCode, &m_dataEndian);
+
+		if (m_nFormatCode != 1 && m_nFormatCode != 5 && m_nFormatCode != 6) {
+			AfxMessageBox("Unsupported Seg-Y format");
+			delete pBuf;
+			return -1;
+		}
+
+		if (linemode == eINLINE) {
+			pIndexLine = pIndex->m_pInline;
+
+		} else if (linemode == eXLINE) {
+			pIndexLine = pIndex->m_pXline;
+
+		} else if (linemode == eUSERLINE) {
+			pInline = pIndex->m_pInline;
+			pXline  = pIndex->m_pXline;
+			nLine = 0;
+			SetUserLinePtr(pUserLine);
+		} else {
+			return -1; // unsupported linemode
+		}
+
+		// the default is to load the first line
+		if (linemode != eUSERLINE) {
+			if (nLine == 0) nLine = pIndex->GetFirstLiveLine(linemode);
+		}
+
+		// check the trace length. If it`s different from the index we have to adjust.
+		double segyNsamps = this->m_nSamps;
+		double indexNsamps = pIndex->m_nsamps;
+		bool bAdjustNsamp = (this->m_nSamps != pIndex->m_nsamps);
+		
+		// TRACE("%s, %d, %d\n", fname,  this->m_nSamps, pIndex->m_nsamps);
+
+		// zip through the index and only read the traces that we need.
+		if (linemode != eUSERLINE) {
+			for (int i=0; i<(int)pIndex->GetTraceCount(); i++) {
+				if (pIndex->m_bIgnore[i] == TRUE ) continue;
+				if (pIndexLine[i] == (DWORD)nLine) {
+					double offset = pIndex->m_pOffset[i];
+					if (bAdjustNsamp) {
+						offset -= 3600;
+						double fTraceCount = offset / (240 + indexNsamps * 4);
+						offset =  fTraceCount * (240 + segyNsamps * 4) + 3600;
+					}
+					LARGE_INTEGER li;
+					li.QuadPart = (__int64) offset;
+					SetFilePointer((HANDLE)m_file.m_hFile, li.LowPart, &li.HighPart, FILE_BEGIN);
+					if(m_file.Read(pBuf, trsize) != trsize) {
+						break; // TODO: check for errors here.
+					}
+					SetIndexedTrace(pBuf, nLoaded++);
+				}
+			}
+		} else {
+			DWORD ixTrace = 0;
+			for (int i=0; i<pUserLine->GetCount(); i++) {
+				int userInline = pUserLine->GetAt(i).x;
+				int userXline  = pUserLine->GetAt(i).y;
+				if (userInline < 0) userInline = -userInline; // remove the flag
+				BOOL bIgnore;
+				double offset = pIndex->FindTrace(userInline, userXline, ixTrace, bIgnore);
+				if (bIgnore == TRUE ) continue;
+				if (bAdjustNsamp) {
+					offset -= 3600;
+					double fTraceCount = offset / (240 + indexNsamps * 4);
+					offset =  fTraceCount * (240 + segyNsamps * 4) + 3600;
+				}
+				LARGE_INTEGER li;
+				li.QuadPart = (__int64) offset;
+				SetFilePointer((HANDLE)m_file.m_hFile, li.LowPart, &li.HighPart, FILE_BEGIN);
+				if(m_file.Read(pBuf, trsize) != trsize) {
+					break; // TODO: check for errors here.
+				}
+				SetIndexedTrace(pBuf, nLoaded++);
+			}
+		}
+
+		m_file.Close(); 
+		delete pBuf;
+	}
+
+	m_currentLineNumber = nLine;
+	m_inlineXlineMode = linemode;
+	SetTraceCount(nLoaded);
+	return nLoaded;
+}
+
+	trsize = m_nSamps * 4 + 240;
+	pBuf = new BYTE[trsize];
+
+-> Why is the above 4 + 240?
+        
+fname = "Z:\\QI-Pro Demo\\Horn River Demo\\Seismic\\demo_E_computed_shift_subset.sgy"        
+
+CHeaderMap *GetHeaderMap()     { return &m_headerMap; }
+
+m_headerMap
+{sampleInterval={m_index=-572662307 m_type=-572662307 m_size=eVAR_1BYTE | eVAR_4BYTE | -572662312 (-572662307) ...} ...}
+    CObject: {...}
+    sampleInterval: {m_index=-572662307 m_type=-572662307 m_size=eVAR_1BYTE | eVAR_4BYTE | -572662312 (-572662307) ...}
+    nSamps: {m_index=-572662307 m_type=-572662307 m_size=eVAR_1BYTE | eVAR_4BYTE | -572662312 (-572662307) ...}
+    formatCode: {m_index=-572662307 m_type=-572662307 m_size=eVAR_1BYTE | eVAR_4BYTE | -572662312 (-572662307) ...}
+    coordUnits: {m_index=-572662307 m_type=-572662307 m_size=eVAR_1BYTE | eVAR_4BYTE | -572662312 (-572662307) ...}
+
+
+else if (linemode == eUSERLINE) {
+			pInline = pIndex->m_pInline;
+			pXline  = pIndex->m_pXline;
+			nLine = 0;
+			SetUserLinePtr(pUserLine);
+		}
+
+void    SetUserLinePtr(CPointArray *ptr) { m_userLinePtr = ptr; }
+
+m_userLinePtr = 0x000001c88b4bd480 {m_pData=0x000001c88b4c7f80 {x=5450 y=1243} m_nSize=551 m_nMaxSize=1000 ...}
+
+-----
+
+	CHeaderMap *pMap = &m_headerMap;
+	pInLine[n]= (int)pMap->inlineNum.GetValue(pTrace);
+	pXLine[n] = (int)pMap->xlineNum.GetValue(pTrace);
+
+*pMap
+{sampleInterval={m_index=16 m_type=eUINT (0) m_size=eVAR_2BYTE (2) ...} nSamps={m_index=20 m_type=eUINT (0) ...} ...}
+    CObject: {...}
+    sampleInterval: {m_index=16 m_type=eUINT (0) m_size=eVAR_2BYTE (2) ...}
+    nSamps: {m_index=20 m_type=eUINT (0) m_size=eVAR_2BYTE (2) ...}
+    formatCode: {m_index=24 m_type=eUINT (0) m_size=eVAR_2BYTE (2) ...}
+    coordUnits: {m_index=54 m_type=eUINT (0) m_size=eVAR_2BYTE (2) ...}
+    revisionNumber: {m_index=300 m_type=eUINT (0) m_size=eVAR_2BYTE (2) ...}
+
+
+InLine[n]
+5450
+pXLine[n]
+1243
+
+-----
+
+LoadIndexedLine(CString fname, ...):
+
+for (int i=0; i<pUserLine->GetCount(); i++) {
+}        
+
+pUserLine->GetCount()
+551
+
+Where are the 551 user lines in "Classified Seismic Volume"?
+
+offset = 8689176.0000000000
+
+li.QuadPart = (__int64) offset;
+li.QuadPart = 9474120
+
+SetTraceCount(nLoaded);
+nLoaded = 3
+
+
+SetUserLinePtr(pUserLine);
+pUserLine = 0x000001c88b4bd480 {m_pData=0x000001c88b4c7f80 {x=5450 y=1243} m_nSize=551 m_nMaxSize=1000 ...}
+
+-Is IMACDOC::GetCurrentUserLinePtr() what is used to get the lines to "Lwr_Keg_River", "Muskwa", etc?
+
+-----
+1)
+
+// Load virtual volumes
+// if *attributeName is NULL then load all the volumes that are in use.
+void CIMACDoc::LoadVirtualVolumes(CModelessInfoDlg *pInfoDlg, const CUPDUPDATA *pCUPDUPData, CString *attributeName)
+{
+	int vvCount = GetVVAttributeCount();
+    
+}    
+
+vvCount = 11
+
+CPointArray *CIMACDoc::GetCurrentUserLinePtr() 
+{ 
+	return GetUserLinePtr(m_userLineSelected); 
+}
+
+m_userLineSelected = 1
+
+CDoublePointArray *CIMACDoc::GetUserLineSmoothedCoordinatePtr(DWORD i)
+{
+    CDoublePointArray *pReturnVal = NULL;
+    if (i < GetUserLineCount()) {
+        pReturnVal = (CDoublePointArray *)m_userLineSmoothedCoordinateArray.GetAt(i);
+    }
+    return pReturnVal;
+}
+
+    if (GetInlineXlineMode() == eUSERLINE) {
+        pSegyOut->SetUserLinePtr(GetCurrentUserLinePtr());
+        pSegyOut->SetUserLineSmoothedCoordinatePtr(GetCurrentUserLineSmoothedCoordinatePtr());
+    } else {
+        pSegyOut->SetUserLinePtr(NULL);
+        pSegyOut->SetUserLineSmoothedCoordinatePtr(NULL);
+    }
+
+*** GetUserLineCount() ***
+3
+
+m_userLineSmoothedCoordinateArray = {m_pData=0x000001c88b4c4070 {0x000001c88b4bcfb0} m_nSize=3 m_nMaxSize=1000 ...}
+
+-		pReturnVal	0x000001c88b4bcae0 {m_pData=0x0000000000000000 <NULL> m_nSize=0 m_nMaxSize=0 ...}	CArray<CDoublePoint,CDoublePoint> *
+-		CObject	{...}	CObject
++		__vfptr	0x00007ff612d6f5a8 {QI-Pro.exe!void(* CArray<CDoublePoint,CDoublePoint>::`vftable'[6])()} {0x00007ff612ad50c3 {QI-Pro.exe!CObject::GetRuntimeClass(void)const }, ...}	void * * '
++		m_pData	0x0000000000000000 <NULL>	CDoublePoint *
+		m_nSize	0	__int64
+		m_nMaxSize	0	__int64
+		m_nGrowBy	1000	__int64
+
+void CIMACDoc::ProjectWellsToCurrentLine()
+{
+	CSegy *pSegyOut = GetSegyOutPtr();
+
+	// loop through the list of wells and project any deviation data onto the current line.
+	WellList *pWellList = GetWellListPtr();
+	POSITION pos = pWellList->GetHeadPosition();
+	while (pos) {
+		CWell *pWell = pWellList->GetNext(pos);
+
+		// Project the deviation onto the current line.
+		pSegyOut->ComputeDeviatedProjection(pWell);
+	}
+}
+
+Where:
+
+*pWellList
+{m_pNodeHead=0x000001c886041248 {pNext=0x000001c886041260 {pNext=0x000001c886041278 {pNext=0x000001c886041290 {...} ...} ...} ...} ...}
+    CObject: {...}
+    m_pNodeHead: 0x000001c886041248 {pNext=0x000001c886041260 {pNext=0x000001c886041278 {pNext=0x000001c886041290 {pNext=...} ...} ...} ...}
+    m_pNodeTail: 0x000001c886041290 {pNext=0x0000000000000000 <NULL> pPrev=0x000001c886041278 {pNext=0x000001c886041290 {...} ...} ...}
+    m_nCount: 4
+    m_pNodeFree: 0x000001c8860412a8 {pNext=0x000001c8860412c0 {pNext=0x000001c8860412d8 {pNext=0x000001c8860412f0 {pNext=...} ...} ...} ...}
+    m_pBlocks: 0x000001c886041240 {pNext=0x0000000000000000 <NULL> }
+    m_nBlockSize: 10
+
+	pDocTemplate->AddFrameTemplate(
+        new CFrameTemplate( 
+			menuID,
+            RUNTIME_CLASS( CChildFrame ), 
+            RUNTIME_CLASS( CIMACView ), 
+            ID_VIEW_VIEW1, 
+            SW_SHOWNORMAL, 
+            TRUE ) );
+
+2)
+                                            
+return ntrace;
+
+Where:
+ntrace = 551                                            
+                                            
+3)
+
+void CIMACDoc::UpdateViews(BOOL bSkipCombo):
+
+	// Time Slice...
+	if (m_timeSlice.isActive() && m_timeSlice.isShowSliceFlag()) {
+		if (m_timeSlice.isLoadSliceFlag()) {
+			if (!m_timeSlice.Create(GetFileCount()+GetVirtualVolumeCount(), GetSegyInPtr(0)->GetSegyIndexPtr())) {
+				m_timeSlice.Destroy();
+				m_timeSlice.SetShowSliceFlag(FALSE);
+			}
+		}
+		LoadTimeSlice(&m_timeSlice);
+		m_timeSlice.SetLoadSliceFlag(FALSE);
+	}
+
+        
+-		m_timeSlice	{m_inlineMin=5440 m_inlineMax=5700 m_xlineMin=1225 ...}	CTimeSlice
++		CObject	{...}	CObject
+		m_inlineMin	5440	unsigned long
+		m_inlineMax	5700	unsigned long
+		m_xlineMin	1225	unsigned long
+		m_xlineMax	1500	unsigned long
+		m_sampleCount	72036	unsigned long
++		m_pIndex	0x0000000000000000 <NULL>	CSegyIndex *
++		m_pSliceData	0x000001c88c7b4ee0 {9.00000000}	float *
++		m_pSliceDead	0x000001c88c7fb4b0 {0}	int *
++		m_pData	0x000001c88466a718 {0x000001c88c940a80 {676.302246}, 0x000001c88ca86050 {5.40736011e-37}, 0x000001c88cacc620 {...}, ...}	float *[200]
++		m_bDataLoaded	0x000001c88466ad58 {1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...}	int[200]
++		m_arrAttrNames	{m_pData=0x000001c885f42430 "angle_stack_15" m_nSize=200 m_nMaxSize=200 ...}	CStringArray
++		m_arrFileNames	{m_pData=0x000001c8860b9b50 "Z:\\QI-Pro Demo\\Horn River Demo\\Seismic\\demo_angle_stack_15_shift_subset.sgy" ...}	CStringArray
++		m_arrCoords	{m_pData=0x000001c88e5aa070 {x=628411.00000000000 y=6623159.0000000000 } m_nSize=72036 m_nMaxSize=73000 ...}	CArray<CDoublePoint,CDoublePoint>
+		m_volumeCount	13	int
+		m_sliceTime	-25	int
++		m_sliceReference	"Mid_Dev_Carb"	ATL::CStringT<char,StrTraitMFC_DLL<char,ATL::ChTraitsCRT<char>>>
+		m_bShowSliceFlag	1	int
+		m_bLoadSliceFlag	0	int
+		m_bActiveFlag	1	int
+
+*** Notice "Mid_Dev_Carb"! ***                 
+
+-----
+
+	CString defaultString = CHorizon::TIME_ZERO;
+	m_cmbSlice.AddString(defaultString);
+	CHorizon *pHor = pDoc->GetHorizonDataPtr();
+	for (int i=0; i<pHor->GetHorizonCount(); i++) {
+		CString horizonName = pHor->GetName(i);
+		m_cmbSlice.AddString(horizonName);
+	}
+
+horizonName = " Lwr_Keg_River"
+horizonName = "Mid_Dev_Carb"
+horizonName = "Muskwa"
+
+	// enable/disable controls
+	m_btnSliceButton.EnableWindow(m_bShowSliceFlag);
+
+m_bShowSliceFlag = 1
+
+-		pHor	0x000001eaa736da80 {m_pY=0x000001eaa83b6070 {6620608.5000000000} m_pX=0x000001eaa8077070 {616883.18999999994} ...}	CHorizon *
++		CObject	{...}	CObject
++		m_pY	0x000001eaa83b6070 {6620608.5000000000}	double *
++		m_pX	0x000001eaa8077070 {616883.18999999994}	double *
++		m_pInline	0x000001eaa86f3070 {5053}	int *
++		m_pXline	0x000001eaa8895070 {1153}	int *
+		m_nRecs	418248	int
+		m_nWords	3	int
+		m_nHeader	0	int
+		m_nullValue	-999.250000	float
++		m_pHorizon	0x000001eaa736dab8 {0x000001eaa8a32070 {1024.36633}, 0x000001eaa8bd5070 {986.298523}, 0x000001eaa8d7c070 {...}, ...}	float *[400]
++		m_displayMode	0x000001eaa736e738 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...}	int[400]
++		m_lineWidth	0x000001eaa736ed78 {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...}	int[400]
++		m_color	0x000001eaa736f3b8 {16720016, 16719904, 65280, 251658240, 251658240, 251658240, 251658240, 251658240, ...}	unsigned long[400]
++		m_arrNames	{m_pData=0x000001eaa0dff390 " Lwr_Keg_River" m_nSize=3 m_nMaxSize=3 ...}	CStringArray
+		m_inLineMin	5053	int
+		m_inLineMax	5718	int
+		m_xLineMin	1153	int
+		m_xLineMax	1780	int
+		m_yMin	6620608.5000000000	double
+		m_yMax	6640085.5000000000	double
+		m_xMin	616244.13000000000	double
+		m_xMax	636821.63000000000	double
+
+CHorizon::LoadCSV()
+
+...
+
+
+CHorizon::LoadFile()
+
+...
+
+CHorizon::LoadHorizon()
+
+...
+
+CHorizon::LoadTxtFile()
+
+...
+
+CIMACDoc::AppendHorizonFile()
+
+...
+
+CHorizon::AllocateHorizonArrays()
+
+--------------------------------------------------------------------------------
+
+// load user line data from the document
+void CMapSelectDlg::SetUserLineData(DWORD lineNumber)
+{
+	if (lineNumber >= pDoc->GetUserLineCount()) return;	
+
+	// delete local user line data
+	ClearUserLineData();
+
+	// get the segyindex pointer
+	CSegy *pSegy = pDoc->GetFirstLoadedSegyPtr();
+	if (pSegy == NULL) return;
+	CSegyIndex *pIndex = pSegy->GetSegyIndexPtr();
+	if (pIndex == NULL) return;
+	if (pIndex->GetTraceCount() == 0) return;
+
+	// reload local user line data
+	CPointArray *pLocalData = m_mapView.GetUserLine();
+	CDoublePointArray *pLocalCoords = m_mapView.GetUserCoords();
+	pLocalData->RemoveAll();
+	pLocalCoords->RemoveAll();
+	CPointArray *pDocData = pDoc->GetUserLinePtr(lineNumber);
+	if (pDocData) {
+		m_mapList.DeleteAllItems();
+		for (int i=0, j=0; i<pDocData->GetCount(); i++) {
+			CPoint pt = pDocData->GetAt(i);
+			if (pt.x < 0) continue;  // skip the interpolated points
+			pLocalData->SetAtGrow(j, pt);
+			double xcoord, ycoord;
+			pIndex->FindTraceCoordinates(pt.x, pt.y, xcoord, ycoord);
+			pLocalCoords->SetAtGrow(j, CDoublePoint(xcoord, ycoord));
+			AddItemToListCtrl (j, pt.x, pt.y);
+			j++;
+		}
+	}
+#if 0
+    TRACE("DocData:\n");
+    CDoublePointArray *pDoubleData = pDoc->GetUserLineSmoothedCoordinatePtr(lineNumber);
+    for (int i = 0; i < pDocData->GetCount(); i++) {
+        CPoint pt = pDocData->GetAt(i);
+        CDoublePoint dpt;
+        if (i < pDoubleData->GetCount()) {
+            dpt = pDoubleData->GetAt(i);
+        }
+        TRACE("i=%d inline=%d xline=%d x=%f y=%f\n", i, pt.x, pt.y, dpt.x, dpt.y);
+    }
+    TRACE("MapData:\n");
+    for (int i = 0; i<pLocalData->GetCount(); i++) {
+        CPoint pt = pLocalData->GetAt(i);
+        CDoublePoint dpt = pLocalCoords->GetAt(i);
+        TRACE("i=%d inline=%d xline=%d x=%f y=%f\n", i, pt.x, pt.y, dpt.x, dpt.y);
+    }
+#endif
+
+	m_mapView.SetDigitizeIndex();
+}
+
+Where:
+
+pDocData->GetCount()
+551
+
+// Add a single item to the list control.
+void CMapSelectDlg::AddItemToListCtrl(int nitem, DWORD inLine, DWORD xLine)
+{
+	// update the list control in the parent dialog
+	CString txt;
+	txt.Format("%d", nitem + 1);
+	int iStat = m_mapList.InsertItem(nitem, txt);
+	txt.Format("%d", inLine);
+	m_mapList.SetItem(nitem, 1, LVIF_TEXT, txt, 0, 0, 0, 0);
+	txt.Format("%d", xLine);
+	m_mapList.SetItem(nitem, 2, LVIF_TEXT, txt, 0, 0, 0, 0);
+}
+
+	// user line combo box
+	m_cmbUserLine.ResetContent();
+	DWORD userLineCount = pDoc->GetUserLineCount();
+	for (DWORD i=0; i<userLineCount; i++) {
+		m_cmbUserLine.AddString(pDoc->GetUserLineName( i ));
+	}
+
+        
+-----
+
+void CMapView::OnPaint()
+{
+    // ...
+	// draw the timeslice
+	CTimeSlice *pTimeSlice = pDoc->GetTimeSlicePtr();
+	float *pSlice = pTimeSlice->GetSlicePtr();
+	if (pTimeSlice->isActive() && pTimeSlice->isShowSliceFlag() && pSlice!=NULL) {
+		CRect rcItem;
+		CDoublePointArray *pSliceCoords = pTimeSlice->GetCoordPtr();
+		DWORD inlineMin, inlineMax, xlineMin, xlineMax;
+		CSegyIndex *pIndex = pDoc->GetFirstLoadedSegyPtr()->GetSegyIndexPtr();
+		pIndex->GetLineMinMax(inlineMin, inlineMax, xlineMin, xlineMax);
+		int sliceIndex = 0;
+		for (DWORD j=inlineMin; j<inlineMax; j++) {
+			for (DWORD k=xlineMin; k<xlineMax; k++, sliceIndex++) {
+				if (pSlice[sliceIndex] == NODATA) continue;
+				CDoublePoint sliceCoord;
+				sliceCoord = pSliceCoords->GetAt(sliceIndex);
+				rcItem.left = Sx(sliceCoord.x) - nHalf;
+				rcItem.right = rcItem.left + nPixel;
+				rcItem.top = Sy(sliceCoord.y) - nHalf;
+				rcItem.bottom = rcItem.top + nPixel;
+				int sampleValue = (int)pSlice[sliceIndex];
+				if (sampleValue < 0) {
+					sampleValue = -sampleValue;
+				}
+				if (sampleValue >= nClass) {
+					sampleValue = 0;	// Check for UNCLASSIFIED
+				}
+				pDC->FillRect(rcItem, &pTraceBrush[sampleValue]);
+			}
+		}
+	}
+    // ...
+	// draw the line which is currently being displayed in the Seismic window
+	if (pDoc->GetInlineXlineMode() != eUSERLINE) {
+		iLine = pDoc->GetDisplayLine();
+		if (iLine == 0) iLine = pIndex->GetFirstLiveLine(pDoc->GetInlineXlineMode());
+		if (pIndex->GetLineEndCoords(iLine, pDoc->GetInlineXlineMode(), x1, y1, x2, y2) == 0) {
+			DrawSingleLine(pDC, &fatwhitePen, CPoint(Sx(x1), Sy(y1)), CPoint(Sx(x2), Sy(y2)));
+			pDC->SelectObject(&redPen);
+			DrawLineAndText(pDC, iLine, CPoint(Sx(x1), Sy(y1)), CPoint(Sx(x2), Sy(y2)));
+		}
+	}
+	// draw the trace that is being tracked from the Seismic window.
+	CSize size;
+	CRect rect;
+	DWORD trackInLine, trackXLine;
+	pDoc->GetTrackTrace(trackInLine, trackXLine);
+	pIndex->FindTraceCoordinates(trackInLine, trackXLine, x1, y1);
+	CPoint ptTrack(Sx(x1), Sy(y1));
+	pDC->MoveTo(ptTrack + CSize(-5, -5));
+	pDC->LineTo(ptTrack + CSize( 5,  5));
+	pDC->MoveTo(ptTrack + CSize(-5,  5));
+	pDC->LineTo(ptTrack + CSize( 5, -5));
+    if (pDoc->GetInlineXlineMode() == eUSERLINE) {
+        txt.Format("%d,%d", trackInLine, trackXLine);
+    } else {
+        iLine = (pDoc->GetInlineXlineMode() == eINLINE) ? trackXLine : trackInLine;
+        txt.Format("%d", iLine);
+    }
+	size = pDC->GetTextExtent(txt);
+	rect.top    = ptTrack.y + 5;
+	rect.bottom = rect.top + size.cy;
+	rect.left   = ptTrack.x - size.cx/2;
+	rect.right  = rect.left + size.cx;
+	pDC->DrawText(txt, rect, DT_CENTER | DT_VCENTER| DT_SINGLELINE);
+
+    // ...
+
+	// draw all user lines not selected 
+	pDC->SelectObject(&greyPen);
+	if (pParent->GetShowAllUseLines() && pDoc->GetInlineXlineMode() == eUSERLINE) {
+		for (DWORD i = 0; i < pDoc->GetUserLineCount(); i++) {
+			if (i == pDoc->GetSelectedUserLineNumber()) continue;
+			CPointArray* pUserLine = pDoc->GetUserLinePtr(i);
+			for (int j = 0; j < pUserLine->GetCount(); j++) {
+				CPoint pt = pUserLine->GetAt(j);
+				if (pt.x < 0) continue;  // skip the interpolated points
+				double xcoord, ycoord;
+				pIndex->FindTraceCoordinates(pt.x, pt.y, xcoord, ycoord);
+				int hello = Sx(xcoord);
+				if (j == 0)
+					pDC->MoveTo(Sx(xcoord), Sy(ycoord));
+				else
+					pDC->LineTo(Sx(xcoord), Sy(ycoord));
+			}
+		}
+	 }
+	// draw the USER line
+	for (int iteration=0; iteration<2; iteration++) {
+		if (iteration == 0) 
+			pDC->SelectObject(&fatwhitePen);
+		else
+			pDC->SelectObject(&redPen);
+
+		for (int i=0; i<m_userLine.GetCount(); i++) {
+			if (i == 0) 
+				pDC->MoveTo(Sx(m_userCoord[i].x), Sy(m_userCoord[i].y));
+			else
+				pDC->LineTo(Sx(m_userCoord[i].x), Sy(m_userCoord[i].y));
+		}
+	}
+	// draw the USER line text on each vertex
+	for (int i=0; i<m_userLine.GetCount(); i++) {
+		txt.Format("%d", i + 1);
+		CPoint rcPoint;
+		rcPoint.x = Sx(m_userCoord[i].x);
+		rcPoint.y = Sy(m_userCoord[i].y);
+		DrawMapText(pDC, rcPoint, txt);
+	}    
+}
+
+Where:
+
+1)
+
+-		pTimeSlice	0x000001eaa0aea6e0 {m_inlineMin=5440 m_inlineMax=5700 m_xlineMin=1225 ...}	CTimeSlice *
++		CObject	{...}	CObject
+		m_inlineMin	5440	unsigned long
+		m_inlineMax	5700	unsigned long
+		m_xlineMin	1225	unsigned long
+		m_xlineMax	1500	unsigned long
+		m_sampleCount	72036	unsigned long
++		m_pIndex	0x0000000000000000 <NULL>	CSegyIndex *
++		m_pSliceData	0x000001eaa736fa90 {9.00000000}	float *
++		m_pSliceDead	0x000001eaa73b6060 {0}	int *
++		m_pData	0x000001eaa0aea718 {0x000001eaa73fc630 {676.302246}, 0x000001eaa7442c00 {5.40736011e-37}, 0x000001eaa74891d0 {...}, ...}	float *[200]
++		m_bDataLoaded	0x000001eaa0aead58 {1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...}	int[200]
++		m_arrAttrNames	{m_pData=0x000001eaa0c42430 "angle_stack_15" m_nSize=200 m_nMaxSize=200 ...}	CStringArray
++		m_arrFileNames	{m_pData=0x000001eaa0db9630 "Z:\\QI-Pro Demo\\Horn River Demo\\Seismic\\demo_angle_stack_15_shift_subset.sgy" ...}	CStringArray
++		m_arrCoords	{m_pData=0x000001eaa90d8070 {x=628411.00000000000 y=6623159.0000000000 } m_nSize=72036 m_nMaxSize=73000 ...}	CArray<CDoublePoint,CDoublePoint>
+		m_volumeCount	13	int
+		m_sliceTime	-25	int
++		m_sliceReference	"Mid_Dev_Carb"	ATL::CStringT<char,StrTraitMFC_DLL<char,ATL::ChTraitsCRT<char>>>
+		m_bShowSliceFlag	1	int
+		m_bLoadSliceFlag	0	int
+		m_bActiveFlag	1	int
+
+
+inlineMin = 5440
+inlineMax = 5700
+
+xlineMin = 1225
+xlineMax = 1500
+                
+2)
+
+pDC->DrawText(txt, rect, DT_CENTER | DT_VCENTER| DT_SINGLELINE);
+
+txt = "-1,-1"
+
+	// draw the USER line text on each vertex
+	for (int i=0; i<m_userLine.GetCount(); i++) {
+		txt.Format("%d", i + 1);
+		CPoint rcPoint;
+		rcPoint.x = Sx(m_userCoord[i].x);
+		rcPoint.y = Sy(m_userCoord[i].y);
+		DrawMapText(pDC, rcPoint, txt);
+	}
+
+        
+txt = "1"
+
+m_userLine.GetCount()
+6
+
+CPointArray		    m_userLine;
+CDoublePointArray	m_userCoord;
+
