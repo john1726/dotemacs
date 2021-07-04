@@ -483,13 +483,13 @@ If WITHROOT is non-nil, also DIRECTORY will be include."
 ;;     (dolist (file (directory-files dir t "\.log$" nil))
 ;;       (find-file file)))
  
-  ;; (dolist (dir (recursive-subdirs "C:/Users/moorer/OneDrive - sound-qi.com/Documents/QII/Notes" t))
-  ;;   (dolist (file (directory-files dir t "\.txt$" nil))
-  ;;     (find-file file)))
+  (dolist (dir (recursive-subdirs "D:/GDrive/Documents/QII/Notes" t))
+    (dolist (file (directory-files dir t "\.txt$" nil))
+      (find-file file)))
 
-  ;; (dolist (dir (recursive-subdirs "C:/Users/moorer/OneDrive - sound-qi.com/Workspace" t))
-  ;;   (dolist (file (directory-files dir t "\.txt$" nil))
-  ;;     (find-file file)))
+  (dolist (dir (recursive-subdirs "D:/GDrive/Workspace" t))
+    (dolist (file (directory-files dir t "\.txt$" nil))
+      (find-file file)))
 
   ;; (dolist (dir (recursive-subdirs "C:/Sound-QI_Source/SoundQI-Branch/RM_Branch" t))
   ;;   (dolist (file (directory-files dir t "\.h$" nil))
