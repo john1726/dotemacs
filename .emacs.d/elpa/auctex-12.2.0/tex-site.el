@@ -1,6 +1,6 @@
 ;;; tex-site.el - Site specific variables.  Don't edit.
 
-;; Copyright (C) 2005, 2013, 2016-2018 Free Software Foundation, Inc.
+;; Copyright (C) 2005 Free Software Foundation, Inc.
 ;;
 ;; completely rewritten.
 
@@ -38,15 +38,8 @@
 
 ;;; Code:
 
-(if (< emacs-major-version 24)
-    (error "AUCTeX requires Emacs 24 or later"))
-
-(unless (or (fboundp 'TeX-modes-set)     ;Avoid inf-looping.
-            (fboundp 'TeX-tex-mode))     ;auctex-autoloads is not loaded.
-  ;; Try and support the case where someone loads tex-site.el or
-  ;; auctex.el directly, in the old way.
-  (provide 'tex-site)        ;Avoid (re)loading tex-site from auctex-autoloads.
-  (load "auctex-autoloads" 'noerror 'nomessage))
+(if (< emacs-major-version 21)
+  (error "AUCTeX requires Emacs 21 or later"))
 
 ;; Define here in order for `M-x customize-group <RET> AUCTeX <RET>'
 ;; to work if the main AUCTeX files are not loaded yet.
@@ -54,7 +47,7 @@
   "A (La)TeX environment."
   :tag "AUCTeX"
   :link '(custom-manual "(auctex)Top")
-  :link '(url-link :tag "Home Page" "https://www.gnu.org/software/auctex/")
+  :link '(url-link :tag "Home Page" "http://www.gnu.org/software/auctex/")
   :prefix "TeX-"
   :group 'tex
   :load "tex" :load "latex" :load "tex-style")
@@ -94,23 +87,21 @@ shared by all users of a site."
 
 (add-hook 'tex-site-unload-hook
 	  (lambda ()
-	    (if (fboundp 'advice-add)
-		(TeX-modes-set 'TeX-modes nil)
-	      (let ((list after-load-alist))
-		(while list
-		  ;; Adapted copy of the definition of `assq-delete-all'
-		  ;; from Emacs 21 as substitute for
-		  ;; `(assq-delete-all'TeX-modes-set (car list))' which
-		  ;; fails on non-list elements in Emacs 21.
-		  (let* ((alist (car list))
-			 (tail alist)
-			 (key 'TeX-modes-set))
-		    (while tail
-		      (if (and (consp (car tail))
-			       (eq (car (car tail)) key))
-			  (setq alist (delq (car tail) alist)))
-		      (setq tail (cdr tail))))
-		  (setq list (cdr list)))))
+	    (let ((list after-load-alist))
+	      (while list
+		;; Adapted copy of the definition of `assq-delete-all'
+		;; from Emacs 21 as substitute for
+		;; `(assq-delete-all'TeX-modes-set (car list))' which
+		;; fails on non-list elements in Emacs 21.
+		(let* ((alist (car list))
+		       (tail alist)
+		       (key 'TeX-modes-set))
+		  (while tail
+		    (if (and (consp (car tail))
+			     (eq (car (car tail)) key))
+			(setq alist (delq (car tail) alist)))
+		    (setq tail (cdr tail))))
+		(setq list (cdr list))))
 	    (setq load-path (delq TeX-lisp-directory load-path))))
 
 (defun TeX-modes-set (var value &optional update)
@@ -125,57 +116,38 @@ definition."
   (let ((list TeX-mode-alist) elt)
     (while list
       (setq elt (car (pop list)))
-      (let ((dst (intern (concat "TeX-" (symbol-name elt)))))
-        (if (fboundp 'advice-add)
-            (if (memq elt value)
-                (advice-add elt :override dst)
-              (advice-remove elt dst))
-          (when (or update (null (get elt 'tex-saved)))
-            (when (fboundp elt)
-              (put elt 'tex-saved (symbol-function elt))))
-          (defalias elt
-            (if (memq elt value)
-                dst
-              (get elt 'tex-saved))))))))
+      (when (or update (null (get elt 'tex-saved)))
+	(when (fboundp elt)
+	  (put elt 'tex-saved (symbol-function elt))))
+      (defalias elt
+	(if (memq elt value)
+	    (intern (concat "TeX-" (symbol-name elt)))
+	  (get elt 'tex-saved))))))
 
 (defcustom TeX-modes
-  (mapcar #'car TeX-mode-alist)
+  (mapcar 'car TeX-mode-alist)
   "List of modes provided by AUCTeX.
 
 This variable can't be set normally; use customize for that, or
 set it with `TeX-modes-set'."
   :type (cons 'set
 	      (mapcar (lambda(x) (list 'const (car x))) TeX-mode-alist))
-  :set #'TeX-modes-set
+  :set 'TeX-modes-set
   :group 'AUCTeX
-  :initialize(lambda (var value)
-	       (custom-initialize-reset var value)
-	       (unless (fboundp 'advice-add)
-		 (let ((list TeX-mode-alist))
-		   (while list
-		     (eval-after-load (cdar list)
-		       `(TeX-modes-set ',var ,var t))
-		     (setq list (cdr list)))))) )
+  :initialize (lambda (var value)
+		(custom-initialize-reset var value)
+		(let ((list TeX-mode-alist))
+		  (while list
+		    (eval-after-load (cdar list)
+		      `(TeX-modes-set ',var ,var t))
+		    (setq list (cdr list))))))
 
-(defconst AUCTeX-version "12.2.0"
+(defconst AUCTeX-version "@AUCTEXVERSION@"
     "AUCTeX version.
 If not a regular release, the date of the last change.")
 
-(defconst AUCTeX-date "2019-10-31"
+(defconst AUCTeX-date "@AUCTEXDATE@"
   "AUCTeX release date using the ISO 8601 format, yyyy-mm-dd.")
 
 ;; Store bibitems when saving a BibTeX buffer
 (add-hook 'bibtex-mode-hook 'BibTeX-auto-store)
-
-;;; Code specific to ELPA packaging:
-
-;; From preview-latex.el:
-
-(defvar preview-TeX-style-dir
-  (expand-file-name "latex" (file-name-directory load-file-name)))
-
-;;; Ensure that loading the autoloads file also loads this file.
-;;;###autoload (require 'tex-site)
-
-(provide 'tex-site)
-;;; tex-site.el ends here

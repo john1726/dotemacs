@@ -18,3 +18,16 @@ which makensis
 makensis QiProHeadwave.nsi
 ls
 pip install winreg
+ls
+cd D:\GDrive\Documents\QII\University\Laurier\CP630EnterpriseComputingNew\L6ClientTierComputing\http_client
+mvn clean package
+cd http_client
+dir
+find . -iname LinearRegressionTest.java
+find-file ./src/main/java/ec/weka/cls/LinearRegressionTest.java
+cd ..
+cd stats-app/ml-weka/
+find-file ./src/main/java/ec/weka/cls/LinearRegressionTest.java
+pushd "C:\enterprise\workspace\Final-Project"
+find-file fj-diabetes-weka/pom.xml
+ls

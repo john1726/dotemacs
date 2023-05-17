@@ -14,7 +14,7 @@
  '(comint-scroll-show-maximum-output t)
  '(comint-scroll-to-bottom-on-input t)
  '(package-selected-packages
-   '(gnu-elpa-keyring-update elpy flycheck-pycheckers flymake-python-pyflakes format-all importmagic ipython-shell-send jedi live-py-mode pyimport python python-black python-environment python-mode python-x pythonic pyvenv auctex magit))
+   '(company-emacs-eclim meghanada gnu-elpa-keyring-update elpy flycheck-pycheckers flymake-python-pyflakes format-all importmagic ipython-shell-send jedi live-py-mode pyimport python python-black python-environment python-mode python-x pythonic pyvenv auctex magit))
  '(safe-local-variable-values '((require-final-newline . t) (mangle-whitespace . t)))
  '(send-mail-function 'mailclient-send-it))
 (custom-set-faces
@@ -27,8 +27,8 @@
 (add-to-list 'exec-path "C:/msys64/usr/bin")
 ;;(setq user-init-file "C:/msys64/home/moorer/.emacs")
 ;;(setq user-emacs-directory "C:/msys64/home/moorer/.emacs.d/")
-(setq default-directory "C:/Sound-QI_Source/SoundQI-Branch/RM_Branch")
-;;(setenv "HOME" "C:/msys64/home/moorer")
+(setq default-directory "D:/Users/psalm/OneDrive - Wilfrid Laurier University/DevProjects")
+;;(setenv "HOME" "D:/msys64/home/psalm")
 ;;(load user-init-file)
 
 ;; Load required packages
@@ -40,6 +40,8 @@
 (mapc 'load (file-expand-wildcards "~/.emacs.d/site-lisp/xah-math-input.el"))
 (mapc 'load (file-expand-wildcards "~/.emacs.d/site-lisp/nsis-mode.el"))
 (autoload 'nsis-mode "nsis-mode" "NSIS mode" t)
+
+(setq large-file-warning-threshold nil)
 
 ;; Set larger value for garbage collection (see https://bling.github.io/blog/2016/01/18/why-are-you-changing-gc-cons-threshold/)
 (defun my-minibuffer-setup-hook ()
@@ -356,133 +358,7 @@ If WITHROOT is non-nil, also DIRECTORY will be include."
     (if (not (eq withroot nil))
         (add-to-list 'subdirs directory))
    subdirs))
- 
-;; Prevent garbage collection while loading files (let ...):   
-;;let ((gc-cons-threshold most-positive-fixnum))
-;;  (dolist (dir (recursive-subdirs "C:/src/EAM/sam" t))
-;;     (dolist (file (directory-files dir t "\.cs$" nil))
-;;       (find-file file)))
- 
-;;  (dolist (dir (recursive-subdirs "C:/src/EAM/sam" t))
-;;     (dolist (file (directory-files dir t "\.sql$" nil))
-;;       (find-file file)))
- 
-;;  (dolist (dir (recursive-subdirs "C:/src/EAM/sam" t))
-;;     (dolist (file (directory-files dir t "\.xaml$" nil))
-;;       (find-file file)))
- 
-;;  (dolist (dir (recursive-subdirs "C:/src/EAM/sam" t))
-;;     (dolist (file (directory-files dir t "\.bat$" nil))
-;;       (find-file file)))
- 
-;;  (dolist (dir (recursive-subdirs "C:/src/EAM/sam" t))
-;;     (dolist (file (directory-files dir t "\.csproj$" nil))
-;;       (find-file file)))
- 
-;;  (dolist (dir (recursive-subdirs "C:/src/EAM/sam" t))
-;;     (dolist (file (directory-files dir t "\.sln$" nil))
-;;       (find-file file)))   
-  
-;;  (dolist (dir (recursive-subdirs "C:/src/EAM/sam" t))
-;;     (dolist (file (directory-files dir t "\.resx$" nil))
-;;       (find-file file)))
- 
-;;  (dolist (dir (recursive-subdirs "C:/src/EAM/sam" t))
-;;     (dolist (file (directory-files dir t "\.settings$" nil))
-;;       (find-file file)))
- 
-;;  (dolist (dir (recursive-subdirs "C:/src/EAM/sam" t))
-;;     (dolist (file (directory-files dir t "\.config$" nil))
-;;       (find-file file)))
- 
-;;  (dolist (dir (recursive-subdirs "C:/src/EAM/sam" t))
-;;     (dolist (file (directory-files dir t "\.tt$" nil))
-;;       (find-file file)))
- 
-;;  (dolist (dir (recursive-subdirs "C:/src/EAM/sam" t))
-;;     (dolist (file (directory-files dir t "\.edmx$" nil))
-;;       (find-file file)))
- 
-;;  (dolist (dir (recursive-subdirs "C:/src/EAM/sam" t))
-;;     (dolist (file (directory-files dir t "\.diagram$" nil))
-;;       (find-file file)))
- 
-;;  (dolist (dir (recursive-subdirs "C:/src/EAM/sam" t))
-;;     (dolist (file (directory-files dir t "\.targets$" nil))
-;;       (find-file file)))
- 
-;; (dolist (dir (recursive-subdirs "C:/src/EAM/branches/TAM_Roger" t))
-;;    (dolist (file (directory-files dir t "\.targets$" nil))
-;;      (find-file file)))
- 
-;; (dolist (dir (recursive-subdirs "C:/src/EAM/branches/TAM_Roger" t))
-;;     (dolist (file (directory-files dir t "\.cs$" nil))
-;;       (find-file file)))         
-                 
- ;; (dolist (dir (recursive-subdirs "C:/src/EAM/branches/TAM_Roger" t))
-;;    (dolist (file (directory-files dir t "\.sql$" nil))
-;;      (find-file file)))
- 
-;; (dolist (dir (recursive-subdirs "C:/src/EAM/branches/TAM_Roger" t))
-;;    (dolist (file (directory-files dir t "\.xaml$" nil))
-;;      (find-file file)))
- 
-;; (dolist (dir (recursive-subdirs "C:/src/EAM/branches/TAM_Roger" t))
-;;    (dolist (file (directory-files dir t "\.bat$" nil))
-;;      (find-file file)))
- 
-;; (dolist (dir (recursive-subdirs "C:/src/EAM/branches/TAM_Roger" t))
-;;    (dolist (file (directory-files dir t "\.csproj$" nil))
-;;      (find-file file)))
- 
-;; (dolist (dir (recursive-subdirs "C:/src/EAM/branches/TAM_Roger" t))
-;;    (dolist (file (directory-files dir t "\.sln$" nil))
-;;      (find-file file)))   
-  
- ;; (dolist (dir (recursive-subdirs "C:/src/EAM/branches/TAM_Roger" t))
-;;    (dolist (file (directory-files dir t "\.resx$" nil))
-;;      (find-file file)))
- 
-;; (dolist (dir (recursive-subdirs "C:/src/EAM/branches/TAM_Roger" t))
-;;    (dolist (file (directory-files dir t "\.settings$" nil))
-;;      (find-file file)))
- 
- ;; (dolist (dir (recursive-subdirs "C:/src/EAM/branches/TAM_Roger" t))
-;;    (dolist (file (directory-files dir t "\.config$" nil))
-;;      (find-file file)))
- 
-;; (dolist (dir (recursive-subdirs "C:/src/EAM/branches/TAM_Roger" t))
-;;    (dolist (file (directory-files dir t "\.tt$" nil))
-;;      (find-file file)))
- 
- ;; (dolist (dir (recursive-subdirs "C:/src/EAM/branches/TAM_Roger" t))
-;;    (dolist (file (directory-files dir t "\.edmx$" nil))
-;;      (find-file file)))
- 
-;; (dolist (dir (recursive-subdirs "C:/src/EAM/branches/TAM_Roger" t))
-;;    (dolist (file (directory-files dir t "\.diagram$" nil))
-;;      (find-file file)))
- 
-;; (dolist (dir (recursive-subdirs "C:/src/EAM/branches/TAM_Roger" t))
-;;    (dolist (file (directory-files dir t "\.targets$" nil))
-;;      (find-file file)))          
-                 
-;;  (dolist (dir (recursive-subdirs "//2YHRR32/c$/Users/moo0220/AppData/Roaming/StructuresInspection-SD1/logs" t))
-;;     (dolist (file (directory-files dir t "\.log$" nil))
-;;       (find-file file)))
- 
-;;  (dolist (dir (recursive-subdirs "//2YHRR32/c$/Users/moo0220/AppData/Roaming/StructuresInspection-SD1/logs" t))
-;;     (dolist (file (directory-files dir t "\.txt$" nil))
-;;       (find-file file)))
- 
-;;  (dolist (dir (recursive-subdirs "//2YHRR32/c$/Users/moo0220/AppData/Roaming/StructuresInspection-SD1/EAM/moo0220" t))
-;;     (dolist (file (directory-files dir t "\.xml$" nil))
-;;       (find-file file)))
- 
-;;  (dolist (dir (recursive-subdirs "//2YHRR32/c$/Users/moo0220/AppData/Roaming/StructuresInspection-SD2/logs" t))
-;;     (dolist (file (directory-files dir t "\.log$" nil))
-;;       (find-file file)))
- 
+    
   (dolist (dir (recursive-subdirs "D:/GDrive/Documents/QII/Notes" t))
     (dolist (file (directory-files dir t "\.txt$" nil))
       (find-file file)))
@@ -490,14 +366,6 @@ If WITHROOT is non-nil, also DIRECTORY will be include."
   (dolist (dir (recursive-subdirs "D:/GDrive/Workspace" t))
     (dolist (file (directory-files dir t "\.txt$" nil))
       (find-file file)))
-
-  ;; (dolist (dir (recursive-subdirs "C:/Sound-QI_Source/SoundQI-Branch/RM_Branch" t))
-  ;;   (dolist (file (directory-files dir t "\.h$" nil))
-  ;;     (find-file file)))
-
-  ;; (dolist (dir (recursive-subdirs "C:/Sound-QI_Source/SoundQI-Branch/RM_Branch" t))
-  ;;   (dolist (file (directory-files dir t "\.cpp$" nil))
-  ;;     (find-file file)))
 
   ;; (dolist (dir (recursive-subdirs "C:/Workspace" t))
   ;;   (dolist (file (directory-files dir t "\.txt$" nil))
@@ -712,5 +580,8 @@ This function does not modify point or mark."
 
 (global-set-key "\C-x\M-d" `insdate-insert-current-date)
 
-(fset 'interpolate-rgb
-   (kmacro-lambda-form [?\M-f ?\M-f ?\M-f ?\M-f ?\M-f ?\M-f ?\M-f ?\M-b ?\C-k ?\C-p ?\C-e return ?\C-a ?\C-y ?\C-n ?\C-n ?\C-a] 0 "%d"))
+
+(projectile-mode +1)
+(define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
+(define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+
